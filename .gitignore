@@ -1,0 +1,20 @@
+# --- Python Specific ---
+venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Flask Specific ---
+instance/
+.webassets-cache
+
+# --- Environment & Secrets ---
+.env
+.flaskenv
+*.secret

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline | MAAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: { brand: { teal: '#0d9488', orange: '#f97316', blue: '#2563eb' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        .pulse-glow { animation: heartbeat 1.5s ease-in-out infinite; }
+        @keyframes heartbeat {
+            0%, 100% { text-shadow: 0 0 20px rgba(249, 115, 22, 0.4); transform: scale(1); }
+            15% { text-shadow: 0 0 40px rgba(249, 115, 22, 0.8), 0 0 80px rgba(249, 115, 22, 0.4); transform: scale(1.15); }
+            30% { text-shadow: 0 0 20px rgba(249, 115, 22, 0.4); transform: scale(1); }
+            45% { text-shadow: 0 0 40px rgba(249, 115, 22, 0.8), 0 0 80px rgba(249, 115, 22, 0.4); transform: scale(1.15); }
+            60% { text-shadow: 0 0 20px rgba(249, 115, 22, 0.4); transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-[#030712] text-gray-200 antialiased min-h-screen flex items-center justify-center relative overflow-hidden">
+    
+    <div class="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-brand-blue/10 rounded-full filter blur-[100px] opacity-50 z-0 pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-brand-orange/10 rounded-full filter blur-[100px] opacity-30 z-0 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-60 z-0 pointer-events-none"></div>
+
+    <!-- Auth Loader Overlay -->
+    <div id="auth-overlay" class="absolute inset-0 z-50 flex items-center justify-center bg-[#030712]">
+        <i class="fas fa-circle-notch fa-spin text-5xl text-brand-orange mb-4"></i>
+    </div>
+
+    <div id="main-content" class="hidden container mx-auto px-4 relative z-10 text-center">
+        
+        <div class="mb-8">
+            <i class="fas fa-heartbeat text-brand-orange pulse-glow text-8xl md:text-9xl"></i>
+        </div>
+
+        <span class="inline-block bg-brand-orange/10 text-brand-orange border border-brand-orange/20 font-bold px-4 py-1.5 rounded-full text-sm mb-6 uppercase tracking-wider shadow-[0_0_15px_rgba(249,115,22,0.2)]">
+            Diagnosis: Disconnected
+        </span>
+
+        <h2 class="text-3xl md:text-5xl font-bold text-white mb-6 font-display">We've Lost the Pulse!</h2>
+        
+        <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-sans">It looks like your internet connection has flatlined. Administer some CPR to your Wi-Fi router, or explore the cached pages we've kept on life support.</p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onclick="window.location.reload()" class="bg-brand-orange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full transition-colors shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2">
+                <i class="fas fa-bolt"></i> Resuscitate (Refresh)
+            </button>
+            <button onclick="window.location.href='/'" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-3 px-8 rounded-full transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-hospital"></i> Go to Waiting Room
+            </button>
+        </div>
+        
+    </div>
+
+    <script>
+    // --- SMART CONFIGURATION ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const authOverlay = document.getElementById('auth-overlay');
+        const mainContent = document.getElementById('main-content');
+        
+        // Offline page is accessible to all users — no auth gate
+        if (authOverlay) authOverlay.style.display = 'none';
+        if (mainContent) mainContent.classList.remove('hidden');
+    });
+    </script>
+
+</body>
+</html>

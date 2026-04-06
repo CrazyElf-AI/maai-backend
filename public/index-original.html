@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI Organisation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amita:wght@400;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif'],
+                        amita: ['"Amita"', 'serif']
+                    },
+                    colors: { brand: { blue: '#2563eb', dark: '#1a1a1a', light: '#f9f9f9', teal: '#0d9488', orange: '#f97316' } }
+                }
+            }
+        }
+    </script>
+    <script>
+        // Setup Dark Mode Toggle Check for the index page
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        
+        /* Cinematic Noise Overlay */
+        .bg-noise {
+            position: absolute; inset: 0; z-index: -1; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+        .dark .bg-noise { opacity: 0.025; }
+
+        /* Enhanced Frosted Glassmorphism */
+        .glass-panel { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border: 1px solid rgba(255, 255, 255, 0.4); border-bottom-color: rgba(255, 255, 255, 0.2); border-right-color: rgba(255, 255, 255, 0.2); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255,255,255,0.5); }
+        .dark .glass-panel { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); border-bottom-color: rgba(255, 255, 255, 0.05); border-right-color: rgba(255, 255, 255, 0.05); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.05); }
+        
+        /* Card Hover & Shine Effect */
+        .hover-card { position: relative; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; will-change: transform; }
+        .hover-card-blue:hover { transform: translateY(-10px); box-shadow: 0 30px 60px -10px rgba(37, 99, 235, 0.25); border-color: rgba(37, 99, 235, 0.5); }
+        .dark .hover-card-blue:hover { box-shadow: 0 30px 60px -10px rgba(37, 99, 235, 0.4); background: rgba(37, 99, 235, 0.1); }
+        
+        .hover-card-orange:hover { transform: translateY(-10px); box-shadow: 0 30px 60px -10px rgba(249, 115, 22, 0.25); border-color: rgba(249, 115, 22, 0.5); }
+        .dark .hover-card-orange:hover { box-shadow: 0 30px 60px -10px rgba(249, 115, 22, 0.4); background: rgba(249, 115, 22, 0.1); }
+        
+        .hover-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -200%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-25deg);
+            z-index: 10;
+            pointer-events: none;
+        }
+        .hover-card:hover::before { animation: shine 0.8s ease-out; }
+        @keyframes shine { 100% { left: 200%; } }
+
+        /* Animated Background Glows */
+        .glow-orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.3; animation: float 12s infinite ease-in-out alternate; z-index: 0; pointer-events: none; max-width: 100vw; max-height: 100vw; }
+        .glow-blue { background: #3b82f6; width: 50vw; height: 50vw; top: -10%; left: -10%; opacity: 0.5; }
+        .glow-teal { background: #14b8a6; width: 40vw; height: 40vw; bottom: -10%; right: -10%; opacity: 0.5; animation-delay: -6s; }
+        .dark .glow-blue { background: #2563eb; opacity: 0.3; }
+        .dark .glow-teal { background: #0d9488; opacity: 0.3; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); opacity: 0.3; }
+            100% { transform: translate(40px, 60px); opacity: 0.6; }
+        }
+
+        /* Floating Background Shapes */
+        @keyframes float-shape-1 { 0%, 100% { transform: translateY(0) rotate(12deg); } 50% { transform: translateY(-20px) rotate(16deg); } }
+        @keyframes float-shape-2 { 0%, 100% { transform: translateY(0) rotate(-12deg); } 50% { transform: translateY(25px) rotate(-5deg); } }
+        @keyframes float-shape-3 { 0%, 100% { transform: translateY(0) rotate(45deg); } 50% { transform: translateY(-15px) rotate(55deg); } }
+        
+        .floating-shape-1 { animation: float-shape-1 6s ease-in-out infinite; }
+        .floating-shape-2 { animation: float-shape-2 8s ease-in-out infinite; }
+        .floating-shape-3 { animation: float-shape-3 7s ease-in-out infinite; }
+
+        /* Floating Icons */
+        @keyframes icon-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .icon-float { animation: icon-float 3s ease-in-out infinite; }
+        
+        /* Slow Spin for Glow Effects */
+        @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+        @keyframes gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .animate-gradient { background-size: 200% 200%; animation: gradient-flow 5s ease infinite; }
+        
+        /* Gradient Text */
+        .text-gradient { background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen relative overflow-x-hidden bg-slate-50 dark:bg-[#030712] transition-colors duration-500">
+    
+    <!-- Cinematic Logo Split Overlay -->
+    <div id="split-reveal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-[#030712] transition-opacity duration-1000 ease-in-out cursor-pointer backdrop-blur-sm">
+        <!-- Background glow for the logo -->
+        <div class="absolute w-[60vw] h-[60vw] bg-brand-blue/10 dark:bg-brand-blue/15 rounded-full filter blur-[120px] animate-pulse-slow"></div>
+        
+        <div class="relative flex items-center justify-center w-full h-full pointer-events-none">
+            <div class="logo-content relative flex flex-col items-center justify-center w-full h-full transition-transform duration-[1200ms] ease-out">
+                <!-- Top Half (Logo) -->
+                <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+                <!-- Bottom Half (Text) -->
+                <div id="logo-bottom" class="flex items-start justify-center w-full h-1/2 pt-4" style="will-change: transform, opacity, filter;">
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white font-display tracking-tight drop-shadow-md text-center text-balance px-4">MAAI <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-brand-orange">Organisation</span></h1>
+                </div>
+            </div>
+            
+            <!-- Light sweep overlay -->
+            <div id="light-sweep" class="absolute top-1/2 left-0 -translate-y-1/2 w-48 h-[150vh] bg-white/40 -skew-x-[20deg] blur-2xl opacity-0 transform -translate-x-[50vw]"></div>
+        </div>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 bg-gradient-to-br from-indigo-50 to-emerald-50 dark:from-[#030712] dark:to-[#0a0f1c] z-[-2] transition-colors duration-500"></div>
+    <div class="bg-noise fixed inset-0 z-[-2]"></div>
+    <canvas id="particle-canvas" class="fixed inset-0 z-[-1] w-full h-full"></canvas>
+    <div class="fixed inset-0 opacity-[0.03] dark:opacity-[0.15] bg-[url('bluehuebgbanner.png')] bg-cover bg-center mix-blend-overlay z-[-1]"></div>
+    <div class="glow-orb glow-blue"></div>
+    <div class="glow-orb glow-teal"></div>
+
+    <!-- Floating 3D Geometric Shapes -->
+    <div class="fixed top-1/4 left-10 md:left-32 w-16 h-16 bg-blue-500/10 dark:bg-blue-500/20 rounded-2xl backdrop-blur-md border border-blue-500/20 rotate-12 floating-shape-1 z-[-1]"></div>
+    <div class="fixed bottom-1/4 right-10 md:right-32 w-24 h-24 bg-teal-500/10 dark:bg-teal-500/20 rounded-full backdrop-blur-md border border-teal-500/20 -rotate-12 floating-shape-2 z-[-1]"></div>
+    <div class="fixed top-1/3 right-1/4 w-12 h-12 bg-orange-500/10 dark:bg-orange-500/20 rounded-xl backdrop-blur-md border border-orange-500/20 rotate-45 floating-shape-3 z-[-1]"></div>
+    
+    <div class="relative z-10 w-full flex flex-col items-center justify-center px-4 py-16 md:py-24 my-auto">
+        <div class="text-center mb-12">
+            <h1 id="main-title" class="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white mb-6 font-display tracking-tight opacity-0 translate-y-8 transition-all duration-1000 ease-out text-balance">
+                Welcome to <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue via-purple-500 to-brand-orange drop-shadow-md">MAAI</span>
+            </h1>
+            <p id="subtitle" class="text-slate-600 dark:text-gray-300 text-lg md:text-2xl font-medium opacity-0 translate-y-8 transition-all duration-1000 ease-out delay-100 px-4 text-balance">Choose how you'd like to make an impact today.</p>
+        </div>
+
+        <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full">
+            <a href="volunteer.html" class="action-card block group glass-panel rounded-[2.5rem] p-6 sm:p-8 md:p-10 text-center hover-card hover-card-blue w-full opacity-0 translate-y-16 transition-all duration-1000 ease-out relative">
+                <!-- Inner Animated Glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-transparent to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-blue-500/10 dark:group-hover:from-blue-500/10 dark:group-hover:to-blue-500/20 transition-all duration-700 opacity-0 group-hover:opacity-100 rounded-[2.5rem] z-0"></div>
+                
+                <div class="relative z-10">
+                    <div class="relative w-28 h-28 mx-auto mb-8 group-hover:-translate-y-2 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-brand-blue rounded-full animate-ping opacity-0 group-hover:opacity-20 transition-opacity duration-500 delay-100"></div>
+                        <div class="absolute inset-0 bg-gradient-to-tr from-blue-200 to-blue-50 dark:from-brand-blue/30 dark:to-blue-900/40 rounded-full animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-md"></div>
+                        <div class="relative bg-white dark:bg-[#0a0f1c] w-full h-full rounded-full flex items-center justify-center icon-float transition-transform duration-500 border border-blue-200 dark:border-brand-blue/40 shadow-[0_0_30px_rgba(37,99,235,0.2)] group-hover:shadow-[0_0_50px_rgba(37,99,235,0.5)]">
+                            <i class="fas fa-hands-helping text-4xl text-brand-blue transition-transform duration-300"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-4 group-hover:text-brand-blue transition-colors font-display">I am a Volunteer</h2>
+                    <p class="text-slate-600 dark:text-gray-400 text-base leading-relaxed mb-8">Join our ground efforts, participate in medical drives, and give the gift of your time to the community.</p>
+                    
+                    <span class="inline-flex items-center justify-center gap-2 font-bold text-brand-blue bg-blue-50 dark:bg-brand-blue/10 px-6 py-3 rounded-full group-hover:bg-brand-blue group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-blue-500/30 w-full sm:w-auto">
+                        Get Started <i class="fas fa-arrow-right transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                    </span>
+                </div>
+            </a>
+
+            <a href="ngo.html" class="action-card block group glass-panel rounded-[2.5rem] p-6 sm:p-8 md:p-10 text-center hover-card hover-card-orange w-full opacity-0 translate-y-16 transition-all duration-1000 ease-out delay-150 relative">
+                <!-- Inner Animated Glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-transparent to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 dark:group-hover:from-orange-500/10 dark:group-hover:to-orange-500/20 transition-all duration-700 opacity-0 group-hover:opacity-100 rounded-[2.5rem] z-0"></div>
+
+                <div class="relative z-10">
+                    <div class="relative w-28 h-28 mx-auto mb-8 group-hover:-translate-y-2 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-brand-orange rounded-full animate-ping opacity-0 group-hover:opacity-20 transition-opacity duration-500 delay-100"></div>
+                        <div class="absolute inset-0 bg-gradient-to-tr from-orange-200 to-orange-50 dark:from-brand-orange/30 dark:to-orange-900/40 rounded-full animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-md"></div>
+                        <div class="relative bg-white dark:bg-[#0a0f1c] w-full h-full rounded-full flex items-center justify-center icon-float transition-transform duration-500 border border-orange-200 dark:border-brand-orange/40 shadow-[0_0_30px_rgba(249,115,22,0.2)] group-hover:shadow-[0_0_50px_rgba(249,115,22,0.5)]">
+                            <i class="fas fa-globe text-4xl text-brand-orange transition-transform duration-300"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-4 group-hover:text-brand-orange transition-colors font-display">I am an Organizer</h2>
+                    <p class="text-slate-600 dark:text-gray-400 text-base leading-relaxed mb-8">Partner with MAAI, set up campaigns, and coordinate large-scale community service events efficiently.</p>
+                    
+                    <span class="inline-flex items-center justify-center gap-2 font-bold text-brand-orange bg-orange-50 dark:bg-brand-orange/10 px-6 py-3 rounded-full group-hover:bg-brand-orange group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-orange-500/30 w-full sm:w-auto">
+                        Partner With Us <i class="fas fa-arrow-right transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                    </span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Split Reveal Animation ---
+            const splitOverlay = document.getElementById('split-reveal-overlay');
+            const logoTop = document.getElementById('logo-top');
+            const logoBottom = document.getElementById('logo-bottom');
+            const lightSweep = document.getElementById('light-sweep');
+            const logoContents = document.querySelectorAll('.logo-content');
+            
+            const mainTitle = document.getElementById('main-title');
+            const subtitle = document.getElementById('subtitle');
+            const cardsContainer = document.getElementById('cards-container');
+            const cards = document.querySelectorAll('.action-card');
+            
+            let animationSkipped = false;
+            document.body.style.overflow = 'hidden';
+
+            const runReveal = () => {
+                if(animationSkipped) return;
+                
+                // Step 1: Build Phase - Slight zoom in on logo
+                logoContents.forEach(el => el.style.transform = 'translateY(-2%)');
+
+                // Step 2: Light sweep effect
+                setTimeout(() => {
+                    if(animationSkipped) return;
+                    lightSweep.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-in-out';
+                    lightSweep.style.opacity = '1';
+                    lightSweep.style.transform = 'translate(100vw, -50%) skewX(-20deg)';
+                    
+                    setTimeout(() => {
+                        if(!animationSkipped) lightSweep.style.opacity = '0';
+                    }, 400);
+                }, 300);
+
+                // Step 3: Logo Split and Reveal
+                setTimeout(() => {
+                    if(animationSkipped) return;
+                    
+                    // Fade overlay background
+                    splitOverlay.style.transition = 'opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 1.5s ease-out';
+                    splitOverlay.style.opacity = '0';
+                    splitOverlay.style.backdropFilter = 'blur(0px)';
+                    
+                    // Split logo vertically
+                    logoTop.style.transition = 'transform 1.5s cubic-bezier(0.8, 0, 0.2, 1), opacity 1.2s ease-out, filter 1.5s ease-out';
+                    logoTop.style.transform = 'translateY(-100%)';
+                    logoTop.style.opacity = '0';
+                    logoTop.style.filter = 'blur(16px)';
+                    
+                    logoBottom.style.transition = 'transform 1.5s cubic-bezier(0.8, 0, 0.2, 1), opacity 1.2s ease-out, filter 1.5s ease-out';
+                    logoBottom.style.transform = 'translateY(100%)';
+                    logoBottom.style.opacity = '0';
+                    logoBottom.style.filter = 'blur(16px)';
+                    
+                    // Reveal main content elements
+                    if (mainTitle) {
+                        mainTitle.classList.remove('opacity-0', 'translate-y-8');
+                        mainTitle.classList.add('opacity-100', 'translate-y-0');
+                    }
+                    if (subtitle) {
+                        subtitle.classList.remove('opacity-0', 'translate-y-8');
+                        subtitle.classList.add('opacity-100', 'translate-y-0');
+                    }
+
+                    cards.forEach((card, index) => {
+                        setTimeout(() => {
+                            if(animationSkipped) return;
+                            card.classList.remove('opacity-0', 'translate-y-16', 'delay-150');
+                            card.classList.add('opacity-100', 'translate-y-0');
+                        }, index * 150);
+                    });
+
+                    document.body.style.overflow = 'auto';
+
+                    // Cleanup DOM
+                    setTimeout(() => {
+                        if(splitOverlay && splitOverlay.parentNode) splitOverlay.remove();
+                    }, 1200);
+
+                }, 1100);
+            };
+
+            const skipAnimation = () => {
+                if(animationSkipped) return;
+                animationSkipped = true;
+                
+                if(splitOverlay && splitOverlay.parentNode) splitOverlay.remove();
+                
+                if (mainTitle) {
+                    mainTitle.classList.remove('opacity-0', 'translate-y-8');
+                    mainTitle.classList.add('opacity-100', 'translate-y-0');
+                }
+                if (subtitle) {
+                    subtitle.classList.remove('opacity-0', 'translate-y-8');
+                    subtitle.classList.add('opacity-100', 'translate-y-0');
+                }
+                cards.forEach(card => {
+                    card.classList.remove('opacity-0', 'translate-y-16', 'delay-150');
+                    card.classList.add('opacity-100', 'translate-y-0');
+                });
+
+                document.body.style.overflow = 'auto';
+            };
+
+            // Trigger animation shortly after load
+            setTimeout(runReveal, 200);
+
+            // Allow skipping by clicking or pressing any key
+            if(splitOverlay) splitOverlay.addEventListener('click', skipAnimation);
+            window.addEventListener('keydown', skipAnimation);
+            
+            // --- Particle Network Background ---
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            let particlesArray = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+
+            let mouse = { x: null, y: null, radius: 150 };
+
+            window.addEventListener('mousemove', (event) => {
+                mouse.x = event.x;
+                mouse.y = event.y;
+            });
+
+            window.addEventListener('mouseout', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                initParticles();
+            });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = Math.random() * 0.8 - 0.4;
+                    this.speedY = Math.random() * 0.8 - 0.4;
+                    this.color = Math.random() > 0.5 ? 'rgba(37, 99, 235, 0.8)' : 'rgba(13, 148, 136, 0.8)';
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                    if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particlesArray = [];
+                const numberOfParticles = Math.min((canvas.width * canvas.height) / 25000, 100);
+                for (let i = 0; i < numberOfParticles; i++) particlesArray.push(new Particle());
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particlesArray.length; i++) {
+                    particlesArray[i].update();
+                    particlesArray[i].draw();
+
+                    for (let j = i; j < particlesArray.length; j++) {
+                        const dx = particlesArray[i].x - particlesArray[j].x;
+                        const dy = particlesArray[i].y - particlesArray[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        // Inter-particle lines
+                        if (distance < 100) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 * (1 - distance / 100)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+                            ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+                            ctx.stroke();
+                        }
+                    }
+
+                    // Mouse connection lines
+                    if (mouse.x != null && mouse.y != null) {
+                        const dx = particlesArray[i].x - mouse.x;
+                        const dy = particlesArray[i].y - mouse.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < mouse.radius) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 * (1 - distance / mouse.radius)})`;
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+                            ctx.lineTo(mouse.x, mouse.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animateParticles);
+            }
+
+            initParticles();
+            animateParticles();
+
+            // --- Card 3D Tilt Effect ---
+            const hoverCards = document.querySelectorAll('.hover-card');
+            hoverCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // Calculate rotation depending on mouse position (Max 10 degrees)
+                    const rotateX = ((y - centerY) / centerY) * -10; 
+                    const rotateY = ((x - centerX) / centerX) * 10;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+                });
+
+                card.addEventListener('mouseenter', () => {
+                    card.style.transition = 'transform 0.1s ease-out, box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease';
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.transform = ''; // Clear inline transform so default CSS transition takes over smoothly
+                });
+            });
+            
+            // --- Click Interaction for Cards ---
+            cards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetUrl = card.getAttribute('href');
+                    
+                    // Dramatic expansion on click
+                    card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.transform = 'translateY(-20px)';
+                    card.style.opacity = '0';
+                    card.style.zIndex = '50';
+                    
+                    // Fade body out to hide other elements
+                    document.body.style.transition = 'opacity 0.4s ease';
+                    document.body.style.opacity = '0';
+
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 400);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

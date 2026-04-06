@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI Organisation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: { 
+                        brand: { 
+                            blue: '#2563eb', 
+                            orange: '#f97316'
+                        } 
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+
+        /* Minimal Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeOut 1s ease-in-out forwards;
+        }
+
+        #loader.hidden {
+            animation: fadeOut 0.8s ease-in-out forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; visibility: visible; }
+            95% { opacity: 0; visibility: visible; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+
+        .loader-content {
+            text-align: center;
+            animation: fadeInLoader 0.6s ease-out;
+        }
+
+        @keyframes fadeInLoader {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+
+        /* Hero animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #hero-title {
+            animation: fadeInUp 0.8s ease-out 1.2s both;
+        }
+
+        #hero-subtitle {
+            animation: fadeInUp 0.8s ease-out 1.35s both;
+        }
+
+        #cards-container {
+            animation: fadeInUp 0.8s ease-out 1.5s both;
+        }
+
+        /* Card hover effect - subtle lift + shadow */
+        .action-card {
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .action-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .action-card.blue-card:hover {
+            box-shadow: 0 16px 32px rgba(37, 99, 235, 0.15);
+        }
+
+        .action-card.orange-card:hover {
+            box-shadow: 0 16px 32px rgba(249, 115, 22, 0.15);
+        }
+
+        /* Icon transition */
+        .icon-wrapper {
+            transition: transform 0.35s ease-out;
+        }
+
+        .action-card:hover .icon-wrapper {
+            transform: scale(1.05);
+        }
+
+        /* Button hover */
+        .action-button {
+            transition: all 0.35s ease-out;
+        }
+
+        .action-button:hover {
+            transform: translateX(4px);
+        }
+
+        /* Dark mode support */
+        body.dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
+        }
+
+        body.dark #loader {
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
+        }
+
+        body.dark .action-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark .action-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        body.dark .action-card.blue-card:hover {
+            box-shadow: 0 16px 32px rgba(37, 99, 235, 0.2);
+        }
+
+        body.dark .action-card.orange-card:hover {
+            box-shadow: 0 16px 32px rgba(249, 115, 22, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
+
+    <!-- Minimal Loader -->
+    <div id="loader" class="loader-content">
+        <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+    </div>
+
+    <!-- Background gradient -->
+    <div class="fixed inset-0 -z-10 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-blue-950"></div>
+
+    <!-- Main content -->
+    <main class="min-h-screen flex flex-col items-center justify-center px-4 py-16 sm:py-20 md:py-24">
+        <div class="w-full max-w-4xl">
+            <!-- Hero Section -->
+            <section class="text-center mb-12 sm:mb-16">
+                <h1 id="hero-title" class="text-4xl sm:text-5xl md:text-6xl font-display font-bold tracking-tight mb-4 sm:mb-6">
+                    Welcome to <span class="bg-gradient-to-r from-brand-blue via-purple-500 to-brand-orange bg-clip-text text-transparent">MAAI</span>
+                </h1>
+                <p id="hero-subtitle" class="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 font-medium max-w-2xl mx-auto">
+                    Choose how you'd like to make an impact today.
+                </p>
+            </section>
+
+            <!-- Action Cards -->
+            <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                <!-- Volunteer Card -->
+                <a href="volunteer.html" class="action-card blue-card group bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-8 sm:p-10 text-center no-underline">
+                    <div class="relative mb-6 sm:mb-8">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 rounded-full flex items-center justify-center icon-wrapper">
+                            <i class="fas fa-hands-helping text-3xl sm:text-4xl text-brand-blue"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-display font-bold mb-3 text-slate-900 dark:text-white group-hover:text-brand-blue transition-colors duration-300">
+                        I am a Volunteer
+                    </h2>
+                    <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed mb-6 sm:mb-8">
+                        Join our ground efforts, participate in medical drives, and give the gift of your time to the community.
+                    </p>
+                    <div class="action-button inline-flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 bg-brand-blue text-white font-semibold rounded-full hover:bg-blue-700">
+                        Get Started
+                        <i class="fas fa-arrow-right text-sm"></i>
+                    </div>
+                </a>
+
+                <!-- Organizer Card -->
+                <a href="ngo.html" class="action-card orange-card group bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-8 sm:p-10 text-center no-underline">
+                    <div class="relative mb-6 sm:mb-8">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-900/30 dark:to-orange-800/20 rounded-full flex items-center justify-center icon-wrapper">
+                            <i class="fas fa-globe text-3xl sm:text-4xl text-brand-orange"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-display font-bold mb-3 text-slate-900 dark:text-white group-hover:text-brand-orange transition-colors duration-300">
+                        I am an Organizer
+                    </h2>
+                    <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed mb-6 sm:mb-8">
+                        Partner with MAAI, set up campaigns, and coordinate large-scale community service events efficiently.
+                    </p>
+                    <div class="action-button inline-flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 bg-brand-orange text-white font-semibold rounded-full hover:bg-orange-600">
+                        Partner With Us
+                        <i class="fas fa-arrow-right text-sm"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 0. SMART CONFIGURATION ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const token = localStorage.getItem('token');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Loader — stop blocking clicks immediately when fading starts
+            const loader = document.getElementById('loader');
+            setTimeout(() => {
+                loader.style.pointerEvents = 'none';
+                loader.classList.add('hidden');
+                setTimeout(() => { loader.style.display = 'none'; }, 800);
+            }, 1000);
+
+            // Smooth navigation — inside DOMContentLoaded so cards exist in DOM
+            document.querySelectorAll('.action-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = card.getAttribute('href');
+                    if (!url) return;
+                    document.body.style.transition = 'opacity 0.3s ease-out';
+                    document.body.style.opacity = '0';
+                    setTimeout(() => { window.location.href = url; }, 300);
+                });
+            });
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('MAAI Service Worker registered successfully:', registration);
+                    })
+                    .catch(error => {
+                        console.log('MAAI Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

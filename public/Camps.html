@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - Our Camps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: { brand: { blue: '#2563eb', dark: '#1a1a1a', light: '#f9f9f9', teal: '#0d9488' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        .hover-card { position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px -5px rgba(13, 148, 136, 0.2); border-color: rgba(13, 148, 136, 0.4); }
+        
+        /* Background Elements */
+        .bg-noise { position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"); }
+        .dark .bg-noise { opacity: 0.025; }
+
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } }
+        .animate-pulse-slow { animation: pulse-slow 8s ease-in-out infinite; }
+
+        /* Theme Variables for Icons & Cards */
+        :root {
+            --icon-color-blue: #1d4ed8;
+            --icon-color-orange: #c2410c;
+            --icon-color-teal: #0f766e;
+            --icon-color-purple: #7e22ce;
+            --icon-color-rose: #be123c;
+            --icon-color-amber: #b45309;
+            --icon-color-green: #15803d;
+            --icon-color-indigo: #4338ca;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(255, 255, 255, 0.9);
+            --card-shadow: 0 15px 35px -5px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+            --text-main: #111827;
+            --text-muted: #4b5563;
+        }
+
+        .dark {
+            --icon-color-blue: #60a5fa;
+            --icon-color-orange: #fb923c;
+            --icon-color-teal: #2dd4bf;
+            --icon-color-purple: #c084fc;
+            --icon-color-rose: #fb7185;
+            --icon-color-amber: #fbbf24;
+            --icon-color-green: #4ade80;
+            --icon-color-indigo: #818cf8;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 15px 35px -5px rgba(0,0,0,0.3);
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+        }
+
+        /* Dynamic Icon Colors */
+        .text-blue-400 { color: var(--icon-color-blue) !important; }
+        .text-orange-400 { color: var(--icon-color-orange) !important; }
+        .text-teal-400 { color: var(--icon-color-teal) !important; }
+        .text-purple-400 { color: var(--icon-color-purple) !important; }
+        .text-rose-400 { color: var(--icon-color-rose) !important; }
+        .text-amber-400 { color: var(--icon-color-amber) !important; }
+        .text-green-400 { color: var(--icon-color-green) !important; }
+        .text-indigo-400 { color: var(--icon-color-indigo) !important; }
+
+        /* Icon Container Background Adjustments */
+        html:not(.dark) .bg-blue-500\/10, html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-orange-500\/10, html:not(.dark) .bg-orange-500\/20 { background-color: rgba(249, 115, 22, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-teal-500\/10, html:not(.dark) .bg-teal-500\/20 { background-color: rgba(13, 148, 136, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-purple-500\/10, html:not(.dark) .bg-purple-500\/20 { background-color: rgba(168, 85, 247, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-rose-500\/10, html:not(.dark) .bg-rose-500\/20 { background-color: rgba(244, 63, 94, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-amber-500\/10, html:not(.dark) .bg-amber-500\/20 { background-color: rgba(245, 158, 11, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-green-500\/10, html:not(.dark) .bg-green-500\/20 { background-color: rgba(34, 197, 94, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+        html:not(.dark) .bg-indigo-500\/10, html:not(.dark) .bg-indigo-500\/20 { background-color: rgba(99, 102, 241, 0.15) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5); }
+
+        /* Stunning Light Mode Overrides */
+        html:not(.dark) body.bg-\[\#030712\] { background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%) !important; }
+        html:not(.dark) section.bg-\[\#030712\], html:not(.dark) section.bg-\[\#0a0f1c\] { background: transparent !important; }
+        
+        html:not(.dark) .text-white { color: var(--text-main) !important; }
+        html:not(.dark) .text-gray-400 { color: var(--text-muted) !important; }
+        html:not(.dark) .text-gray-300 { color: #374151 !important; }
+        html:not(.dark) .border-white\/10 { border-color: rgba(0,0,0,0.1) !important; }
+        html:not(.dark) .border-white\/20 { border-color: rgba(0,0,0,0.15) !important; }
+        
+        html:not(.dark) .bg-white\/5 { background: var(--card-bg) !important; border: 1px solid var(--card-border) !important; box-shadow: var(--card-shadow) !important; backdrop-filter: blur(20px) !important; }
+        html:not(.dark) .hover-card:hover { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15) !important; background: rgba(255, 255, 255, 0.95) !important; transform: translateY(-10px); border-color: rgba(255, 255, 255, 1) !important; }
+    </style>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-[#030712] dark:text-gray-200 antialiased transition-colors duration-300 relative z-0">
+    
+    <!-- Immersive Background Elements -->
+    <div class="fixed inset-0 z-[-2] bg-[#030712] hidden dark:block"></div>
+    <div class="bg-noise fixed inset-0 z-[-1]"></div>
+    <div class="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] bg-teal-600/20 rounded-full filter blur-[150px] opacity-40 z-[-1] pointer-events-none animate-pulse-slow"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/20 rounded-full filter blur-[150px] opacity-30 z-[-1] pointer-events-none animate-pulse-slow" style="animation-delay: 4s;"></div>
+
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed w-full top-0 z-50 transition-all duration-300 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-sm dark:shadow-lg py-2">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+            <div class="hidden md:flex space-x-8 font-medium text-gray-600 dark:text-gray-300">
+                <a href="index.html" class="hover:text-teal-400 transition-colors">Home</a>
+                <a href="volunteer.html" class="hover:text-teal-400 transition-colors">Volunteer</a>
+                <a href="ngo.html" class="hover:text-teal-400 transition-colors">Partner Portal</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Theme Toggle Slider -->
+                <label class="relative inline-flex items-center cursor-pointer mr-2" title="Toggle Theme">
+                    <input type="checkbox" id="theme-toggle" class="sr-only peer" onchange="toggleTheme()">
+                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-teal"></div>
+                </label>
+                <a href="login.html" class="hidden md:block bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white px-6 py-2 rounded-full font-medium shadow-lg shadow-teal-500/30 transition-all">
+                    Login
+                </a>
+                <button id="mobile-menu-btn" class="md:hidden text-gray-800 dark:text-gray-300 focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-[#030712] border-t border-white/10 absolute top-full left-0 w-full shadow-2xl">
+            <div class="flex flex-col px-4 py-6 space-y-4 font-medium text-gray-300 text-center">
+                <a href="index.html" class="hover:text-teal-400 transition-colors">Home</a>
+                <a href="volunteer.html" class="hover:text-teal-400 transition-colors">Volunteer</a>
+                <a href="ngo.html" class="hover:text-teal-400 transition-colors">Partner Portal</a>
+                <a href="login.html" class="inline-block bg-gradient-to-r from-teal-600 to-blue-600 text-white px-6 py-2 rounded-full font-medium w-full mt-2 transition-all">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Banner -->
+    <header class="relative bg-[#030712] h-[60vh] flex items-center pt-16 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center opacity-30 dark:opacity-20 mix-blend-luminosity"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#030712] via-[#030712]/80 to-transparent dark:from-[#030712] dark:via-[#030712]/80"></div>
+        
+        <div class="container mx-auto px-4 relative z-10 text-center translate-y-4">
+            <span class="inline-block bg-teal-500/10 text-teal-500 dark:text-teal-400 border border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-6 uppercase tracking-widest shadow-sm">On Ground Action</span>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-gray-50 leading-tight mb-6 font-display drop-shadow-lg" style="text-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                Our <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">Camps</span>
+            </h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-medium">Explore the initiatives we are driving right now, celebrate our past impact, and see the smiles we've helped create.</p>
+        </div>
+    </header>
+
+    <!-- 1. Current Camps Section -->
+    <section id="current-camps" class="py-24 bg-transparent relative z-10 -mt-10">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white font-display mb-4">Current <span class="text-teal-500">Drives</span></h2>
+                <p class="text-gray-500 dark:text-gray-400">Join our upcoming and active medical camps.</p>
+            </div>
+            
+            <div id="current-camps-container" class="max-w-5xl mx-auto space-y-8">
+                <div class="text-center py-16 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 shadow-lg">
+                    <i class="fas fa-circle-notch fa-spin text-3xl text-teal-500 mb-4 block"></i>
+                    <p class="text-gray-500 font-medium">Loading active drives...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Past Camps / Legacy Section -->
+    <section id="past-camps" class="py-24 bg-[#0a0f1c] relative overflow-hidden border-t border-white/10">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-white font-display mb-4">Our <span class="text-blue-400">Legacy</span></h2>
+                <p class="text-gray-400">A look back at the impact we've created in various communities.</p>
+            </div>
+            
+            <div id="past-camps-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+                <div class="col-span-full text-center py-16 bg-white/5 backdrop-blur-md rounded-3xl border border-dashed border-white/20">
+                    <i class="fas fa-circle-notch fa-spin text-3xl text-blue-500 mb-4 block"></i>
+                    <p class="text-gray-500 font-medium">Loading past camps...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Testimonials Section -->
+    <section class="py-24 bg-[#030712] relative overflow-hidden border-t border-white/10">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+                <span class="inline-block bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-6 uppercase tracking-wider">Voices from the ground</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-6 font-display">
+                    Volunteer <span class="text-orange-400">Testimonials</span>
+                </h2>
+            </div>
+            
+            <div id="testimonials-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="col-span-full text-center py-16">
+                    <i class="fas fa-circle-notch fa-spin text-3xl text-orange-500 mb-4 block"></i>
+                    <p class="text-gray-500 font-medium">Loading stories...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Camp Reels Section -->
+    <section class="py-24 bg-[#0a0f1c] relative overflow-hidden border-t border-white/10">
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+                <span class="inline-block bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-6 uppercase tracking-wider">Watch the Impact</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-6 font-display">
+                    Camp <span class="text-indigo-400">Reels</span>
+                </h2>
+            </div>
+            
+            <div id="reels-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                <div class="col-span-full text-center py-16">
+                    <i class="fas fa-circle-notch fa-spin text-3xl text-indigo-500 mb-4 block"></i>
+                    <p class="text-gray-500 font-medium">Fetching reels...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#030712] border-t border-white/10 pt-16 pb-8 text-white">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 border-b border-gray-800 pb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+                    <p class="text-gray-400 max-w-sm mb-6 leading-relaxed">Empowering communities through care, education, and organized medical support. Join us in making a real difference.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-6">Quick Links</h4>
+                    <ul class="space-y-3 text-gray-400">
+                        <li><a href="index.html" class="hover:text-teal-400 transition-colors">Home</a></li>
+                        <li><a href="volunteer.html" class="hover:text-teal-400 transition-colors">Volunteer Portal</a></li>
+                        <li><a href="ngo.html" class="hover:text-teal-400 transition-colors">Partner with Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-6">Connect</h4>
+                    <p class="text-gray-400 mb-4 text-sm"><i class="fas fa-envelope mr-2"></i> maaiorganisation@gmail.com</p>
+                    <div class="flex space-x-4">
+                        <a href="https://instagram.com/maai.cares" target="_blank" title="Follow us on Instagram" aria-label="Instagram" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-teal-500 text-slate-100 transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://linkedin.com/company/maai-organisation" target="_blank" title="Connect with us on LinkedIn" aria-label="LinkedIn" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-teal-500 text-slate-100 transition-all">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center text-sm text-gray-600">
+                <p>&copy; 2026 MAAI Organization. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+    
+    <script type="module">
+    // --- 0. SMART CONFIGURATION ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const token = localStorage.getItem('token');
+
+    async function loadPublicCamps() {
+        try {
+        // Fetch only 'approved' proposals from your backend
+        const res = await fetch(`${API_BASE}/active-drives`);
+        const drives = await res.json();
+        
+        const container = document.getElementById('camps-grid');
+        if (drives.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">No active drives scheduled right now.</p>';
+            return;
+        }
+
+        container.innerHTML = drives.map(d => `
+            <div class="glass p-8 rounded-[2.5rem] border border-white/10 hover-card">
+                <span class="text-brand-blue text-xs font-bold uppercase tracking-widest">${d.category}</span>
+                <h3 class="text-2xl font-bold text-white mt-2 mb-4">${d.title}</h3>
+                <p class="text-slate-400 text-sm mb-6">${d.description}</p>
+                <div class="flex items-center text-slate-500 text-xs">
+                    <i class="fas fa-map-marker-alt mr-2"></i> ${d.location}
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Failed to load drives");
+    }
+}
+
+async function loadLiveCamps() {
+    const container = document.getElementById('camps-grid');
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/active-drives`); //
+        const drives = await res.json();
+
+        if (drives.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-center py-10 col-span-full">No active drives scheduled. Check back soon!</p>';
+            return;
+        }
+
+        container.innerHTML = drives.map(d => `
+            <div class="glass p-8 rounded-[2.5rem] border border-white/10 hover-card">
+                <span class="text-brand-blue text-[10px] font-bold uppercase tracking-widest">${d.category || 'Health Camp'}</span>
+                <h3 class="text-2xl font-bold text-white mt-2 mb-4">${d.title}</h3>
+                <p class="text-slate-400 text-sm mb-6">${d.description}</p>
+                <div class="flex items-center text-slate-500 text-xs mt-auto">
+                    <i class="fas fa-map-marker-alt mr-2 text-brand-blue"></i> ${d.location}
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error("Camps sync failed");
+    }
+}
+window.onload = loadLiveCamps;
+
+        // 2. Fetch Past/Completed Camps
+        const pastContainer = document.getElementById('past-camps-container');
+        try {
+            const res = await fetch(`${API_BASE}/camps`);
+            const camps = await res.json();
+            
+            if (camps.length === 0) {
+                pastContainer.innerHTML = `<div class="col-span-full text-center py-16 bg-white/5 rounded-3xl border border-dashed border-white/20">
+                    <h3 class="text-2xl font-bold text-white mb-2">Our legacy is growing</h3>
+                    <p class="text-gray-400">Past impact reports will be published here soon.</p>
+                </div>`;
+            } else {
+                pastContainer.innerHTML = camps.map(data => `
+                    <div class="bg-white/5 backdrop-blur-md rounded-3xl overflow-hidden shadow-lg border border-white/10 hover:-translate-y-2 transition-all flex flex-col">
+                        <div class="h-52 w-full overflow-hidden relative bg-black">
+                            <img src="${data.imageUrl}" alt="${data.title}" class="w-full h-full object-cover opacity-80" onerror="this.src='https://via.placeholder.com/400x300?text=MAAI+Camp';">
+                            <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-gray-50 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/20">
+                                <i class="fas fa-check-circle text-green-400"></i> Completed
+                            </div>
+                        </div>
+                        <div class="p-6 flex-grow flex flex-col">
+                            <h3 class="text-xl font-bold text-white mb-2 font-display">${data.title}</h3>
+                            <div class="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-4 uppercase tracking-wider">
+                                <i class="far fa-calendar-alt text-blue-400 mr-1"></i> ${data.dateCompleted}
+                            </div>
+                            <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-grow">${data.description}</p>
+                            <div class="grid grid-cols-2 gap-2 border-t border-white/10 pt-4 mt-auto">
+                                <div class="text-center">
+                                    <span class="block text-2xl font-extrabold text-blue-500">${data.beneficiaries}</span>
+                                    <span class="text-[10px] text-gray-500 uppercase font-bold">Lives Touched</span>
+                                </div>
+                                <div class="text-center border-l border-white/10">
+                                    <span class="block text-2xl font-extrabold text-teal-500">${data.volunteers}</span>
+                                    <span class="text-[10px] text-gray-500 uppercase font-bold">Volunteers</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) { console.error("Error loading past camps:", e); }
+
+    // 3. Fetch Testimonials
+async function loadTestimonials() {
+    const container = document.getElementById('testimonials-container');
+    try {
+        const res = await fetch(`${API_BASE}/testimonials`);
+        const data = await res.json();
+        container.innerHTML = data.map(t => `
+            <div class="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-lg">
+                <p class="text-gray-300 italic mb-6">"${t.text}"</p>
+                <div>
+                    <h4 class="font-bold text-white">${t.author}</h4>
+                    <p class="text-xs text-orange-400 font-medium">${t.author_position || 'Volunteer'}</p>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) { console.error("Error loading testimonials:", e); }
+}
+
+// 4. Fetch Reels
+async function loadReels() {
+    const container = document.getElementById('reels-container');
+    try {
+        const res = await fetch(`${API_BASE}/reels`);
+        const data = await res.json();
+        container.innerHTML = data.map(r => `
+            <div class="aspect-[9/16] bg-black rounded-3xl overflow-hidden border border-white/10 shadow-lg group relative">
+                <iframe src="${r.video_url}" class="w-full h-full border-0" allow="autoplay"></iframe>
+                <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent">
+                    <p class="text-white text-xs font-bold">${r.title}</p>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) { console.error("Error loading reels:", e); }
+}
+
+// Update your window.onload to include them:
+window.onload = () => {
+    loadPublicCamps();
+    loadTestimonials();
+    loadReels();
+};
+</script>
+</body>
+</html>

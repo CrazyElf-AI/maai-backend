@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - Member Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: {
+                        navy: { 800: '#1e293b', 900: '#0f172a' },
+                        orange: { 500: '#f97316', 600: '#ea580c' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-display { font-family: 'Outfit', sans-serif; }
+        
+        /* Stunning Light Mode Overrides */
+        html:not(.dark) body.bg-navy-900 { background: linear-gradient(135deg, #fff1f2 0%, #e0f2fe 100%) !important; }
+        html:not(.dark) input.bg-navy-900, html:not(.dark) select.bg-navy-900, html:not(.dark) textarea.bg-navy-900 { background-color: rgba(255, 255, 255, 0.6) !important; color: #0f172a !important; border-color: rgba(0,0,0,0.1) !important;}
+        html:not(.dark) .bg-navy-800\/80 { background-color: rgba(255, 255, 255, 0.7) !important; border: 1px solid rgba(255, 255, 255, 0.9) !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1) !important; backdrop-filter: blur(24px) !important; }
+        html:not(.dark) .bg-navy-800 { background-color: rgba(255, 255, 255, 0.8) !important; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05) !important; border-color: rgba(255,255,255,0.9) !important; }
+        html:not(.dark) .text-white { color: #111827 !important; }
+        html:not(.dark) .text-gray-200 { color: #1f2937 !important; }
+        html:not(.dark) .text-slate-300 { color: #374151 !important; }
+        html:not(.dark) .text-slate-400 { color: #6b7280 !important; }
+        html:not(.dark) .border-slate-700 { border-color: rgba(0,0,0,0.08) !important; }
+        html:not(.dark) .border-slate-600 { border-color: rgba(0,0,0,0.1) !important; }
+        html:not(.dark) .bg-slate-700 { background-color: #f1f5f9 !important; color: #475569 !important; border-color: #cbd5e1 !important; }
+        html:not(.dark) .bg-orange-500\/20 { background-color: rgba(249, 115, 22, 0.15) !important; filter: blur(100px) !important; }
+        html:not(.dark) .bg-blue-500\/20 { background-color: rgba(37, 99, 235, 0.15) !important; filter: blur(100px) !important; }
+    </style>
+    
+    <!-- Razorpay Checkout Script (For Registration) -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-navy-900 text-gray-200 antialiased min-h-screen flex flex-col items-center justify-center relative overflow-x-hidden py-12 lg:py-24">
+    
+    <!-- Loader for Auth State Check -->
+    <div id="auth-loader" class="fixed inset-0 z-50 bg-navy-900 flex items-center justify-center flex-col transition-opacity duration-300">
+        <i class="fas fa-circle-notch fa-spin text-5xl text-orange-500 mb-4 block drop-shadow-[0_0_15px_rgba(249,115,22,0.6)]"></i>
+        <h2 class="text-2xl font-extrabold text-white font-display">Checking Session...</h2>
+    </div>
+
+    <!-- Background Glows -->
+    <div class="fixed top-[-10%] left-[-10%] w-96 h-96 bg-orange-500/20 rounded-full filter blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-500/20 rounded-full filter blur-[120px] pointer-events-none"></div>
+
+    <div class="w-full max-w-xl p-8 bg-navy-800/80 backdrop-blur-xl border border-slate-700 rounded-3xl shadow-2xl relative z-10 mx-4 my-8 lg:my-12 transition-all duration-300">
+        <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-slate-700 mb-6">
+            <button type="button" id="tab-login" class="flex-1 py-3 text-orange-500 border-b-2 border-orange-500 font-bold transition-colors">Sign In</button>
+            <button type="button" id="tab-signup" class="flex-1 py-3 text-slate-400 border-b-2 border-transparent hover:text-white font-bold transition-colors">Sign Up</button>
+        </div>
+
+        <!-- 1. LOGIN SECTION -->
+        <div id="login-section">
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Email Address</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="email" id="email" required autocomplete="email" class="w-full bg-navy-900 border border-slate-600 rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="member@example.com">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="password" id="password" required autocomplete="current-password" class="w-full bg-navy-900 border border-slate-600 rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="••••••••">
+                    </div>
+                </div>
+                
+                <button type="submit" id="login-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] flex justify-center items-center gap-2 mt-4">
+                    <span>Sign In</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <p id="login-error" class="text-rose-400 text-sm text-center mt-4 hidden font-medium"></p>
+            </form>
+            
+            <div class="mt-8 text-center border-t border-slate-700 pt-6">
+                <p class="text-sm text-slate-400 mb-2">Don't have an account? <button type="button" onclick="document.getElementById('tab-signup').click()" class="text-orange-500 hover:text-orange-400 font-semibold transition-colors">Sign up to volunteer</button></p>
+                <p class="text-sm text-slate-400">Are you an Organization? <a href="ngo-register.html" class="text-blue-400 hover:text-blue-300 font-semibold transition-colors">Register NGO</a></p>
+            </div>
+        </div>
+
+        <!-- 2. SIGNUP SECTION -->
+        <div id="signup-section" class="hidden animate-[fade-in_0.3s_ease-out]">
+            
+            <!-- Progress Indicators -->
+            <div class="flex items-center justify-between mb-8 relative max-w-sm mx-auto">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-700 z-0 rounded-full">
+                    <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-300 w-0 rounded-full"></div>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold relative z-10 step-circle text-sm" id="circle-1">1</div>
+                <div class="w-8 h-8 rounded-full bg-slate-700 text-slate-400 flex items-center justify-center font-bold relative z-10 step-circle transition-colors duration-300 text-sm border-4 border-navy-800" id="circle-2">2</div>
+                <div class="w-8 h-8 rounded-full bg-slate-700 text-slate-400 flex items-center justify-center font-bold relative z-10 step-circle transition-colors duration-300 text-sm border-4 border-navy-800" id="circle-3">3</div>
+            </div>
+
+            <form id="volunteer-signup-form" class="space-y-5">
+                
+                <!-- Step 1: General Data -->
+                <div id="step-1" class="animate-[fade-in_0.3s_ease-out]">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Full Name *</label>
+                            <input type="text" id="vol-name" required autocomplete="name" class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="Jane Doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Date of Birth *</label>
+                            <input type="date" id="vol-dob" required autocomplete="bday" class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors [color-scheme:dark]">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Email Address *</label>
+                            <input type="email" id="vol-email" required autocomplete="email" class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="jane@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Password *</label>
+                            <input type="password" id="vol-password" required minlength="6" autocomplete="new-password" class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="••••••••">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">WhatsApp Number *</label>
+                            <input type="tel" id="vol-phone" required autocomplete="tel" class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="+91 98765 43210">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">City of Residence *</label>
+                            <input type="text" id="vol-city" required class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="e.g. Mumbai">
+                        </div>
+                    </div>
+                    <button type="button" id="next-1" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] flex justify-center items-center gap-2 mt-6">
+                        <span>Next: Education Details</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Step 2: Educational Data -->
+                <div id="step-2" class="hidden animate-[fade-in_0.3s_ease-out]">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">College / University Name *</label>
+                            <input type="text" id="vol-college" required class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="e.g. AIIMS">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Year of Study *</label>
+                            <select id="vol-year" required class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-slate-300 focus:outline-none focus:border-orange-500 transition-colors appearance-none">
+                                <option value="" disabled selected>Select Year</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                                <option value="Internship">Internship</option>
+                                <option value="Graduated">Graduated / Working Professional</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Field of Study *</label>
+                            <input type="text" id="vol-field" required class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="e.g. MBBS, Nursing, Public Health">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-300 mb-2">Why do you want to join MAAI? *</label>
+                            <textarea id="vol-motivation" rows="2" required class="w-full bg-navy-900 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="Tell us a little bit about your goals..."></textarea>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <button type="button" id="back-2" class="w-1/3 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-all flex justify-center items-center">Back</button>
+                        <button type="button" id="next-2" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] flex justify-center items-center gap-2">
+                            <span>Next: Verification</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Payment Verification -->
+                <div id="step-3" class="hidden animate-[fade-in_0.3s_ease-out]">
+                    <div class="bg-navy-800 border border-slate-600 rounded-xl p-6 text-center mb-6">
+                        <div class="w-16 h-16 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-orange-500/20">
+                            <i class="fas fa-shield-check text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Final Step: Verification</h3>
+                        <p class="text-slate-400 text-sm mb-6">Complete your registration to access the MAAI member dashboard and start making an impact.</p>
+                        
+                        <div class="bg-navy-900 rounded-lg p-4 flex justify-between items-center border border-slate-700">
+                            <span class="text-slate-300 font-semibold text-sm">Registration Fee</span>
+                            <span id="display-price" class="text-white font-bold text-lg">Free</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <button type="button" id="back-3" class="w-1/3 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-all">Back</button>
+                        <button type="submit" id="vol-submit-btn" class="w-2/3 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] flex justify-center items-center gap-2">
+                            <span>Complete Sign Up</span>
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                    <p id="vol-status-msg" class="text-sm text-center mt-4 hidden font-medium"></p>
+                </div>
+            </form>
+        
+            <div class="mt-6 text-center border-t border-slate-700 pt-6">
+                <p class="text-sm text-slate-400">Already a member? <button type="button" onclick="document.getElementById('tab-login').click()" class="text-orange-500 hover:text-orange-400 font-semibold transition-colors">Sign in here</button></p>
+            </div>
+        </div>
+    </div>
+<script>
+// --- 0. SMART CONFIGURATION ---
+// Automatically switches between your local computer and the live Render server
+const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+const token = localStorage.getItem('token'); // <-- Crucial for God Mode and IT Panel
+
+// --- 1. GATEKEEPER ---
+// Check if user is already logged in before showing the page
+if (token && token !== 'undefined' && token !== 'null') {
+    window.location.replace('member-portal.html');
+} else {
+    const loader = document.getElementById('auth-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+    }
+}
+
+// --- 2. GLOBAL SELECTORS ---
+const step1 = document.getElementById('step-1');
+const step2 = document.getElementById('step-2');
+const step3 = document.getElementById('step-3');
+const progressBar = document.getElementById('progress-bar');
+const tabLogin = document.getElementById('tab-login');
+const tabSignup = document.getElementById('tab-signup');
+const loginSection = document.getElementById('login-section');
+const signupSection = document.getElementById('signup-section');
+
+// --- 3. UI HELPERS (TAB SWITCHING) ---
+const setActiveTab = (activeTab, inactiveTab, showSection, hideSection) => {
+    showSection.classList.remove('hidden');
+    hideSection.classList.add('hidden');
+    activeTab.className = "flex-1 py-3 text-orange-500 border-b-2 border-orange-500 font-bold transition-colors cursor-pointer";
+    inactiveTab.className = "flex-1 py-3 text-slate-400 border-b-2 border-transparent hover:text-white font-bold transition-colors cursor-pointer";
+};
+
+tabLogin.addEventListener('click', () => setActiveTab(tabLogin, tabSignup, loginSection, signupSection));
+tabSignup.addEventListener('click', () => setActiveTab(tabSignup, tabLogin, signupSection, loginSection));
+
+// --- 4. CONSOLIDATED LOGIN LOGIC ---
+const loginForm = document.getElementById('login-form');
+const loginBtn = document.getElementById('login-btn');
+const errorMsg = document.getElementById('login-error');
+
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // GHOSTING FIX: Clear previous sessions to prevent token mixups
+    localStorage.clear(); 
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const originalBtnText = loginBtn.innerHTML;
+
+    loginBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Authenticating...';
+    loginBtn.disabled = true;
+    errorMsg.classList.add('hidden');
+
+    try {
+        const response = await fetch(`${API_BASE}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            const actualToken = data.access_token || data.token;
+            if (actualToken) {
+                localStorage.setItem('token', actualToken);
+                window.location.replace('member-portal.html');
+            }
+        } else {
+            throw new Error(data.error || 'Invalid credentials');
+        }
+    } catch (error) {
+        loginBtn.innerHTML = originalBtnText;
+        loginBtn.disabled = false;
+        errorMsg.classList.remove('hidden');
+        errorMsg.textContent = error.message;
+    }
+});
+
+// --- 5. REFINED MULTI-STEP SIGNUP LOGIC ---
+// Step 1 -> 2: Validate Name, Email, and Password (Required by backend)
+document.getElementById('next-1').addEventListener('click', () => {
+    const name = document.getElementById('vol-name').value;
+    const email = document.getElementById('vol-email').value;
+    const password = document.getElementById('vol-password').value; 
+
+    if (!name || !email || !password) {
+        alert("Please fill in your name, email, and create a password.");
+        return;
+    }
+    
+    step1.classList.add('hidden');
+    step2.classList.remove('hidden');
+    progressBar.style.width = '50%';
+});
+
+// Step 2 -> 3: Validate Phone and Location
+document.getElementById('next-2').addEventListener('click', () => {
+    const phone = document.getElementById('vol-phone').value;
+    if (!phone) {
+        alert("Please provide a phone number.");
+        return;
+    }
+    step2.classList.add('hidden');
+    step3.classList.add('active'); // Use active for display flex if needed
+    step3.classList.remove('hidden');
+    progressBar.style.width = '100%';
+});
+
+// Navigation: Back Buttons
+document.getElementById('back-2').addEventListener('click', () => { 
+    step2.classList.add('hidden'); 
+    step1.classList.remove('hidden'); 
+    progressBar.style.width = '0%'; 
+});
+document.getElementById('back-3').addEventListener('click', () => { 
+    step3.classList.add('hidden'); 
+    step2.classList.remove('hidden'); 
+    progressBar.style.width = '50%'; 
+});
+
+// Final Signup Submission
+const signupForm = document.getElementById('volunteer-signup-form');
+const statusMsg = document.getElementById('vol-status-msg');
+
+signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        full_name: document.getElementById('vol-name').value,
+        email: document.getElementById('vol-email').value,
+        password: document.getElementById('vol-password').value,
+        phone_number: document.getElementById('vol-phone').value,
+        city: document.getElementById('vol-city').value
+    };
+
+    try {
+        const response = await fetch(`${API_BASE}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            statusMsg.textContent = "Registration successful! Loading your login details...";
+            statusMsg.className = "text-green-400 text-sm text-center mt-4 font-medium";
+            statusMsg.classList.remove('hidden');
+
+            setTimeout(() => {
+                // Auto-switch to login tab and pre-fill the email
+                tabLogin.click();
+                document.getElementById('email').value = formData.email;
+                statusMsg.classList.add('hidden');
+            }, 2500);
+        } else {
+            throw new Error(data.error || "Registration failed");
+        }
+    } catch (error) {
+        statusMsg.textContent = error.message;
+        statusMsg.className = "text-rose-400 text-sm text-center mt-4 font-medium";
+        statusMsg.classList.remove('hidden');
+    }
+});
+</script>
+</body>
+</html>

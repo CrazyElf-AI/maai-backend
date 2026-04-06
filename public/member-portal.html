@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - Member Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: {
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        },
+                        orange: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Stunning Light Mode Additions */
+        html:not(.dark) body { background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%) !important; }
+        html:not(.dark) .bg-white { background: rgba(255, 255, 255, 0.7) !important; border: 1px solid rgba(255, 255, 255, 0.9) !important; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.05) !important; backdrop-filter: blur(20px) !important; }
+        html:not(.dark) .bg-orange-500\/10 { background-color: rgba(249, 115, 22, 0.15) !important; filter: blur(90px) !important; }
+        html:not(.dark) .bg-blue-500\/10 { background-color: rgba(37, 99, 235, 0.15) !important; filter: blur(90px) !important; }
+        html:not(.dark) .bg-teal-500\/10 { background-color: rgba(13, 148, 136, 0.15) !important; filter: blur(90px) !important; }
+    </style>
+    <script>
+        // Handle dark mode immediately to avoid flashing
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-navy-900 dark:text-gray-200 antialiased min-h-screen relative transition-colors duration-300">
+    
+    <div id="auth-loader" class="fixed inset-0 z-[60] bg-white dark:bg-navy-900 flex flex-col items-center justify-center transition-opacity duration-300">
+        <i class="fas fa-circle-notch fa-spin text-5xl text-orange-500 mb-4 block"></i>
+        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white font-display">Verifying Access...</h2>
+    </div>
+
+    <div id="app-body" class="hidden flex h-screen w-full relative">
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+    <aside id="sidebar" class="w-64 bg-white dark:bg-navy-800 border-r border-gray-200 dark:border-slate-700 flex flex-col z-50 fixed md:relative h-full transition-transform duration-300 transform -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
+        <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" class="flex items-center gap-3 bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-500 px-4 py-3 rounded-xl font-semibold transition-colors border dark:border-orange-500/20">
+                <i class="fas fa-home w-5"></i> Home
+            </a>
+            <a href="#" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors">
+                <i class="fas fa-certificate w-5"></i> My Certificates
+            </a>
+            <a href="#" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors">
+                <i class="fas fa-book w-5"></i> Resources
+            </a>
+            <div id="admin-link-container" class="hidden">
+                <div class="h-px bg-gray-200 dark:bg-slate-700/50 my-4"></div>
+                <a href="admin-dashboard.html" class="flex items-center gap-3 text-teal-600 hover:text-teal-700 hover:bg-teal-50 border-teal-200 dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-500/10 px-4 py-3 rounded-xl font-bold transition-colors border dark:border-teal-500/20">
+                    <i class="fas fa-shield-alt w-5"></i> Admin Dashboard
+                </a>
+            </div>
+            <div id="god-link-container" class="hidden">
+                <a href="godmode.html" class="flex items-center gap-3 text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-500/10 px-4 py-3 rounded-xl font-bold transition-colors border dark:border-amber-500/20 mt-2">
+                    <i class="fas fa-bolt w-5"></i> God Mode
+                </a>
+            </div>
+            <div id="it-link-container" class="hidden">
+                <a href="it-panel.html" class="...">
+                    <i class="fas fa-tools mr-3"></i> IT Panel
+                </a>
+            </div>
+            <div class="h-px bg-gray-200 dark:bg-slate-700/50 my-2"></div>
+            <a href="index.html" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors mt-2">
+                <i class="fas fa-globe w-5"></i> Back to Website
+            </a>
+        </nav>
+        <div class="px-4 py-4 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-600 dark:text-slate-400 ml-2">Dark Mode</span>
+            <label class="relative inline-flex items-center cursor-pointer mr-2" title="Toggle Theme">
+                <input type="checkbox" id="theme-toggle-sidebar" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+            </label>
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-slate-700">
+            <button id="logout-btn" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors w-full">
+                <i class="fas fa-sign-out-alt w-5"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="md:hidden bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-slate-700 p-4 flex justify-between items-center z-10">
+            <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+            <button id="mobile-menu-btn" class="text-gray-600 dark:text-slate-300 focus:outline-none">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 lg:p-10 relative">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full filter blur-[100px] pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full filter blur-[100px] pointer-events-none"></div>
+
+            <div class="max-w-6xl mx-auto space-y-10 relative z-10">
+                
+                <div>
+                    <h1 class="text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white mb-2 flex items-center flex-wrap gap-3">
+                        <span>Welcome back, <span id="user-name" class="text-orange-500">Member</span>!</span>
+                        <a id="user-role-badge" class="text-xs bg-gray-200 text-gray-700 border-gray-300 dark:bg-slate-700/50 dark:text-slate-400 px-3 py-1 rounded-full uppercase tracking-wider font-bold border dark:border-slate-600 shadow-sm mt-1 lg:mt-0 cursor-default transition-all" title="Your Role">Member</a>
+                    </h1>
+                    <p class="text-gray-600 dark:text-slate-400 mb-8">Here's an overview of your impact and upcoming opportunities.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 flex items-center gap-5 shadow-sm dark:shadow-lg">
+                            <div class="w-14 h-14 bg-orange-50 border-orange-200 dark:bg-orange-500/10 border dark:border-orange-500/20 text-orange-500 rounded-full flex items-center justify-center text-2xl shrink-0">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Profession / Role</p>
+                                <p id="user-profession" class="text-xl font-bold text-gray-900 dark:text-white">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 flex items-center gap-5 shadow-sm dark:shadow-lg">
+                            <div class="w-14 h-14 bg-blue-50 border-blue-200 dark:bg-blue-500/10 border dark:border-blue-500/20 text-blue-500 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl shrink-0">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-slate-400 font-semibold uppercase tracking-wider mb-1">Hours Volunteered</p>
+                                <p id="user-hours" class="text-xl font-display font-bold text-gray-900 dark:text-white">0 <span class="text-sm text-gray-500 dark:text-slate-400 font-sans font-normal lowercase">hrs</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-end mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-orange-500 pl-3">Active Drives</h2>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-orange-500 dark:text-slate-400 dark:hover:text-white dark:hover:border-orange-500 transition-colors" onclick="document.getElementById('drives-container').scrollBy({left: -320, behavior: 'smooth'})">
+                                <i class="fas fa-chevron-left text-sm"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-orange-500 dark:text-slate-400 dark:hover:text-white dark:hover:border-orange-500 transition-colors" onclick="document.getElementById('drives-container').scrollBy({left: 320, behavior: 'smooth'})">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="drives-container" class="flex gap-6 overflow-x-auto hide-scrollbar pb-4 snap-x snap-mandatory scroll-smooth">
+                        <div class="text-gray-500 dark:text-slate-500 italic"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading active drives...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 border-l-4 border-orange-500 pl-3">Notice Board</h2>
+                    <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-md dark:shadow-lg">
+                        <div id="notices-container" class="divide-y divide-gray-100 dark:divide-slate-700/50">
+                            <div class="p-6 text-gray-500 dark:text-slate-500 italic"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading announcements...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    </div>
+
+    <script>
+    // --- 0. SMART CONFIGURATION (Global) ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const token = localStorage.getItem('token');
+
+    // --- 1. THE GATEKEEPER (Immediate Check) ---
+    if (!token || token === 'null' || token === 'undefined') {
+        window.location.replace('login.html');
+    }
+
+    // --- 2. ELEMENT SELECTORS ---
+    const appBody = document.getElementById('app-body');
+    const userNameEl = document.getElementById('user-name');
+    const userProfessionEl = document.getElementById('user-profession');
+    const userHoursEl = document.getElementById('user-hours');
+    const drivesContainer = document.getElementById('drives-container');
+    const noticesContainer = document.getElementById('notices-container');
+    const roleBadge = document.getElementById('user-role-badge');
+
+    // --- 3. UNIFIED INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log("🚀 Initializing Portal using:", API_BASE);
+        
+        setupMobileSidebar();
+        setupThemeToggle();
+
+        // Run all data fetches at once for speed
+        try {
+            await Promise.all([
+                loadUserProfile(),
+                loadActiveDrives(),
+                loadNotices()
+            ]);
+        } catch (err) {
+            console.error("Critical load failure:", err);
+        } finally {
+            // Reveal the UI and hide loader
+            const loader = document.getElementById('auth-loader');
+            if (loader) loader.style.display = 'none';
+            if (appBody) appBody.classList.remove('hidden');
+        }
+    });
+
+    // --- 4. API HELPER (Replaces fetchJson) ---
+    async function apiCall(endpoint, options = {}) {
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...options.headers,
+            },
+            ...options,
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            window.location.replace('login.html');
+            return null;
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
+            throw new Error(errorData.error || 'Server Error');
+        }
+        return response.json();
+    }
+
+    // --- 5. DATA FUNCTIONS ---
+    async function loadUserProfile() {
+        try {
+            const data = await apiCall('/me');
+            if (!data) return;
+
+            // Update UI
+            userNameEl.textContent = data.full_name?.split(' ')[0] || 'Member';
+            userProfessionEl.textContent = data.profession || getDefaultProfession(data.role);
+            userHoursEl.innerHTML = `${data.hours_volunteered ?? 0} <span class="text-sm text-gray-500 dark:text-slate-400 font-sans font-normal lowercase">hrs</span>`;
+            
+            setBadge(data.role);
+            setRoleUI(data.role);
+        } catch (error) {
+            console.error("Profile load error:", error);
+        }
+    }
+
+    async function loadActiveDrives() {
+        try {
+            const drives = await apiCall('/active-drives');
+            if (!drivesContainer) return;
+
+            if (!drives || !drives.length) {
+                drivesContainer.innerHTML = '<p class="text-gray-500 italic px-6">No active drives at the moment.</p>';
+                return;
+            }
+
+            drivesContainer.innerHTML = drives.map(drive => `
+                <div class="min-w-[320px] w-[320px] bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 shadow-md snap-start">
+                    <h4 class="font-bold text-lg text-slate-800 dark:text-white">${drive.title}</h4>
+                    <p class="text-sm text-gray-500 mt-2">${drive.location}</p>
+                </div>
+            `).join('');
+        } catch (error) {
+            drivesContainer.innerHTML = '<p class="text-rose-500 px-6">Failed to load drives.</p>';
+        }
+    }
+
+    async function loadNotices() {
+        try {
+            const notices = await apiCall('/announcements');
+            if (!noticesContainer) return;
+
+            if (!notices || !notices.length) {
+                noticesContainer.innerHTML = '<div class="p-6 text-gray-500 italic">No announcements right now.</div>';
+                return;
+            }
+
+            noticesContainer.innerHTML = notices.map(notice => `
+                <div class="p-6 border-b border-gray-100 dark:border-slate-700 last:border-0">
+                    <h5 class="font-semibold text-slate-800 dark:text-white">${notice.title}</h5>
+                    <p class="text-sm text-gray-500 mt-1">${notice.content}</p>
+                </div>
+            `).join('');
+        } catch (error) {
+            noticesContainer.innerHTML = '<div class="p-6 text-rose-500">Failed to load notices.</div>';
+        }
+    }
+
+    // --- 6. UI HELPERS ---
+    function getDefaultProfession(role) {
+        if (role === 'ngo') return 'NGO Partner';
+        if (role === 'admin' || role === 'god') return 'Platform Admin';
+        return 'Community Volunteer';
+    }
+
+    function setRoleUI(role) {
+        // 1. Find the sidebar containers
+        // FIX: corrected IDs to match the actual HTML sidebar elements
+        const adminLinkContainer = document.getElementById('admin-link-container');
+        const itLink = document.getElementById('it-link-container');
+        const godLink = document.getElementById('god-link-container');
+
+        // Show Admin Dashboard link for admin/god/it roles
+        if (adminLinkContainer) {
+            adminLinkContainer.classList.toggle('hidden', !['admin', 'god', 'it'].includes(role));
+        }
+
+        // Show IT Panel link for IT and God roles
+        if (itLink) {
+            itLink.classList.toggle('hidden', !['it', 'god'].includes(role));
+        }
+
+        // Show God Mode link only for god role
+        if (godLink) {
+            godLink.classList.toggle('hidden', role !== 'god');
+        }
+    }
+
+    function setBadge(role) {
+        if (!roleBadge) return;
+        const roleStyles = {
+            god: 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30',
+            admin: 'text-teal-600 bg-teal-50 border-teal-200 dark:bg-teal-500/20 dark:text-teal-400 dark:border-teal-500/30',
+            ngo: 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30',
+            member: 'text-gray-700 bg-gray-200 border-gray-300 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600'
+        };
+        roleBadge.className = `text-xs px-3 py-1 rounded-full uppercase tracking-wider font-bold shadow-sm transition-all ${roleStyles[role] || roleStyles.member}`;
+        roleBadge.textContent = role || 'member';
+    }
+
+    // Wire logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.onclick = handleLogout;
+
+    function handleLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userLoggedIn');
+        window.location.replace('login.html');
+    }
+
+    function setupMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const btn = document.getElementById('mobile-menu-btn');
+        if (btn && sidebar && overlay) {
+            btn.onclick = () => { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); };
+            overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
+        }
+    }
+
+    function setupThemeToggle() {
+        const themeToggle = document.getElementById('theme-toggle-sidebar');
+        if (themeToggle) {
+            themeToggle.checked = document.documentElement.classList.contains('dark');
+            themeToggle.onchange = () => {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            };
+        }
+    }
+</script>
+</body>
+</html>

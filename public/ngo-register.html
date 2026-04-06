@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - NGO Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: {
+                        navy: { 800: '#1e293b', 900: '#0f172a' },
+                        orange: { 500: '#f97316', 600: '#ea580c' },
+                        teal: { 500: '#14b8a6' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617] text-gray-200 antialiased min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Auth/Loading Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center flex-col text-center p-4">
+        <div id="auth-loading">
+            <i class="fas fa-circle-notch fa-spin text-5xl text-teal-500 mb-4 drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]"></i>
+            <h2 class="text-3xl font-extrabold text-white font-display">Loading...</h2>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container" class="w-full max-w-2xl hidden">
+        <div class="glass-panel rounded-2xl p-8 md:p-12 shadow-2xl border-t border-orange-500/30">
+            <div class="text-center mb-8">
+                <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+                <h1 class="text-3xl font-display font-extrabold text-white">NGO Registration</h1>
+                <p class="text-slate-400 text-sm mt-2">Complete your organisation's profile to get started.</p>
+            </div>
+
+            <form id="ngo-registration-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="ngo-name" class="block text-sm font-medium text-slate-300 mb-2">NGO Name *</label>
+                        <input type="text" id="ngo-name" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="Your Organisation Name">
+                    </div>
+                    <div>
+                        <label for="founder-name" class="block text-sm font-medium text-slate-300 mb-2">Founder / President Name *</label>
+                        <input type="text" id="founder-name" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="Name of Founder/President">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="reg-number" class="block text-sm font-medium text-slate-300 mb-2">Registration Number *</label>
+                        <input type="text" id="reg-number" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="e.g., 12345/2024">
+                    </div>
+                    <div>
+                        <label for="contact-number" class="block text-sm font-medium text-slate-300 mb-2">Contact Number *</label>
+                        <input type="tel" id="contact-number" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="+91 XXXXX XXXXX">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-slate-300 mb-2">Account Email *</label>
+                        <input type="email" id="email" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="ngo@example.com">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-slate-300 mb-2">Password *</label>
+                        <input type="password" id="password" required minlength="6" class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="••••••••">
+                    </div>
+                </div>
+                <div>
+                    <label for="address" class="block text-sm font-medium text-slate-300 mb-2">Full Address / Location *</label>
+                    <textarea id="address" rows="2" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="Street, City, State, Pincode"></textarea>
+                </div>
+                <div>
+                    <label for="description" class="block text-sm font-medium text-slate-300 mb-2">What does the NGO do? *</label>
+                    <textarea id="description" rows="3" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="Describe your NGO's mission and primary activities..."></textarea>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" id="register-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span>Register NGO</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <p id="status-msg" class="text-rose-400 text-sm text-center mt-4 hidden font-medium"></p>
+                </div>
+                <div class="mt-6 text-center border-t border-white/10 pt-6">
+                    <p class="text-sm text-slate-400">Already registered? <a href="login.html" class="text-orange-500 hover:text-orange-400 font-semibold transition-colors">Sign in here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    // --- SMART CONFIGURATION ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+
+    const authOverlay = document.getElementById('auth-overlay');
+    const appContainer = document.getElementById('app-container');
+    const registrationForm = document.getElementById('ngo-registration-form');
+    const registerBtn = document.getElementById('register-btn');
+    const statusMsg = document.getElementById('status-msg');
+
+    // --- GATEKEEPER (Replaces onAuthStateChanged) ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        if (token && token !== 'undefined' && token !== 'null') {
+            // User is already logged in to PostgreSQL, send to portal
+            window.location.replace('member-portal.html');
+        } else {
+            // Not logged in. Show the form.
+            if(authOverlay) authOverlay.style.display = 'none';
+            if(appContainer) appContainer.classList.remove('hidden');
+        }
+    });
+
+    // --- REGISTRATION LOGIC ---
+    registrationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const originalBtnContent = registerBtn.innerHTML;
+        registerBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Registering...';
+        registerBtn.disabled = true;
+        statusMsg.classList.add('hidden');
+
+        // Package the data exactly how your Flask backend expects it
+        const ngoData = {
+            ngo_name: document.getElementById('ngo-name').value,
+            founder_name: document.getElementById('founder-name').value,
+            registration_number: document.getElementById('reg-number').value,
+            contact_number: document.getElementById('contact-number').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            address: document.getElementById('address').value,
+            description: document.getElementById('description').value
+        };
+
+        try {
+            // Send to your Flask SQL Database!
+            const response = await fetch(`${API_BASE}/register-ngo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ngoData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                statusMsg.textContent = "Registration successful! Redirecting to login...";
+                statusMsg.className = "text-teal-400 text-sm text-center mt-4 block font-medium";
+                statusMsg.classList.remove('hidden');
+                
+                // Send them to the main login page so they get a proper JWT token
+                setTimeout(() => window.location.replace('login.html'), 2000);
+            } else {
+                throw new Error(data.error || 'Registration failed');
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            statusMsg.textContent = error.message || "Registration error. Please try again.";
+            statusMsg.className = "text-rose-400 text-sm text-center mt-4 block font-medium";
+            statusMsg.classList.remove('hidden');
+            
+            registerBtn.innerHTML = originalBtnContent;
+            registerBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

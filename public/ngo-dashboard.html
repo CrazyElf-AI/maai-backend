@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - NGO Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: {
+                        navy: { 800: '#1e293b', 900: '#0f172a' },
+                        orange: { 500: '#f97316', 600: '#ea580c' },
+                        teal: { 500: '#14b8a6' },
+                        amber: { 500: '#f59e0b' },
+                        rose: { 500: '#f43f5e' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [x-cloak] { display: none !important; }
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .content-section { opacity: 0; transform: translateY(1rem); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .content-section.loaded { opacity: 1; transform: translateY(0); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617] text-gray-200 antialiased min-h-screen flex relative transition-colors duration-300" x-data="appState()" x-cloak>
+    
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center flex-col text-center p-4">
+        <div id="auth-loading">
+            <i class="fas fa-circle-notch fa-spin text-5xl text-teal-500 mb-4 drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]"></i>
+            <h2 class="text-3xl font-extrabold text-white font-display">Verifying Access...</h2>
+        </div>
+        <div id="auth-denied" class="hidden">
+            <i class="fas fa-ban text-5xl text-rose-500 mb-4 drop-shadow-[0_0_15px_rgba(244,63,94,0.6)]"></i>
+            <h2 class="text-3xl font-extrabold text-white font-display">Access Denied</h2>
+            <p class="text-slate-400 mt-2">You do not have permission to view this page.</p>
+            <a href="index.html" class="mt-6 bg-teal-500 text-[#030712] px-6 py-3 rounded-xl font-bold hover:bg-teal-400 transition-colors shadow-[0_0_15px_rgba(20,184,166,0.4)]">Go to Home</a>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" class="flex h-screen w-full hidden opacity-0 transition-opacity duration-500">
+        <div class="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgODAwIj48cGF0aCBmaWxsPSIjMEYxNzJBQyIgZD0iTTczNiA0MDBDNzM2IDYxMy4yIDU2NS4yIDc4NCAzNTIgNzg0UzY4IDYxMy4yIDY4IDQwMFM4MS4yIDExNiAyOTQgMTE2UzczNiAxODYuOCA3MzYgNDAwWiIvPjwvc3ZnPg==')] opacity-[0.03] blur-3xl"></div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div @click="isSidebarOpen = false" x-show="isSidebarOpen" x-transition:enter="transition-opacity ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#0a0f1c] border-r border-white/10 flex-col z-50 fixed md:relative h-full transition-transform duration-300 transform md:translate-x-0 shadow-2xl md:shadow-none" :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+            <div class="p-6 border-b border-white/10 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+                <button @click="isSidebarOpen = false" class="md:hidden text-gray-400">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-1">
+                <a href="#" @click.prevent="activeTab = 'dashboard'" :class="{ 'bg-white/5 text-white border-l-2 border-orange-500': activeTab === 'dashboard', 'text-gray-400 hover:text-white hover:bg-white/5': activeTab !== 'dashboard' }" class="group flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 border-l-2 border-transparent">
+                    <i class="fas fa-chart-pie w-5 transition-all duration-200 group-hover:drop-shadow-[0_0_4px_theme(colors.orange.500)]" :class="{'text-orange-400': activeTab === 'dashboard'}"></i> Dashboard
+                </a>
+                <a href="#" @click.prevent="activeTab = 'my-events'" :class="{ 'bg-white/5 text-white border-l-2 border-orange-500': activeTab === 'my-events', 'text-gray-400 hover:text-white hover:bg-white/5': activeTab !== 'my-events' }" class="group flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 border-l-2 border-transparent">
+                    <i class="fas fa-calendar-check w-5 transition-all duration-200 group-hover:drop-shadow-[0_0_4px_theme(colors.orange.500)]" :class="{'text-orange-400': activeTab === 'my-events'}"></i> My Events
+                </a>
+                <a href="#" @click.prevent="activeTab = 'profile'" :class="{ 'bg-white/5 text-white border-l-2 border-orange-500': activeTab === 'profile', 'text-gray-400 hover:text-white hover:bg-white/5': activeTab !== 'profile' }" class="group flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition-all duration-200 border-l-2 border-transparent">
+                    <i class="fas fa-user w-5 transition-all duration-200 group-hover:drop-shadow-[0_0_4px_theme(colors.orange.500)]" :class="{'text-orange-400': activeTab === 'profile'}"></i> Profile
+                </a>
+                <div class="h-px bg-white/10 my-2"></div>
+                <a href="ngo.html" class="group flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 rounded-lg font-medium transition-colors border-l-2 border-transparent">
+                    <i class="fas fa-globe w-5 transition-all duration-200 group-hover:drop-shadow-[0_0_4px_theme(colors.white)]"></i> Back to Website
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/10">
+                <button id="logout-btn" class="flex items-center gap-3 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-4 py-3 rounded-lg font-medium transition-colors w-full">
+                    <i class="fas fa-sign-out-alt w-5"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden">
+            <div class="flex-1 overflow-y-auto p-6 lg:p-10">
+                <div class="max-w-6xl mx-auto space-y-12">
+
+                    <div x-show="activeTab === 'dashboard' || activeTab === 'my-events'" class="space-y-12" x-transition.opacity>
+                    
+                    <!-- 1. Hero Header -->
+                    <section class="content-section rounded-2xl p-8 bg-gradient-to-r from-blue-900/50 to-purple-900/50 border border-white/10 flex flex-col sm:flex-row justify-between items-center gap-6">
+                        <div>
+                            <h1 class="text-3xl font-bold text-white mb-1">Welcome back 👋</h1>
+                            <p class="text-blue-200">Here’s what’s happening with your events.</p>
+                        </div>
+                        <button @click="isCreateEventModalOpen = true" class="bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold py-3 px-6 rounded-full hover:shadow-[0_0_20px_rgba(249,115,22,0.5)] transition-all text-sm flex items-center gap-2 shrink-0">
+                            <i class="fas fa-plus-circle text-base"></i>
+                            <span>New Event</span>
+                        </button>
+                    </section>
+
+                    <!-- 2. Stats Cards -->
+                    <section class="content-section" style="transition-delay: 100ms;">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="glass-panel p-6 rounded-2xl border-t border-blue-500/30 flex items-center gap-5 shadow-lg hover:scale-[1.03] hover:border-blue-400 transition-all duration-300">
+                                <i class="fas fa-layer-group text-3xl text-blue-400 bg-blue-500/10 p-4 rounded-lg"></i>
+                                <div class="flex-1">
+                                    <p id="total-events" class="text-3xl font-bold text-white font-display">0</p>
+                                    <p class="text-sm text-gray-400 font-semibold uppercase tracking-wider">Total Events</p>
+                                </div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl border-t border-teal-500/30 flex items-center gap-5 shadow-lg hover:scale-[1.03] hover:border-teal-400 transition-all duration-300">
+                                <i class="fas fa-check-circle text-3xl text-teal-400 bg-teal-500/10 p-4 rounded-lg"></i>
+                                <div class="flex-1">
+                                    <p id="approved-events" class="text-3xl font-bold text-white font-display">0</p>
+                                    <p class="text-sm text-gray-400 font-semibold uppercase tracking-wider">Approved Events</p>
+                                </div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl border-t border-amber-500/30 flex items-center gap-5 shadow-lg hover:scale-[1.03] hover:border-amber-400 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                                <i class="fas fa-hourglass-half text-3xl text-amber-400 bg-amber-500/10 p-4 rounded-lg"></i>
+                                <div class="flex-1">
+                                    <p id="pending-events" class="text-3xl font-bold text-white font-display">0</p>
+                                    <p class="text-sm text-gray-400 font-semibold uppercase tracking-wider">Pending Events</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 3. Recent Events View -->
+                    <section class="content-section" style="transition-delay: 200ms;">
+                        <h2 class="text-2xl font-bold text-white mb-6">Recent Events</h2>
+                        <div id="events-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    </section>
+                    
+                    </div>
+
+                    <!-- 4. Profile View -->
+                    <div x-show="activeTab === 'profile'" style="display: none;" x-transition.opacity>
+                        <section class="content-section loaded">
+                            <h2 class="text-3xl lg:text-4xl font-extrabold text-white mb-8">NGO Profile</h2>
+                            <div class="glass-panel rounded-2xl p-8 border-t border-orange-500/30 max-w-3xl shadow-xl">
+                                <div class="flex items-center gap-6 mb-8 border-b border-white/10 pb-8">
+                                    <div class="w-24 h-24 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-4xl border border-orange-500/30 shrink-0">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div>
+                                        <h3 id="profile-ngo-name" class="text-3xl font-bold text-white font-display mb-2"><i class="fas fa-circle-notch fa-spin text-lg text-orange-500"></i></h3>
+                                        <span class="bg-orange-500/20 text-orange-400 text-xs font-bold px-3 py-1 rounded-full border border-orange-500/30 uppercase tracking-wider">Registered Partner</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    <div>
+                                        <p class="text-sm text-gray-400 mb-1">Registration Number</p>
+                                        <p id="profile-reg-number" class="text-lg font-medium text-white">---</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-400 mb-1">Contact Email</p>
+                                        <p id="profile-email" class="text-lg font-medium text-white">---</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-400 mb-1">Contact Number</p>
+                                        <p id="profile-phone" class="text-lg font-medium text-white">---</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-400 mb-1">Joined Date</p>
+                                        <p id="profile-joined" class="text-lg font-medium text-white">---</p>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <p class="text-sm text-gray-400 mb-1">Registered Address</p>
+                                        <p id="profile-address" class="text-lg font-medium text-white">---</p>
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <p class="text-sm text-gray-400 mb-1">NGO Description</p>
+                                        <p id="profile-description" class="text-lg font-medium text-white leading-relaxed">---</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div x-show="isCreateEventModalOpen" @keydown.escape.window="isCreateEventModalOpen = false" class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" x-transition:enter="transition-opacity ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div @click.away="isCreateEventModalOpen = false" x-show="isCreateEventModalOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="glass-panel rounded-2xl p-8 w-full max-w-2xl shadow-2xl border-t border-orange-500/30">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Create New Event</h2>
+                <button @click="isCreateEventModalOpen = false" class="text-gray-500 hover:text-white transition-colors">&times;</button>
+            </div>
+            <form id="create-event-form" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label for="event-name" class="block text-sm font-medium text-slate-300 mb-1">Event Name</label>
+                        <input type="text" id="event-name" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors">
+                    </div>
+                    <div>
+                        <label for="event-location" class="block text-sm font-medium text-slate-300 mb-1">Location</label>
+                        <input type="text" id="event-location" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="event-date" class="block text-sm font-medium text-slate-300 mb-1">Date</label>
+                        <input type="date" id="event-date" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors [color-scheme:dark]">
+                    </div>
+                    <div>
+                        <label for="event-beneficiaries" class="block text-sm font-medium text-slate-300 mb-1">No. of Beneficiaries (Expected)</label>
+                        <input type="number" id="event-beneficiaries" required min="1" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="e.g., 150">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="sm:col-span-2">
+                        <label for="event-volunteers" class="block text-sm font-medium text-slate-300 mb-1">No. of Volunteers Required</label>
+                        <input type="number" id="event-volunteers" required min="1" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="e.g., 10">
+                    </div>
+                </div>
+                <div>
+                    <label for="event-description" class="block text-sm font-medium text-slate-300 mb-1">Purpose / Description</label>
+                    <textarea id="event-description" rows="3" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition-colors" placeholder="Briefly describe the goals and focus of this initiative..."></textarea>
+                </div>
+                <div class="text-right">
+                    <button type="submit" id="create-event-btn" class="bg-orange-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-orange-600 transition-colors shadow-[0_0_20px_rgba(249,115,22,0.3)] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Submit for Approval
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script type="module">
+        // --- 0. SMART CONFIGURATION ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const token = localStorage.getItem('token');
+        // --- 1. Firebase & App Initialization ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, serverTimestamp, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDk8JcvxzI6caOOPgXoH8aUf3jOXQKK85s",
+            authDomain: "maai-memberportal.firebaseapp.com",
+            projectId: "maai-memberportal",
+            storageBucket: "maai-memberportal.firebasestorage.app",
+            messagingSenderId: "135041595486",
+            appId: "1:135041595486:web:bdca38adb043ebcc0f9ccf"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- 2. Alpine.js State Management ---
+        function appState() {
+            return {
+                isSidebarOpen: false,
+                activeTab: 'dashboard',
+                isCreateEventModalOpen: false,
+                init() {
+                    // Close sidebar on menu item click
+                    this.$watch('activeTab', () => {
+                        if (this.isSidebarOpen) {
+                            this.isSidebarOpen = false;
+                        }
+                    });
+                }
+            };
+        }
+        window.appState = appState;
+
+        // --- 3. Authentication & Data Fetching ---
+        const authOverlay = document.getElementById('auth-overlay');
+        const authLoading = document.getElementById('auth-loading');
+        const authDenied = document.getElementById('auth-denied');
+        const appContainer = document.getElementById('app-container');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                let hasAccess = false;
+
+                // Check 1: Check for admin/god/it roles in volunteer_registrations
+                const userQuery = query(collection(db, "volunteer_registrations"), where("email", "==", user.email));
+                const userSnap = await getDocs(userQuery);
+                if (!userSnap.empty) {
+                    const userRole = userSnap.docs[0].data().role || 'member';
+                    if (['admin', 'god', 'it', 'ngo'].includes(userRole)) { // Keep 'ngo' for legacy roles
+                        hasAccess = true;
+                    }
+                }
+
+                // Check 2: If no access yet, check the new 'ngos' collection
+                if (!hasAccess) {
+                    const ngoDocRef = doc(db, "ngos", user.uid);
+                    const ngoDocSnap = await getDoc(ngoDocRef);
+                    if (ngoDocSnap.exists()) {
+                        hasAccess = true;
+                    }
+                }
+
+                // Final decision
+                if (hasAccess) {
+                     authOverlay.classList.add('opacity-0');
+                     setTimeout(() => {
+                         authOverlay.style.display = 'none';
+                         appContainer.classList.remove('hidden');
+                         appContainer.classList.add('opacity-100');
+                         initializeDashboard(user);
+                     }, 300);
+                } else {
+                    authLoading.classList.add('hidden');
+                    authDenied.classList.remove('hidden');
+                }
+            } else {
+                window.location.replace('login.html');
+            }
+        });
+
+        function initializeDashboard(user) {
+            // Entry animations
+            document.querySelectorAll('.content-section').forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('loaded');
+                }, (index * 100) + 100);
+            });
+            // --- 4. Real-time Event (Camp) Data ---
+            const campsCollection = collection(db, "camps");
+            const q = query(campsCollection, where("createdBy", "==", user.uid));
+
+            onSnapshot(q, (snapshot) => {
+                let total = 0;
+                let approved = 0;
+                let pending = 0;
+                let cardsHtml = '';
+                const eventsContainer = document.getElementById('events-container');
+
+                if (snapshot.empty) {
+                    const emptyState = `
+                        <div class="col-span-full text-center py-16 px-6 bg-[#0f172a] rounded-2xl border border-dashed border-white/10 flex flex-col items-center">
+                            <i class="fas fa-clipboard-list text-5xl text-slate-500 mb-6"></i>
+                            <h3 class="text-2xl font-bold text-white mb-2">No events yet</h3>
+                            <p class="text-slate-400 mb-6">Create your first event to get started.</p>
+                            <button @click="isCreateEventModalOpen = true" class="bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold py-2 px-5 rounded-full hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all text-sm flex items-center gap-2">Create Event</button>
+                        </div>`;
+                    eventsContainer.innerHTML = emptyState;
+                } else {
+                    snapshot.forEach(doc => {
+                        const camp = doc.data();
+                        total++;
+                        if (camp.status === 'approved') approved++;
+                        if (camp.status === 'pending') pending++;
+
+                        const getStatusBadge = (status) => {
+                            switch (status) {
+                                case 'approved': return `<span class="bg-teal-500/20 text-teal-300 px-3 py-1 rounded-full text-xs font-bold border border-teal-500/30">Approved</span>`;
+                                case 'pending': return `<span class="bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/30">Pending</span>`;
+                                case 'rejected': return `<span class="bg-rose-500/20 text-rose-300 px-3 py-1 rounded-full text-xs font-bold border border-rose-500/30">Rejected</span>`;
+                                default: return `<span class="bg-gray-500/20 text-gray-300 px-3 py-1 rounded-full text-xs font-bold border border-gray-500/30">Unknown</span>`;
+                            }
+                        };
+
+                        const rejectionInfo = camp.status === 'rejected' ? 
+                            `<div class="mt-3 pt-3 border-t border-rose-500/20 text-sm text-rose-400"><i class="fas fa-info-circle w-4 mr-1"></i><strong>Reason:</strong> ${camp.rejectionReason || 'No reason provided.'}</div>` : '';
+
+                        // Card for mobile
+                        cardsHtml += `
+                            <div class="glass-panel rounded-2xl p-5 shadow-lg hover:border-white/10 transition-all duration-300">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-bold text-lg text-white pr-4">${camp.name}</h3>
+                                    ${getStatusBadge(camp.status)}
+                                </div>
+                                <div class="space-y-1 mt-2">
+                                    <p class="text-sm text-gray-400"><i class="fas fa-map-marker-alt w-4 mr-1 text-gray-500"></i>${camp.location}</p>
+                                    <p class="text-sm text-gray-400"><i class="fas fa-calendar-alt w-4 mr-1 text-gray-500"></i>${camp.date}</p>
+                                </div>
+                                ${rejectionInfo}
+                            </div>
+                        `;
+
+                        // Row for desktop
+                        tableHtml += `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-5 font-medium text-white">
+                                    ${camp.name}
+                                    ${camp.status === 'rejected' ? `<span class="block text-xs text-rose-400 mt-1" title="${camp.rejectionReason}">Reason: ${camp.rejectionReason || 'N/A'}</span>` : ''}
+                                </td>
+                                <td class="p-5 text-gray-400">${camp.location}</td>
+                                <td class="p-5 text-gray-400">${camp.date}</td>
+                                <td class="p-5 text-center">${getStatusBadge(camp.status)}</td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('events-cards-container').innerHTML = cardsHtml;
+                    document.getElementById('events-table-body').innerHTML = tableHtml;
+                }
+
+                // Update dashboard stats
+                document.getElementById('total-events').textContent = total.toString();
+                document.getElementById('approved-events').textContent = approved.toString();
+                document.getElementById('pending-events').textContent = pending.toString();
+            }, (error) => {
+                console.error("Error fetching events: ", error);
+                const errorState = `<p class="text-center text-rose-500 p-8">Failed to load events.</p>`;
+                document.getElementById('events-cards-container').innerHTML = errorState;
+                document.getElementById('events-table-body').innerHTML = `<tr><td colspan="4" class="text-center text-rose-500 p-8">Failed to load events.</td></tr>`;
+            });
+
+            // --- 5. Create Event Form Logic ---
+            const createEventForm = document.getElementById('create-event-form');
+            const createEventBtn = document.getElementById('create-event-btn');
+
+            createEventForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-event-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Submitting...';
+
+    const formData = {
+        ngo_name: document.getElementById('ngo-name').value,
+        email: document.getElementById('ngo-email').value,
+        phone: document.getElementById('ngo-phone').value,
+        city: document.getElementById('event-city').value,
+        state: document.getElementById('event-state').value,
+        camp_type: document.getElementById('event-type').value,
+        proposal_file: `NGO Dashboard submission by ${document.getElementById('ngo-name').value}`,
+        description: document.getElementById('event-type').value,
+        date: new Date().toISOString().split('T')[0]
+    };
+
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE}/camps/apply`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (res.ok) {
+            alert("Camp proposal submitted successfully for MAAI approval!");
+            window.location.reload();
+        } else {
+            throw new Error("Failed to submit proposal");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Submission failed. Please try again.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit for Approval';
+    }
+});
+        // --- 6. Logout Logic ---
+            function handleLogout() {
+        // 1. Clear the PostgreSQL JWT token
+        localStorage.removeItem('token');
+        
+        // 2. Clear any legacy login flags
+        localStorage.removeItem('userLoggedIn');
+        
+        // 3. Send them back to the login page
+        window.location.replace('login.html');
+    }
+        }
+    </script>
+</body>
+</html>

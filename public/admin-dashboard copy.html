@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        // The Gatekeeper: Ensure only logged-in users stay here
+const token = localStorage.getItem('token');
+if (!token) {
+    // No token found, user is not authenticated
+    window.location.replace('login.html');
+}
+
+// Global logout handler to clear the session
+window.logout = () => {
+    localStorage.removeItem('token');
+    window.location.replace('login.html');
+};
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        /* Advanced Glassmorphism */
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        /* Custom Scrollbar for tables */
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="bg-[#030712] text-gray-200 antialiased min-h-screen relative overflow-x-hidden">
+    
+    <!-- Simple Security Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center flex-col">
+        <div class="mb-8 text-center">
+            <i class="fas fa-lock text-5xl text-teal-500 mb-4 block drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]"></i>
+            <h2 class="text-3xl font-extrabold text-white">Admin Access</h2>
+        </div>
+        <div class="glass-panel p-8 rounded-3xl flex flex-col gap-5 items-center w-full max-w-sm shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+            <input type="password" id="admin-pwd" class="w-full bg-[#0a0f1c] border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-colors" placeholder="Enter Password">
+            <button id="auth-btn" class="bg-teal-500 text-[#030712] px-6 py-3 rounded-xl font-bold hover:bg-teal-400 w-full transition-colors shadow-[0_0_15px_rgba(20,184,166,0.4)]">Login to Dashboard</button>
+            <p id="auth-error" class="text-rose-500 text-sm hidden font-medium">Incorrect password.</p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div id="dashboard-content" class="hidden container mx-auto px-4 py-10 max-w-7xl relative z-10">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-12 border-b border-white/10 pb-6 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 w-12 h-12 rounded-full flex items-center justify-center border border-white/20">
+                    <i class="fas fa-shield-alt text-teal-400 text-xl"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-white font-display tracking-tight">MAAI <span class="text-teal-400">Admin</span></h1>
+            </div>
+            <button onclick="location.reload()" class="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg transition-colors text-sm font-medium border border-transparent hover:border-white/10">
+                <i class="fas fa-sign-out-alt mr-2"></i>Lock Session
+            </button>
+        </header>
+
+        <!-- Volunteer Registrations Section -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-blue-500 pl-3">Volunteer Sign Ups</h2>
+            <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto shadow-xl">
+                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                    <thead>
+                        <tr class="bg-blue-900/20 text-blue-300 text-xs uppercase tracking-wider font-semibold">
+                            <th class="p-5 border-b border-white/10">Date Applied</th>
+                            <th class="p-5 border-b border-white/10">Name</th>
+                            <th class="p-5 border-b border-white/10">Contact Info</th>
+                            <th class="p-5 border-b border-white/10">Role / Profession</th>
+                            <th class="p-5 border-b border-white/10">City</th>
+                            <th class="p-5 border-b border-white/10">Motivation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="volunteers-tbody" class="text-sm text-gray-300 divide-y divide-white/5">
+                        <tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Camp Registrations Section -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-teal-500 pl-3">NGO Camp Proposals</h2>
+            <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto shadow-xl">
+                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
+                    <thead>
+                        <tr class="bg-teal-900/20 text-teal-300 text-xs uppercase tracking-wider font-semibold">
+                            <th class="p-5 border-b border-white/10">Date Applied</th>
+                            <th class="p-5 border-b border-white/10">Organizer</th>
+                            <th class="p-5 border-b border-white/10">Camp Initiative</th>
+                            <th class="p-5 border-b border-white/10">Location & Event Date</th>
+                            <th class="p-5 border-b border-white/10 text-center">Beneficiaries</th>
+                            <th class="p-5 border-b border-white/10 text-center">Vols Needed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="camps-tbody" class="text-sm text-gray-300 divide-y divide-white/5">
+                        <tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Manage Flagship Initiatives Section -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-orange-500 pl-3">Manage Flagship Initiatives</h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                
+                <!-- Add New Form -->
+                <div class="glass-panel p-8 rounded-2xl xl:col-span-1 h-fit shadow-xl border-t border-orange-500/20">
+                    <h3 class="text-xl font-bold text-white mb-6 font-display"><i class="fas fa-plus-circle text-orange-400 mr-2"></i>Add Initiative</h3>
+                    <form id="initiative-form" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Title</label>
+                            <input type="text" id="init-title" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Category</label>
+                            <input type="text" id="init-category" required placeholder="e.g. Health Camp, Workshop" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Image URL</label>
+                            <input type="url" id="init-image" required placeholder="https://..." class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Description</label>
+                            <textarea id="init-desc" required rows="4" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors"></textarea>
+                        </div>
+                        <button type="submit" id="init-submit" class="bg-orange-500 text-[#030712] px-4 py-3 rounded-lg font-bold w-full hover:bg-orange-400 transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] mt-2">Publish Initiative</button>
+                        <p id="init-msg" class="text-sm font-medium text-center hidden mt-3"></p>
+                    </form>
+                </div>
+
+                <!-- Live Initiatives List -->
+                <div class="xl:col-span-2 space-y-5" id="initiatives-list">
+                    <div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Initiatives...</div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        // --- 1. Firebase Configuration & Imports ---
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { db } from "./firebaseConfig.js";
+
+        // --- 2. Security Overlay Logic ---
+        const authBtn = document.getElementById('auth-btn');
+        const authOverlay = document.getElementById('auth-overlay');
+        const dashboard = document.getElementById('dashboard-content');
+        const pwdInput = document.getElementById('admin-pwd');
+        
+        const handleLogin = () => {
+            if(pwdInput.value === 'maaiadmin2026') {
+                authOverlay.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                initDashboardData();
+            } else {
+                document.getElementById('auth-error').classList.remove('hidden');
+            }
+        };
+        
+        authBtn.addEventListener('click', handleLogin);
+        pwdInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+
+        // --- 3. Dashboard Core Logic ---
+        function initDashboardData() {
+            
+            // Real-time Volunteer Registrations
+            const volQuery = query(collection(db, "volunteer_registrations"), orderBy("createdAt", "desc"));
+            onSnapshot(volQuery, (snapshot) => {
+                const tbody = document.getElementById('volunteers-tbody');
+                tbody.innerHTML = '';
+                if(snapshot.empty) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">No volunteers found.</td></tr>';
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'N/A';
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="p-5 border-b border-white/5 text-gray-400">${date}</td>
+                            <td class="p-5 border-b border-white/5 font-semibold text-white">${data.name}</td>
+                            <td class="p-5 border-b border-white/5 leading-snug">${data.email}<br><span class="text-xs font-semibold text-blue-400"><i class="fab fa-whatsapp mr-1"></i>${data.phone}</span></td>
+                            <td class="p-5 border-b border-white/5"><span class="bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-1 rounded-md text-xs font-semibold">${data.profession}</span></td>
+                            <td class="p-5 border-b border-white/5">${data.city}</td>
+                            <td class="p-5 border-b border-white/5 max-w-[200px] truncate text-gray-400" title="${data.motivation}">${data.motivation}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            // Real-time Camp Registrations
+            const campQuery = query(collection(db, "camp_registrations"), orderBy("createdAt", "desc"));
+            onSnapshot(campQuery, (snapshot) => {
+                const tbody = document.getElementById('camps-tbody');
+                tbody.innerHTML = '';
+                if(snapshot.empty) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500">No camps found.</td></tr>';
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const submittedDate = data.createdAt ? data.createdAt.toDate().toLocaleDateString() : 'N/A';
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="p-5 border-b border-white/5 text-gray-400">${submittedDate}</td>
+                            <td class="p-5 border-b border-white/5 font-semibold text-white leading-snug">${data.name}<br><span class="text-xs text-gray-400 font-normal">${data.email}</span><br><span class="text-xs font-semibold text-teal-400"><i class="fab fa-whatsapp mr-1"></i>${data.phone}</span></td>
+                            <td class="p-5 border-b border-white/5 font-semibold text-teal-300 max-w-[200px] whitespace-normal break-words">${data.title}</td>
+                            <td class="p-5 border-b border-white/5 leading-snug">${data.location}<br><span class="text-xs text-gray-400"><i class="far fa-calendar-alt mr-1"></i>Event: ${data.date}</span></td>
+                            <td class="p-5 border-b border-white/5 text-center text-white font-bold">${data.beneficiaries}</td>
+                            <td class="p-5 border-b border-white/5 text-center"><span class="bg-teal-500/20 text-teal-300 px-3 py-1 rounded-full text-xs font-bold border border-teal-500/30">${data.volunteersRequired}</span></td>
+                        </tr>
+                    `;
+                });
+            });
+
+            // Real-time Flagship Initiatives
+            const initQuery = query(collection(db, "flagship_initiatives"), orderBy("createdAt", "desc"));
+            onSnapshot(initQuery, (snapshot) => {
+                const list = document.getElementById('initiatives-list');
+                list.innerHTML = '';
+                if(snapshot.empty) list.innerHTML = '<div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20">No initiatives added yet.</div>';
+                
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    list.innerHTML += `
+                        <div class="glass-panel p-5 rounded-2xl flex flex-col sm:flex-row gap-6 items-start relative group transition-all hover:bg-white/5 hover:border-white/10">
+                            <div class="w-full sm:w-48 h-32 flex-shrink-0 relative overflow-hidden rounded-xl bg-black/50 border border-white/10">
+                                <img src="${data.imageUrl}" alt="${data.title}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image';">
+                            </div>
+                            <div class="flex-grow pr-12">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-md mb-2 inline-block">${data.category}</span>
+                                <h4 class="text-xl font-bold text-white mb-2 font-display leading-tight">${data.title}</h4>
+                                <p class="text-sm text-gray-400 leading-relaxed line-clamp-2">${data.description}</p>
+                            </div>
+                            <button data-id="${id}" class="delete-init-btn absolute top-5 right-5 text-gray-500 hover:text-rose-500 bg-[#030712] hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 transition-all p-3 rounded-full flex items-center justify-center shadow-lg" title="Delete Initiative">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+
+                // Attach delete listeners dynamically
+                document.querySelectorAll('.delete-init-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        if(confirm('Are you sure you want to permanently delete this initiative?')) {
+                            const id = e.currentTarget.getAttribute('data-id');
+                            try {
+                                await deleteDoc(doc(db, "flagship_initiatives", id));
+                            } catch (err) {
+                                console.error("Error removing document: ", err);
+                                alert("Error removing document. Please check console.");
+                            }
+                        }
+                    });
+                });
+            });
+
+            // Handle Add Initiative Form Submission
+            const form = document.getElementById('initiative-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('init-submit');
+                const msg = document.getElementById('init-msg');
+                
+                const originalBtnText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Publishing...';
+                msg.classList.add('hidden');
+                
+                try {
+                    await addDoc(collection(db, "flagship_initiatives"), {
+                        title: document.getElementById('init-title').value,
+                        category: document.getElementById('init-category').value,
+                        imageUrl: document.getElementById('init-image').value,
+                        description: document.getElementById('init-desc').value,
+                        createdAt: serverTimestamp()
+                    });
+                    form.reset();
+                    msg.textContent = 'Initiative published successfully!';
+                    msg.className = 'text-sm font-medium text-center text-teal-400 mt-3 block';
+                } catch(err) {
+                    console.error("Error adding initiative: ", err);
+                    msg.textContent = 'Error adding initiative. Check console.';
+                    msg.className = 'text-sm font-medium text-center text-rose-500 mt-3 block';
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnText;
+                    setTimeout(() => msg.classList.add('hidden'), 4000);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Outfit', sans-serif; }
+        /* Advanced Glassmorphism */
+        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        /* Custom Scrollbar for tables */
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="bg-[#030712] text-gray-200 antialiased min-h-screen relative overflow-hidden">
+    
+    <!-- Simple Security Overlay -->
+    <div id="auth-overlay" class="fixed inset-0 bg-[#030712] z-50 flex items-center justify-center flex-col">
+        <div class="mb-8 text-center" id="auth-status-ui">
+            <i class="fas fa-circle-notch fa-spin text-5xl text-teal-500 mb-4 block drop-shadow-[0_0_15px_rgba(20,184,166,0.6)]"></i>
+            <h2 class="text-3xl font-extrabold text-white">Verifying Access...</h2>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Wrapper -->
+    <div id="dashboard-content" class="hidden flex h-screen w-full relative z-10">
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#0a0f1c] border-r border-white/10 flex flex-col z-50 fixed md:relative h-full transition-transform duration-300 transform -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
+            <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>ass="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="#stats-overview" class="flex items-center gap-3 bg-teal-500/10 text-teal-400 px-4 py-3 rounded-xl font-semibold transition-colors border border-teal-500/20">
+                    <i class="fas fa-chart-pie w-5"></i> Overview
+                </a>
+                <a href="#volunteers-section" class="flex items-center gap-3 text-gray-400 hover:text-teal-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-users w-5"></i> Members Management
+                </a>
+                <a href="#camps-section" class="flex items-center gap-3 text-gray-400 hover:text-teal-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-campground w-5"></i> NGO Camps
+                </a>
+                <a href="#flagship-section" class="flex items-center gap-3 text-gray-400 hover:text-orange-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-star w-5"></i> Flagship Mgt
+                </a>
+                <a href="#leadership-section" class="flex items-center gap-3 text-gray-400 hover:text-pink-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-user-tie w-5"></i> Leadership
+                </a>
+                <a href="#careers-section" class="flex items-center gap-3 text-gray-400 hover:text-yellow-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-briefcase w-5"></i> Careers
+                </a>
+                <a href="#reels-section" class="flex items-center gap-3 text-gray-400 hover:text-indigo-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-video w-5"></i> Camp Reels
+                </a>
+                <a href="#test-section" class="flex items-center gap-3 text-gray-400 hover:text-green-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-comment-dots w-5"></i> Testimonials
+                </a>
+                <a href="#settings-section" class="flex items-center gap-3 text-gray-400 hover:text-purple-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-cog w-5"></i> Settings
+                </a>
+                <a href="it-panel.html" class="flex items-center gap-3 text-gray-400 hover:text-blue-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
+                    <i class="fas fa-laptop-code w-5"></i> IT Panel
+                </a>
+            </nav>
+            <div class="p-4 border-t border-white/10 space-y-2">
+                <a href="index.html" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors w-full">
+                    <i class="fas fa-globe w-5"></i> Back to Website
+                </a>
+                <a href="member-portal.html" class="flex items-center gap-3 text-gray-400 hover:text-white hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors w-full">
+                    <i class="fas fa-arrow-left w-5"></i> Portal
+                </a>
+                <button id="logout-admin-btn" class="flex items-center gap-3 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-4 py-3 rounded-xl font-medium transition-colors w-full">
+                    <i class="fas fa-sign-out-alt w-5"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden">
+            <!-- Mobile Header -->
+            <header class="md:hidden bg-[#0a0f1c] border-b border-white/10 p-4 flex justify-between items-center z-10 shrink-0">
+                <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+                <button id="mobile-menu-btn" class="text-gray-300 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 lg:p-10 relative scroll-smooth">
+                <div class="max-w-7xl mx-auto">
+                    
+                    <!-- Header & Stats Overview -->
+                    <div id="stats-overview" class="mb-10 mt-2">
+                        <h2 class="text-3xl font-extrabold text-white font-display mb-6 tracking-tight">Dashboard Overview</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="glass-panel p-6 rounded-2xl border-t border-blue-500/30 flex items-center gap-5 shadow-lg">
+                                <div class="w-14 h-14 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center text-2xl shrink-0">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-400 font-semibold uppercase tracking-wider mb-1">Total Volunteers</p>
+                                    <p id="stat-volunteers" class="text-3xl font-bold text-white font-display">0</p>
+                                </div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl border-t border-teal-500/30 flex items-center gap-5 shadow-lg">
+                                <div class="w-14 h-14 bg-teal-500/20 text-teal-400 rounded-full flex items-center justify-center text-2xl shrink-0">
+                                    <i class="fas fa-campground"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-400 font-semibold uppercase tracking-wider mb-1">Pending NGO Camps</p>
+                                    <p id="stat-camps" class="text-3xl font-bold text-white font-display">0</p>
+                                </div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl border-t border-orange-500/30 flex items-center gap-5 shadow-lg">
+                                <div class="w-14 h-14 bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center text-2xl shrink-0">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-400 font-semibold uppercase tracking-wider mb-1">Active Initiatives</p>
+                                    <p id="stat-initiatives" class="text-3xl font-bold text-white font-display">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+        <!-- Volunteer Registrations Section -->
+        <section id="volunteers-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-blue-500 pl-3">Members Management</h2>
+            
+            <!-- Add Member Form -->
+            <div class="glass-panel p-6 rounded-2xl mb-8 shadow-xl border-t border-blue-500/20">
+                <h3 class="text-xl font-bold text-white mb-4 font-display"><i class="fas fa-user-plus text-blue-400 mr-2"></i>Add New Member</h3>
+                <form id="admin-add-member-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Name</label>
+                        <input type="text" id="add-mem-name" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Email</label>
+                        <input type="email" id="add-mem-email" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="john@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Role</label>
+                        <select id="add-mem-role" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors appearance-none">
+                            <option value="member" selected>MEMBER</option>
+                            <option value="ngo">NGO</option>
+                            <option value="ops">OPS</option>
+                            <option value="rnd">R&D</option>
+                            <option value="it">IT</option>
+                            <option value="admin">ADMIN</option>
+                            <option value="god">GOD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" id="add-mem-submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold w-full hover:bg-blue-400 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">Add Member</button>
+                    </div>
+                </form>
+                <p id="add-mem-msg" class="text-sm font-medium hidden mt-3"></p>
+            </div>
+            
+            <!-- Search Members -->
+            <div class="mb-6 flex justify-end">
+                <div class="relative w-full md:w-96">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="admin-member-search" class="w-full bg-[#030712]/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="Search members by name or email...">
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto shadow-xl">
+                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                    <thead>
+                        <tr class="bg-blue-900/20 text-blue-300 text-xs uppercase tracking-wider font-semibold">
+                            <th class="p-5 border-b border-white/10">Date Applied</th>
+                            <th class="p-5 border-b border-white/10">Name</th>
+                            <th class="p-5 border-b border-white/10">Contact Info</th>
+                            <th class="p-5 border-b border-white/10">Field of Study</th>
+                            <th class="p-5 border-b border-white/10">City</th>
+                            <th class="p-5 border-b border-white/10">Motivation</th>
+                            <th class="p-5 border-b border-white/10 text-center">Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="volunteers-tbody" class="text-sm text-gray-300 divide-y divide-white/5">
+                        <tr><td colspan="7" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Camp Registrations Section -->
+        <section id="camps-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-teal-500 pl-3">NGO Camp Proposals</h2>
+            <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto shadow-xl">
+                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[1000px]">
+                    <thead>
+                        <tr class="bg-teal-900/20 text-teal-300 text-xs uppercase tracking-wider font-semibold">
+                            <th class="p-5 border-b border-white/10">Camp Name</th>
+                            <th class="p-5 border-b border-white/10">Organizer (NGO)</th>
+                            <th class="p-5 border-b border-white/10">Location</th>
+                            <th class="p-5 border-b border-white/10">Event Date</th>
+                            <th class="p-5 border-b border-white/10 text-center">Status</th>
+                            <th class="p-5 border-b border-white/10 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ngo-camps-tbody" class="text-sm text-gray-300 divide-y divide-white/5">
+                        <tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading camp proposals...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Manage Flagship Initiatives Section -->
+        <section id="flagship-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-orange-500 pl-3">Manage Flagship Initiatives</h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                
+                <!-- Add New Form -->
+                <div class="glass-panel p-8 rounded-2xl xl:col-span-1 h-fit shadow-xl border-t border-orange-500/20">
+                    <h3 class="text-xl font-bold text-white mb-6 font-display"><i class="fas fa-plus-circle text-orange-400 mr-2"></i>Flagship Management</h3>
+                    <form id="initiative-form" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Title</label>
+                            <input type="text" id="init-title" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Category</label>
+                            <input type="text" id="init-category" required placeholder="e.g. Health Camp, Workshop" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Image URL</label>
+                            <input type="url" id="init-image-url" required placeholder="https://example.com/image.jpg" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Description</label>
+                            <textarea id="init-desc" required rows="4" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-orange-500 transition-colors"></textarea>
+                        </div>
+                        <button type="submit" id="init-submit" class="bg-orange-500 text-[#030712] px-4 py-3 rounded-lg font-bold w-full hover:bg-orange-400 transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] mt-2">Publish Initiative</button>
+                        <p id="init-msg" class="text-sm font-medium text-center hidden mt-3"></p>
+                    </form>
+                </div>
+
+                <!-- Live Initiatives List -->
+                <div class="xl:col-span-2 space-y-5" id="initiatives-list">
+                    <div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Initiatives...</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Manage Leadership Section -->
+        <section id="leadership-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-pink-500 pl-3">Manage Leadership</h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                
+                <!-- Add New Form -->
+                <div class="glass-panel p-8 rounded-2xl xl:col-span-1 h-fit shadow-xl border-t border-pink-500/20">
+                    <h3 class="text-xl font-bold text-white mb-6 font-display"><i class="fas fa-user-plus text-pink-400 mr-2"></i>Add Leader</h3>
+                    <form id="leader-form" class="space-y-5">
+                        <input type="hidden" id="leader-edit-id">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Name</label>
+                            <input type="text" id="leader-name" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Category</label>
+                            <select id="leader-category" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors appearance-none">
+                                <option value="Founding Members">Founding Members</option>
+                                <option value="Current Core Team" selected>Current Core Team</option>
+                                <option value="Directors and Ambassadors">Directors and Ambassadors</option>
+                                <option value="Mentors">Mentors</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Role / Position</label>
+                            <input type="text" id="leader-role" required placeholder="e.g. Founder & President" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Image URL</label>
+                            <input type="url" id="leader-image-url" required placeholder="https://example.com/profile.jpg" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">LinkedIn URL (Optional)</label>
+                            <input type="url" id="leader-linkedin" placeholder="https://linkedin.com/in/..." class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Instagram URL (Optional)</label>
+                            <input type="url" id="leader-insta" placeholder="https://instagram.com/..." class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Bio</label>
+                            <textarea id="leader-bio" required rows="3" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-pink-500 transition-colors"></textarea>
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button type="submit" id="leader-submit" class="bg-pink-500 text-[#030712] px-4 py-3 rounded-lg font-bold w-full hover:bg-pink-400 transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)]">Publish Profile</button>
+                            <button type="button" id="leader-cancel-edit" class="hidden bg-gray-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-gray-500 transition-all">Cancel</button>
+                        </div>
+                        <p id="leader-msg" class="text-sm font-medium text-center hidden mt-3"></p>
+                    </form>
+                </div>
+
+                <!-- Live Leadership List -->
+                <div class="xl:col-span-2 space-y-5" id="leadership-list">
+                    <div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Leadership...</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Manage Careers Section -->
+        <section id="careers-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-yellow-500 pl-3">Manage Careers</h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="glass-panel p-8 rounded-2xl xl:col-span-1 h-fit shadow-xl border-t border-yellow-500/20">
+                    <h3 class="text-xl font-bold text-white mb-6 font-display"><i class="fas fa-briefcase text-yellow-400 mr-2"></i>Add Position</h3>
+                    <form id="career-form" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Job Title</label>
+                            <input type="text" id="car-title" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Type / Location</label>
+                            <input type="text" id="car-type" required placeholder="e.g. Full-time • Remote" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Link / Email to Apply</label>
+                            <input type="text" id="car-link" required placeholder="URL or mailto:..." class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Description</label>
+                            <textarea id="car-desc" required rows="3" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"></textarea>
+                        </div>
+                        <button type="submit" id="car-submit" class="bg-yellow-500 text-black px-4 py-3 rounded-lg font-bold w-full hover:bg-yellow-400 transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)] mt-2">Publish Job</button>
+                        <p id="car-msg" class="text-sm font-medium text-center hidden mt-3"></p>
+                    </form>
+                </div>
+                <div class="xl:col-span-2 space-y-5" id="careers-list">
+                    <div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Careers...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Manage Camp Reels Section -->
+        <section id="reels-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-indigo-500 pl-3">Manage Camp Reels</h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="glass-panel p-8 rounded-2xl xl:col-span-1 h-fit shadow-xl border-t border-indigo-500/20">
+                    <h3 class="text-xl font-bold text-white mb-6 font-display"><i class="fas fa-video text-indigo-400 mr-2"></i>Add Reel</h3>
+                    <form id="reel-form" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Title</label>
+                            <input type="text" id="reel-title" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Video Embed URL</label>
+                            <input type="url" id="reel-url" required placeholder="https://..." class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                        </div>
+                        <button type="submit" id="reel-submit" class="bg-indigo-500 text-white px-4 py-3 rounded-lg font-bold w-full hover:bg-indigo-400 transition-all shadow-[0_0_15px_rgba(99,102,241,0.3)] mt-2">Publish Reel</button>
+                        <p id="reel-msg" class="text-sm font-medium text-center hidden mt-3"></p>
+                    </form>
+                </div>
+                <div class="xl:col-span-2 space-y-5" id="reels-list">
+                    <div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Reels...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Manage Testimonials Section -->
+        <section id="test-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-green-500 pl-3">Manage Testimonials</h2>
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div class="glass-panel p-8 rounded-2xl xl:col-span-1 h-fit shadow-xl border-t border-green-500/20">
+                    <h3 class="text-xl font-bold text-white mb-6 font-display"><i class="fas fa-comment-dots text-green-400 mr-2"></i>Add Testimonial</h3>
+                    <form id="test-form" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Name</label>
+                            <input type="text" id="test-name" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-green-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Role/Title</label>
+                            <input type="text" id="test-role" required placeholder="e.g. Lead Medical Volunteer" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-green-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Image URL</label>
+                            <input type="url" id="test-image" placeholder="Optional avatar..." class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-green-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Quote</label>
+                            <textarea id="test-quote" required rows="3" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-green-500 transition-colors"></textarea>
+                        </div>
+                        <button type="submit" id="test-submit" class="bg-green-500 text-white px-4 py-3 rounded-lg font-bold w-full hover:bg-green-400 transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)] mt-2">Publish Story</button>
+                        <p id="test-msg" class="text-sm font-medium text-center hidden mt-3"></p>
+                    </form>
+                </div>
+                <div class="xl:col-span-2 space-y-5" id="tests-list">
+                    <div class="text-gray-500 text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Testimonials...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Platform Settings Section -->
+        <section id="settings-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-purple-500 pl-3">Platform Settings</h2>
+            <div class="glass-panel p-8 rounded-2xl shadow-xl border-t border-purple-500/20 max-w-md">
+                <h3 class="text-xl font-bold text-white mb-4 font-display"><i class="fas fa-cog text-purple-400 mr-2"></i>Payment Verification</h3>
+                <form id="pricing-form" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Current Registration Fee (₹)<br><span class="text-[10px] text-gray-500 normal-case mt-1 block">Set to 0 to disable required payment.</span></label>
+                        <div class="flex gap-4">
+                            <input type="number" id="signup-price" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors" placeholder="e.g. 500">
+                            <button type="submit" id="price-submit" class="bg-purple-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-purple-400 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] whitespace-nowrap">Update Price</button>
+                        </div>
+                    </div>
+                    <p id="price-msg" class="text-sm font-medium hidden mt-2"></p>
+                </form>
+            </div>
+        </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Rejection Modal -->
+    <div id="rejection-modal" class="fixed inset-0 bg-black/70 z-[60] hidden items-center justify-center p-4">
+        <div id="rejection-modal-content" class="glass-panel rounded-2xl p-8 w-full max-w-md shadow-2xl border-t border-rose-500/30 transform scale-95 opacity-0 transition-all duration-300">
+            <h3 class="text-xl font-bold text-white mb-4">Reason for Rejection</h3>
+            <form id="rejection-form">
+                <input type="hidden" id="rejection-camp-id">
+                <textarea id="rejection-reason" rows="4" required class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-rose-500 transition-colors" placeholder="Provide a clear reason..."></textarea>
+                <div class="flex gap-4 mt-6">
+                    <button type="button" id="cancel-rejection" class="w-1/2 bg-gray-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-500 transition-all">Cancel</button>
+                    <button type="submit" class="w-1/2 bg-rose-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-rose-500 transition-all">Confirm Rejection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    // --- 0. SMART CONFIGURATION ---
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const token = localStorage.getItem('token');
+
+    // --- 1. DOM ELEMENTS ---
+    const authOverlay = document.getElementById('auth-overlay');
+    const dashboard = document.getElementById('dashboard-content');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+
+    // --- 2. SECURITY & AUTH CHECK ---
+    async function checkAccess() {
+        if (!token) {
+            window.location.replace('login.html');
+            return;
+        }
+
+        try {
+            // Verify role via Flask identity route
+            const res = await fetch(`${API_BASE}/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!res.ok) throw new Error("Unauthorized");
+            
+            const userData = await res.json();
+            if (userData.role === 'god' || userData.role === 'admin') {
+                authOverlay.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                initDashboardData();
+            } else {
+                showAccessDenied();
+            }
+        } catch (err) {
+            console.error("Auth error:", err);
+            window.location.replace('login.html');
+        }
+    }
+
+    // --- 3. CORE API HELPER ---
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        const options = {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+        if (body) options.body = JSON.stringify(body);
+        
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        if (res.status === 401) window.location.replace('login.html');
+        return res.ok ? await res.json() : null;
+    }
+
+    // --- 4. DASHBOARD DATA LOADERS ---
+    async function initDashboardData() {
+        loadVolunteers();
+        loadCampProposals();
+        loadInitiatives();
+        loadLeadership();
+        loadCareers();
+        loadReels();
+        loadTestimonials();
+    }
+
+    // --- 5. VOLUNTEER MANAGEMENT ---
+    async function loadVolunteers() {
+        const users = await apiCall('/admin/users'); //
+        if (!users) return;
+
+        document.getElementById('stat-volunteers').textContent = users.length;
+        const tbody = document.getElementById('volunteers-tbody');
+        tbody.innerHTML = users.map(u => `
+            <tr class="hover:bg-white/5 transition-colors">
+                <td class="p-5 border-b border-white/5 font-semibold text-white">${u.full_name}</td>
+                <td class="p-5 border-b border-white/5 text-gray-400">${u.email}</td>
+                <td class="p-5 border-b border-white/5 text-center">
+                    <select onchange="updateUserRole(${u.id}, this.value)" class="bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs">
+                        <option value="member" ${u.role === 'member' ? 'selected' : ''}>MEMBER</option>
+                        <option value="ngo" ${u.role === 'ngo' ? 'selected' : ''}>NGO</option>
+                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>ADMIN</option>
+                        <option value="god" ${u.role === 'god' ? 'selected' : ''}>GOD</option>
+                    </select>
+                </td>
+                <td class="p-5 border-b border-white/5 text-center">
+                    <button onclick="deleteUser(${u.id})" class="text-rose-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function updateUserRole(userId, newRole) {
+        const res = await apiCall(`/admin/users/${userId}/role`, 'PUT', { role: newRole }); //
+        if (res) notify("Role updated in PostgreSQL!");
+    }
+
+    // --- 6. CAMP PROPOSALS (NGO) ---
+    async function loadCampProposals() {
+        const camps = await apiCall('/admin/camps'); //
+        if (!camps) return;
+
+        const pending = camps.filter(c => c.status === 'pending');
+        document.getElementById('stat-camps').textContent = pending.length;
+
+        const tbody = document.getElementById('ngo-camps-tbody');
+        tbody.innerHTML = camps.map(c => `
+            <tr class="hover:bg-white/5 border-b border-white/5">
+                <td class="p-5 text-white font-bold">${c.camp_type || 'Camp'}</td>
+                <td class="p-5 text-gray-400">${c.ngo_name}</td>
+                <td class="p-5 text-center">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${c.status === 'approved' ? 'bg-teal-500/20 text-teal-400' : 'bg-amber-500/20 text-amber-400'}">
+                        ${c.status}
+                    </span>
+                </td>
+                <td class="p-5 text-right space-x-2">
+                    ${c.status === 'pending' ? `
+                        <button onclick="updateCampStatus(${c.id}, 'approved')" class="text-teal-400 hover:underline">Approve</button>
+                        <button onclick="updateCampStatus(${c.id}, 'rejected')" class="text-rose-400 hover:underline">Reject</button>
+                    ` : '<span class="text-slate-600">Processed</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function updateCampStatus(campId, status) {
+        const reason = status === 'rejected' ? prompt("Reason for rejection:") : "";
+        const res = await apiCall(`/admin/camps/${campId}/status`, 'PUT', { status, rejection_reason: reason }); //
+        if (res) {
+            notify(`Camp ${status}!`);
+            loadCampProposals();
+        }
+    }
+
+    // --- 7. UTILITIES ---
+    function notify(msg) {
+        alert(msg); // Replace with your toast system if preferred
+    }
+
+    function handleLogout() {
+    // 1. Wipe the PostgreSQL JWT token
+    localStorage.removeItem('token');
+    
+    // 2. Clear legacy flags (just in case)
+    localStorage.removeItem('userLoggedIn');
+    
+    // 3. Kick to login
+    window.location.replace('login.html');
+}
+
+// Attach to your logout buttons
+const logoutBtn = document.getElementById('logout-btn') || document.getElementById('logout-admin-btn');
+if (logoutBtn) logoutBtn.onclick = handleLogout;
+
+    function showAccessDenied() {
+        authOverlay.innerHTML = `<div class="text-center"><i class="fas fa-ban text-5xl text-rose-500 mb-4"></i><h2 class="text-white text-2xl font-bold">Access Denied</h2><p class="text-gray-400 mt-2">Admins only.</p><button onclick="window.location.href='member-portal.html'" class="mt-6 bg-brand-blue px-6 py-2 rounded-xl font-bold">Return</button></div>`;
+    }
+
+    // Sidebar Logic
+    if (mobileMenuBtn) {
+        mobileMenuBtn.onclick = () => {
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+        };
+        sidebarOverlay.onclick = () => {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        };
+    }
+
+
+    // ─── MISSING FUNCTIONS (injected) ────────────────────────────────────────
+
+    async function deleteUser(userId) {
+        if (!confirm('Permanently delete this user? This cannot be undone.')) return;
+        const res = await apiCall(`/admin/users/${userId}`, 'DELETE');
+        if (res) { notify('User deleted.'); loadVolunteers(); }
+    }
+
+    // Admin Add-Member form
+    const adminAddForm = document.getElementById('admin-add-member-form');
+    if (adminAddForm) {
+        adminAddForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('add-mem-msg');
+            const body = {
+                full_name: document.getElementById('add-mem-name').value.trim(),
+                email:     document.getElementById('add-mem-email').value.trim(),
+                role:      document.getElementById('add-mem-role').value
+            };
+            if (!body.full_name || !body.email) return;
+            const res = await apiCall('/admin/users', 'POST', body);
+            if (res) {
+                msg.textContent = 'Member added!';
+                msg.className = 'text-sm font-medium mt-3 text-teal-400';
+                msg.classList.remove('hidden');
+                adminAddForm.reset();
+                loadVolunteers();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    // Member search filter
+    const memberSearch = document.getElementById('admin-member-search');
+    if (memberSearch) {
+        memberSearch.addEventListener('input', () => {
+            const q = memberSearch.value.toLowerCase();
+            document.querySelectorAll('#volunteers-tbody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+    }
+
+    // ─── INITIATIVES ─────────────────────────────────────────────────────────
+    async function loadInitiatives() {
+        const list = document.getElementById('initiatives-list');
+        if (!list) return;
+        const data = await apiCall('/admin/initiatives') || await apiCall('/initiatives');
+        if (!data) return;
+        document.getElementById('stat-initiatives').textContent = data.length;
+        list.innerHTML = data.length ? data.map(i => `
+            <div class="glass-panel p-6 rounded-2xl flex gap-5 items-start shadow-xl">
+                <img src="${i.image_url || i.imageUrl || ''}" class="w-24 h-20 object-cover rounded-xl flex-shrink-0" onerror="this.style.display=\'none\'">
+                <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-bold uppercase text-orange-400">${i.category || ''}</span>
+                    <h4 class="font-bold text-white mt-1 truncate">${i.title}</h4>
+                    <p class="text-xs text-gray-400 mt-1 line-clamp-2">${(i.description||'').substring(0,120)}...</p>
+                </div>
+                <button onclick="deleteInitiative(${i.id})" class="text-rose-500 hover:text-rose-400 flex-shrink-0"><i class="fas fa-trash"></i></button>
+            </div>`).join('')
+            : '<div class="text-gray-500 italic text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20">No initiatives yet.</div>';
+    }
+
+    async function deleteInitiative(id) {
+        if (!confirm('Delete this initiative?')) return;
+        const res = await apiCall(`/admin/initiatives/${id}`, 'DELETE');
+        if (res) { notify('Initiative removed.'); loadInitiatives(); }
+    }
+
+    const initForm = document.getElementById('initiative-form');
+    if (initForm) {
+        initForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('init-msg');
+            const body = {
+                title:       document.getElementById('init-title').value.trim(),
+                category:    document.getElementById('init-category').value.trim(),
+                image_url:   document.getElementById('init-image-url').value.trim(),
+                description: document.getElementById('init-desc').value.trim()
+            };
+            const res = await apiCall('/admin/initiatives', 'POST', body);
+            if (res) {
+                msg.textContent = 'Initiative published!';
+                msg.className = 'text-sm font-medium text-center mt-3 text-teal-400';
+                msg.classList.remove('hidden');
+                initForm.reset();
+                loadInitiatives();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    // ─── LEADERSHIP ──────────────────────────────────────────────────────────
+    async function loadLeadership() {
+        const list = document.getElementById('leadership-list');
+        if (!list) return;
+        const data = await apiCall('/leadership');
+        if (!data) return;
+        list.innerHTML = data.length ? data.map(l => `
+            <div class="glass-panel p-5 rounded-2xl flex gap-4 items-center shadow-xl">
+                <img src="${l.imageUrl || l.image_url || ''}" class="w-14 h-14 rounded-full object-cover flex-shrink-0 border border-white/10" onerror="this.src=\'https://placehold.co/56x56/1e293b/94a3b8?text=?\'" >
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-white truncate">${l.name}</p>
+                    <p class="text-xs text-pink-400">${l.role || l.position} &middot; <span class="text-gray-500">${l.category || ''}</span></p>
+                </div>
+                <button onclick="deleteLeader(${l.id})" class="text-rose-500 hover:text-rose-400 flex-shrink-0"><i class="fas fa-trash"></i></button>
+            </div>`).join('')
+            : '<div class="text-gray-500 italic text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20">No leaders yet.</div>';
+    }
+
+    async function deleteLeader(id) {
+        if (!confirm('Remove this leader?')) return;
+        const res = await apiCall(`/admin/leadership/${id}`, 'DELETE');
+        if (res) { notify('Leader removed.'); loadLeadership(); }
+    }
+
+    const leaderForm = document.getElementById('leader-form');
+    if (leaderForm) {
+        leaderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('leader-msg');
+            const body = {
+                name:          document.getElementById('leader-name').value.trim(),
+                position:      document.getElementById('leader-role').value.trim(),
+                category:      document.getElementById('leader-category').value,
+                image_url:     document.getElementById('leader-image-url').value.trim(),
+                linkedin_url:  document.getElementById('leader-linkedin').value.trim(),
+                instagram_url: document.getElementById('leader-insta').value.trim(),
+                bio:           document.getElementById('leader-bio').value.trim()
+            };
+            const res = await apiCall('/admin/leadership', 'POST', body);
+            if (res) {
+                msg.textContent = 'Leader published!';
+                msg.className = 'text-sm font-medium text-center mt-3 text-teal-400';
+                msg.classList.remove('hidden');
+                leaderForm.reset();
+                loadLeadership();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    // ─── CAREERS ─────────────────────────────────────────────────────────────
+    async function loadCareers() {
+        const list = document.getElementById('careers-list');
+        if (!list) return;
+        const data = await apiCall('/admin/careers');
+        if (!data) return;
+        list.innerHTML = data.length ? data.map(j => `
+            <div class="glass-panel p-5 rounded-2xl flex justify-between items-start gap-4 shadow-xl">
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-white">${j.title}</p>
+                    <p class="text-xs text-gray-400 mt-1 line-clamp-2">${(j.description||'').substring(0,100)}</p>
+                </div>
+                <button onclick="deleteCareer(${j.id})" class="text-rose-500 hover:text-rose-400 flex-shrink-0 mt-1"><i class="fas fa-trash"></i></button>
+            </div>`).join('')
+            : '<div class="text-gray-500 italic text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20">No jobs posted yet.</div>';
+    }
+
+    async function deleteCareer(id) {
+        if (!confirm('Remove this job posting?')) return;
+        const res = await apiCall(`/admin/careers/${id}`, 'DELETE');
+        if (res) { notify('Job removed.'); loadCareers(); }
+    }
+
+    const careerForm = document.getElementById('career-form');
+    if (careerForm) {
+        careerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('car-msg');
+            const body = {
+                title:       document.getElementById('car-title').value.trim(),
+                description: document.getElementById('car-desc').value.trim(),
+                apply_link:  document.getElementById('car-link').value.trim()
+            };
+            const res = await apiCall('/admin/careers', 'POST', body);
+            if (res) {
+                msg.textContent = 'Job published!';
+                msg.className = 'text-sm font-medium text-center mt-3 text-teal-400';
+                msg.classList.remove('hidden');
+                careerForm.reset();
+                loadCareers();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    // ─── REELS ───────────────────────────────────────────────────────────────
+    async function loadReels() {
+        const list = document.getElementById('reels-list');
+        if (!list) return;
+        const data = await apiCall('/reels');
+        if (!data) return;
+        list.innerHTML = data.length ? data.map(r => `
+            <div class="glass-panel p-5 rounded-2xl flex justify-between items-center gap-4 shadow-xl">
+                <p class="font-bold text-white truncate">${r.title}</p>
+                <button onclick="deleteReel(${r.id})" class="text-rose-500 hover:text-rose-400 flex-shrink-0"><i class="fas fa-trash"></i></button>
+            </div>`).join('')
+            : '<div class="text-gray-500 italic text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20">No reels yet.</div>';
+    }
+
+    async function deleteReel(id) {
+        if (!confirm('Remove this reel?')) return;
+        const res = await apiCall(`/admin/reels/${id}`, 'DELETE');
+        if (res) { notify('Reel removed.'); loadReels(); }
+    }
+
+    const reelForm = document.getElementById('reel-form');
+    if (reelForm) {
+        reelForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('reel-msg');
+            const body = {
+                title:     document.getElementById('reel-title').value.trim(),
+                video_url: document.getElementById('reel-url').value.trim()
+            };
+            const res = await apiCall('/admin/reels', 'POST', body);
+            if (res) {
+                msg.textContent = 'Reel published!';
+                msg.className = 'text-sm font-medium text-center mt-3 text-teal-400';
+                msg.classList.remove('hidden');
+                reelForm.reset();
+                loadReels();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    // ─── TESTIMONIALS ────────────────────────────────────────────────────────
+    async function loadTestimonials() {
+        const list = document.getElementById('tests-list');
+        if (!list) return;
+        const data = await apiCall('/testimonials');
+        if (!data) return;
+        list.innerHTML = data.length ? data.map(t => `
+            <div class="glass-panel p-5 rounded-2xl shadow-xl">
+                <p class="text-gray-300 italic text-sm mb-3">\u201c${t.text}\u201d</p>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-white text-sm">${t.author}</p>
+                        <p class="text-xs text-green-400">${t.authorPosition || t.author_position || ''}</p>
+                    </div>
+                    <button onclick="deleteTestimonial(${t.id})" class="text-rose-500 hover:text-rose-400"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`).join('')
+            : '<div class="text-gray-500 italic text-center py-12 glass-panel rounded-2xl border border-dashed border-white/20">No testimonials yet.</div>';
+    }
+
+    async function deleteTestimonial(id) {
+        if (!confirm('Remove this testimonial?')) return;
+        const res = await apiCall(`/admin/testimonials/${id}`, 'DELETE');
+        if (res) { notify('Testimonial removed.'); loadTestimonials(); }
+    }
+
+    const testForm = document.getElementById('test-form');
+    if (testForm) {
+        testForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('test-msg');
+            const body = {
+                author:          document.getElementById('test-name').value.trim(),
+                author_position: document.getElementById('test-role').value.trim(),
+                image_url:       document.getElementById('test-image').value.trim(),
+                text:            document.getElementById('test-quote').value.trim()
+            };
+            const res = await apiCall('/admin/testimonials', 'POST', body);
+            if (res) {
+                msg.textContent = 'Testimonial published!';
+                msg.className = 'text-sm font-medium text-center mt-3 text-teal-400';
+                msg.classList.remove('hidden');
+                testForm.reset();
+                loadTestimonials();
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        });
+    }
+
+    window.onload = checkAccess;
+</script>
+</body>
+</html>

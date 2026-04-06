@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initiative Details | MAAI</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; scroll-behavior: smooth; }
+        .glass-nav { background: rgba(3, 7, 18, 0.7); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .hero-gradient { background: linear-gradient(to bottom, rgba(3, 7, 18, 0) 0%, rgba(3, 7, 18, 0.6) 50%, #030712 100%); }
+        .mesh-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at 50% -20%, #1e3a8a 0%, #030712 60%); }
+        
+        /* Smooth transitions for content reveal */
+        .reveal { animation: revealContent 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes revealContent { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .line-clamp-custom { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+
+<body class="text-gray-200 antialiased">
+    <div class="mesh-bg"></div>
+
+    <nav class="fixed top-0 w-full z-50 glass-nav">
+        <div class="container mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-2">
+    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+</a>
+            <a href="index.html#initiatives" class="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-all">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Home
+            </a>
+        </div>
+    </nav>
+
+    <section id="loader" class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-teal-500/20 border-t-teal-500 rounded-full animate-spin mb-4 mx-auto"></div>
+            <p class="text-gray-500 tracking-widest uppercase text-[10px] font-black">Loading Initiative</p>
+        </div>
+    </section>
+
+    <div id="content" class="hidden">
+        
+        <header class="relative h-[85vh] w-full overflow-hidden">
+            <img id="display-image" src="" class="w-full h-full object-cover" alt="">
+            <div class="absolute inset-0 hero-gradient"></div>
+            
+            <div class="absolute bottom-0 left-0 w-full pb-16 md:pb-24">
+                <div class="container mx-auto px-6 max-w-4xl">
+                    <div class="reveal">
+                        <span id="display-category" class="bg-teal-500 text-black px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] mb-6 inline-block"></span>
+                        <h1 id="display-title" class="text-5xl md:text-8xl font-extrabold text-white leading-none font-display tracking-tight drop-shadow-2xl"></h1>
+                        
+                        <div class="flex flex-wrap items-center mt-10 gap-8 text-gray-400">
+                            <span class="flex items-center text-xs font-bold uppercase tracking-widest">
+                                <i class="far fa-calendar-alt mr-3 text-teal-500"></i> 
+                                <span id="display-date"></span>
+                            </span>
+                            <span class="flex items-center text-xs font-bold uppercase tracking-widest">
+                                <i class="fas fa-shield-virus mr-3 text-teal-500"></i> 
+                                Verified Initiative
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-6 max-w-3xl py-24">
+            <article id="display-desc" class="text-lg md:text-2xl text-gray-300 leading-relaxed space-y-10 font-light reveal" style="animation-delay: 0.2s;">
+                </article>
+
+            <div class="mt-24 reveal" style="animation-delay: 0.4s;">
+                <div class="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-[3rem] p-12 text-center relative overflow-hidden">
+                    <div class="absolute -top-24 -left-24 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl"></div>
+                    
+                    <h3 class="text-3xl font-bold text-white mb-4">Want to be part of this?</h3>
+                    <p class="text-gray-400 mb-10 max-w-md mx-auto text-lg leading-relaxed">Join us on the ground and help us turn this initiative into a legacy.</p>
+                    
+                    <a href="login.html?tab=signup" class="inline-flex items-center bg-teal-500 text-black px-12 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-teal-400 hover:scale-105 transition-all shadow-[0_20px_50px_rgba(20,184,166,0.3)]">
+                        Volunteer Now <i class="fas fa-chevron-right ml-3 text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="py-12 border-t border-white/5 text-center">
+            <p class="text-gray-600 text-[10px] uppercase tracking-[0.5em]">Medical Awareness & Assistance Initiative © 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- 0. SMART CONFIGURATION ---
+        const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+        const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+
+        async function loadInitiativeDetails() {
+            // 1. Get ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            try {
+                // 2. Fetch from PostgreSQL
+                const res = await fetch(`${API_BASE}/initiatives/${id}`);
+                if (!res.ok) throw new Error("Initiative Not Found");
+                const data = await res.json();
+
+                // 3. THE KEY CHANGE: Update the Browser Tab Title
+                document.title = `${data.title} | MAAI`;
+
+                // 4. Inject Data into UI
+                document.getElementById('display-title').textContent = data.title;
+                document.getElementById('display-category').textContent = data.category;
+                document.getElementById('display-image').src = data.imageUrl;
+                document.getElementById('display-date').textContent = data.date;
+                
+                // 5. Handle Description (Auto-paragraphs)
+                const descContainer = document.getElementById('display-desc');
+                descContainer.innerHTML = data.description
+                    .split('\n\n') // Split by double newlines for paragraphs
+                    .map(p => `<p class="mb-8">${p.replace(/\n/g, '<br>')}</p>`)
+                    .join('');
+
+                // 6. Reveal Content & Hide Loader
+                document.getElementById('loader').classList.add('hidden');
+                const content = document.getElementById('content');
+                content.classList.remove('hidden');
+                
+            } catch (err) {
+                console.error("Critical error loading initiative:", err);
+                alert("We couldn't find that initiative. Sending you back to home.");
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Initialize on load
+        window.onload = loadInitiativeDetails;
+    </script>
+</body>
+</html>

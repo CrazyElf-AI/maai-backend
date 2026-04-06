@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAAI - Volunteer Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Outfit"', 'sans-serif']
+                    },
+                    colors: {
+                        brand: { teal: '#0d9488', rose: '#f43f5e', blue: '#2563eb' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family: 'Outfit', sans-serif; }
+
+        /* ── Light mode base ── */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-card: rgba(255,255,255,0.9);
+            --border: rgba(0,0,0,0.08);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+        }
+        .dark {
+            --bg-primary: #030712;
+            --bg-secondary: #0a0f1c;
+            --bg-card: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.08);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        /* ── Process step animations ── */
+        @keyframes process-glow {
+            0%   { border-color:rgba(255,255,255,.06); transform:translateY(0) scale(1); background:rgba(255,255,255,.02); box-shadow:0 4px 6px rgba(0,0,0,.1); }
+            5%   { border-color:rgba(13,148,136,.8); transform:translateY(-12px) scale(1.05); background:linear-gradient(180deg,rgba(13,148,136,.15) 0%,rgba(13,148,136,.02) 100%); box-shadow:0 20px 40px -5px rgba(13,148,136,.4),inset 0 0 30px rgba(13,148,136,.2); }
+            15%  { border-color:rgba(244,63,94,.8); transform:translateY(-12px) scale(1.05); background:linear-gradient(180deg,rgba(244,63,94,.15) 0%,rgba(244,63,94,.02) 100%); box-shadow:0 20px 40px -5px rgba(244,63,94,.4),inset 0 0 30px rgba(244,63,94,.2); }
+            20%  { border-color:rgba(255,255,255,.06); transform:translateY(0) scale(1); background:rgba(255,255,255,.02); box-shadow:0 4px 6px rgba(0,0,0,.1); }
+            100% { border-color:rgba(255,255,255,.06); transform:translateY(0) scale(1); background:rgba(255,255,255,.02); box-shadow:0 4px 6px rgba(0,0,0,.1); }
+        }
+        @keyframes num-pulse {
+            0%,20%,100% { transform:scale(1); }
+            5%  { transform:scale(1.2); box-shadow:0 0 25px 8px rgba(13,148,136,.8); }
+            15% { transform:scale(1.2); box-shadow:0 0 25px 8px rgba(244,63,94,.8); }
+        }
+        @keyframes text-glow {
+            0%,20%,100% { color:#fff; text-shadow:none; }
+            5%  { color:#5eead4; text-shadow:0 0 20px rgba(94,234,212,.8); }
+            15% { color:#fda4af; text-shadow:0 0 20px rgba(251,113,133,.8); }
+        }
+        .process-step { animation:process-glow 12s infinite cubic-bezier(.4,0,.2,1); backdrop-filter:blur(12px); }
+        .process-step h3 { animation:text-glow 12s infinite cubic-bezier(.4,0,.2,1); }
+        .process-step .step-num { animation:num-pulse 12s infinite cubic-bezier(.4,0,.2,1); }
+        .ps1,.ps1 h3,.ps1 .step-num { animation-delay:0s; }
+        .ps2,.ps2 h3,.ps2 .step-num { animation-delay:3s; }
+        .ps3,.ps3 h3,.ps3 .step-num { animation-delay:6s; }
+        .ps4,.ps4 h3,.ps4 .step-num { animation-delay:9s; }
+
+        @keyframes progress-slide {
+            0%,5%   { left:0%;   width:0%;  opacity:0; }
+            10%     { left:5%;   width:20%; opacity:1; }
+            20%     { left:25%;  width:5%;  opacity:0; }
+            25%,30% { left:25%;  width:0%;  opacity:0; }
+            35%     { left:30%;  width:20%; opacity:1; }
+            45%     { left:50%;  width:5%;  opacity:0; }
+            50%,55% { left:50%;  width:0%;  opacity:0; }
+            60%     { left:55%;  width:20%; opacity:1; }
+            70%     { left:75%;  width:5%;  opacity:0; }
+            75%,80% { left:75%;  width:0%;  opacity:0; }
+            85%     { left:80%;  width:20%; opacity:1; }
+            95%     { left:100%; width:5%;  opacity:0; }
+            100%    { left:100%; width:0%;  opacity:0; }
+        }
+        .progress-slide { animation:progress-slide 12s infinite ease-in-out; position:absolute; height:100%; top:0; background:linear-gradient(90deg,transparent,rgba(13,148,136,.8),rgba(244,63,94,.8),transparent); border-radius:9999px; z-index:10; }
+
+        /* ── Misc ── */
+        @keyframes pulse-slow { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:.6;transform:scale(1.1)} }
+        .anim-pulse-slow { animation:pulse-slow 8s ease-in-out infinite; }
+        .delay-4 { animation-delay:4s; }
+        .hover-lift { transition:all .35s cubic-bezier(.4,0,.2,1); }
+        .hover-lift:hover { transform:translateY(-8px); box-shadow:0 20px 40px -5px rgba(13,148,136,.25); border-color:rgba(13,148,136,.4); }
+        .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+        /* Activity tab content */
+        .act-tab-btn.active { background:rgba(13,148,136,.15); color:#0d9488; border-color:rgba(13,148,136,.4); }
+        .dark .act-tab-btn.active { background:rgba(13,148,136,.2); color:#2dd4bf; border-color:rgba(13,148,136,.5); }
+        .act-panel { display:none; }
+        .act-panel.active { display:block; }
+
+        /* Next initiative filter pills */
+        .filter-pill.active { background:#0d9488; color:#fff; border-color:#0d9488; }
+
+        /* Light-mode overrides so dark-specific utilities still look good */
+        html:not(.dark) .dark-card {
+            background:rgba(255,255,255,.85);
+            border:1px solid rgba(0,0,0,.08);
+            box-shadow:0 8px 30px rgba(0,0,0,.06);
+        }
+        html:not(.dark) .hero-overlay { background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(248,250,252,0.7) 60%, #f8fafc 100%); }
+        html:not(.dark) .section-dark { background:#f1f5f9; border-color:rgba(0,0,0,.06); }
+        html:not(.dark) .section-darker { background:#e2e8f0; border-color:rgba(0,0,0,.06); }
+        html:not(.dark) .text-white { color:#0f172a !important; }
+        html:not(.dark) .text-gray-400 { color:#64748b !important; }
+        html:not(.dark) .text-gray-300 { color:#475569 !important; }
+        html:not(.dark) .border-white\/10 { border-color:rgba(0,0,0,.08) !important; }
+        html:not(.dark) .bg-white\/5 { background:rgba(255,255,255,.85) !important; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+        html:not(.dark) .bg-white\/10 { background:rgba(255,255,255,.95) !important; }
+        html:not(.dark) .step-bg { background:#e2e8f0 !important; border-color:rgba(0,0,0,.06) !important; }
+        html:not(.dark) .stat-card { background:rgba(255,255,255,.9); border:1px solid rgba(13,148,136,.2); box-shadow:0 0 40px rgba(13,148,136,.08); }
+
+        /* Glow text */
+        .glow-teal  { text-shadow:0 0 15px rgba(13,148,136,.5),0 0 30px rgba(13,148,136,.25); }
+        .glow-rose  { text-shadow:0 0 15px rgba(244,63,94,.5),0 0 30px rgba(244,63,94,.25); }
+        .glow-amber { text-shadow:0 0 15px rgba(245,158,11,.5),0 0 30px rgba(245,158,11,.25); }
+        .dark .glow-teal  { text-shadow:0 0 20px rgba(45,212,191,.8),0 0 40px rgba(45,212,191,.4); }
+        .dark .glow-rose  { text-shadow:0 0 20px rgba(251,113,133,.8),0 0 40px rgba(251,113,133,.4); }
+        .dark .glow-amber { text-shadow:0 0 20px rgba(252,211,77,.8),0 0 40px rgba(252,211,77,.4); }
+
+        /* Initiative detail white box */
+        #initiative-detail-box { transition:all .4s cubic-bezier(.4,0,.2,1); }
+    </style>
+    <script>
+        // Apply theme before paint
+        if (localStorage.getItem('theme') === 'dark') { document.documentElement.classList.add('dark'); }
+        else { document.documentElement.classList.remove('dark'); }
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-toggle').checked = isDark;
+        }
+    </script>
+</head>
+<body class="bg-[#f8fafc] dark:bg-[#030712] text-slate-900 dark:text-gray-200 antialiased transition-colors duration-300">
+
+    <!-- Background blobs (dark only) -->
+    <div class="fixed inset-0 z-[-2] bg-[#030712] hidden dark:block pointer-events-none"></div>
+    <div class="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] bg-teal-600/20 rounded-full blur-[150px] opacity-0 dark:opacity-50 z-[-1] pointer-events-none anim-pulse-slow"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-rose-600/20 rounded-full blur-[150px] opacity-0 dark:opacity-40 z-[-1] pointer-events-none anim-pulse-slow delay-4"></div>
+
+    <!-- ══════════════ NAV ══════════════ -->
+    <nav class="fixed w-full top-0 z-50 bg-white/80 dark:bg-[#030712]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-2">
+                <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+                <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+            </a>
+            <div class="hidden md:flex space-x-7 font-medium text-slate-600 dark:text-gray-300 text-sm">
+                <a href="#about"        class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">About</a>
+                <a href="#activities"   class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Activities</a>
+                <a href="#initiatives"  class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Initiatives</a>
+                <a href="#team"         class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Team</a>
+                <a href="#next-camp"    class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Find a Camp</a>
+                <a href="#careers"      class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Careers</a>
+                <a href="#socials"      class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Socials</a>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Theme toggle -->
+                <label class="relative inline-flex items-center cursor-pointer" title="Toggle theme">
+                    <input type="checkbox" id="theme-toggle" class="sr-only peer" onchange="toggleTheme()">
+                    <div class="w-11 h-6 bg-gray-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                    <span class="ml-1.5 text-xs hidden md:block text-slate-500 dark:text-slate-400"><i class="fas fa-moon"></i></span>
+                </label>
+                <a href="login.html?tab=signup" class="bg-gradient-to-r from-teal-600 to-rose-500 hover:from-teal-500 hover:to-rose-400 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg shadow-teal-500/30 transition-all">
+                    Join Now
+                </a>
+                <button id="mobile-menu-btn" class="md:hidden text-slate-700 dark:text-gray-300">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-[#030712] border-t border-gray-100 dark:border-white/10 absolute top-full left-0 w-full shadow-xl">
+            <div class="flex flex-col px-6 py-5 space-y-4 font-medium text-slate-600 dark:text-gray-300 text-sm text-center">
+                <a href="#about">About</a><a href="#activities">Activities</a><a href="#initiatives">Initiatives</a>
+                <a href="#team">Team</a><a href="#next-camp">Find a Camp</a><a href="#careers">Careers</a><a href="#socials">Socials</a>
+                <a href="login.html?tab=signup" class="bg-gradient-to-r from-teal-600 to-rose-500 text-white px-6 py-2.5 rounded-full font-bold mt-2">Join as Volunteer</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ══════════════ HERO ══════════════ -->
+    <header class="relative h-[88vh] flex items-end pb-20 pt-16 overflow-hidden">
+        <img src="https://i.postimg.cc/KvfgWQsZ/ourteambanner2.jpg" alt="Volunteers" class="absolute inset-0 w-full h-full object-cover object-[center_35%] opacity-100">
+        <!-- light overlay -->
+        <div class="inline-block p-8 md:p-12 rounded-[3rem] 
+            bg-white/70 dark:bg-black/60 
+            backdrop-blur-xl 
+            border border-white/40 dark:border-white/10 
+            shadow-2xl shadow-gray-200/50 dark:shadow-none 
+            reveal">
+    
+    <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6 
+               text-slate-900 dark:text-white transition-colors duration-300">
+        Volunteer for <br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r 
+                     from-orange-500 to-rose-600 
+                     dark:from-amber-400 dark:to-rose-500">
+            Real Impact.
+        </span>
+    </h1>
+
+    <p class="text-slate-600 dark:text-gray-200 text-lg mb-8 max-w-md font-medium leading-relaxed">
+        Turn your time into a legacy. Join the MAAI movement today.
+    </p>
+
+    <div class="flex flex-wrap items-center gap-4 mt-8 reveal" style="animation-delay: 0.2s;">
+    <a href="login.html?tab=signup" 
+       class="inline-flex items-center px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px]
+              bg-indigo-600 dark:bg-white 
+              text-white dark:text-indigo-950 
+              shadow-xl shadow-indigo-500/20 dark:shadow-none
+              hover:bg-indigo-500 dark:hover:bg-gray-100
+              hover:-translate-y-1 transition-all duration-300">
+        Join the Movement
+    </a>
+
+    <a href="camps.html" 
+       class="inline-flex items-center px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px]
+              bg-white/10 dark:bg-white/5 
+              backdrop-blur-md
+              border border-slate-200 dark:border-white/10 
+              text-slate-900 dark:text-white 
+              hover:bg-white/40 dark:hover:bg-white/10
+              hover:-translate-y-1 transition-all duration-300">
+        <i class="fas fa-map-marker-alt mr-2 text-rose-500"></i> View Camps
+    </a>
+</div>
+    </header>
+
+    <!-- ══════════════ ABOUT ══════════════ -->
+    <section id="about" class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-6">Why Volunteer With MAAI</span>
+                    <h2 class="text-4xl md:text-5xl font-extrabold leading-tight mb-8 text-slate-900 dark:text-white">
+                        Be the Change<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Communities Need</span>
+                    </h2>
+                    <p class="text-slate-600 dark:text-gray-400 mb-6 leading-relaxed text-lg">MAAI is a ground-level medical awareness organisation driven by passionate students and professionals. Every camp, every person reached — made possible by volunteers like you.</p>
+                    <p class="text-slate-600 dark:text-gray-400 mb-10 leading-relaxed text-lg">Whether you're a medical student, working professional, or simply someone who cares — there's a role for you here. No experience required, just the will to show up.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="flex items-start gap-4">
+                            <div class="bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 p-3 rounded-xl shrink-0"><i class="fas fa-user-md text-xl"></i></div>
+                            <div><h4 class="font-bold text-slate-900 dark:text-white">Medical Exposure</h4><p class="text-sm text-slate-500 dark:text-gray-500 mt-1">Work alongside doctors & med students</p></div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 p-3 rounded-xl shrink-0"><i class="fas fa-certificate text-xl"></i></div>
+                            <div><h4 class="font-bold text-slate-900 dark:text-white">Certificates & Recognition</h4><p class="text-sm text-slate-500 dark:text-gray-500 mt-1">Earn verified volunteer certificates</p></div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 p-3 rounded-xl shrink-0"><i class="fas fa-users text-xl"></i></div>
+                            <div><h4 class="font-bold text-slate-900 dark:text-white">Community & Network</h4><p class="text-sm text-slate-500 dark:text-gray-500 mt-1">Join a growing team of changemakers</p></div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 p-3 rounded-xl shrink-0"><i class="fas fa-heart text-xl"></i></div>
+                            <div><h4 class="font-bold text-slate-900 dark:text-white">Real-World Impact</h4><p class="text-sm text-slate-500 dark:text-gray-500 mt-1">See the difference you make firsthand</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute -top-6 -right-6 w-32 h-32 bg-teal-400/20 rounded-3xl blur-2xl"></div>
+                    <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-rose-400/20 rounded-3xl blur-2xl"></div>
+                    <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[2.5rem] p-12 text-center shadow-2xl relative z-10">
+                        <div class="bg-teal-50 dark:bg-white/10 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                            <i class="fas fa-hands-helping text-5xl text-teal-500 dark:text-teal-400"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-900 dark:text-white mb-4">Show Up & Help</h3>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">You bring the heart — we handle the training, logistics, and coordination. Together we deliver healthcare to those who need it most.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ ACTIVITIES (tabbed) ══════════════ -->
+    <section id="activities" class="py-24 bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <span class="inline-block bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">What We Do</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Our <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Activities</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">From ground-level camps to podcasts — every activity is a step toward a healthier community.</p>
+            </div>
+
+            <!-- Tab buttons -->
+            <div class="flex flex-wrap justify-center gap-3 mb-10">
+                <button onclick="switchTab('health-camps')"  class="act-tab-btn active px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-clinic-medical mr-2"></i>Health Camps
+                </button>
+                <button onclick="switchTab('awareness')" class="act-tab-btn px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-bullhorn mr-2"></i>Awareness Sessions
+                </button>
+                <button onclick="switchTab('team-force')" class="act-tab-btn px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-users mr-2"></i>Team Force
+                </button>
+                <button onclick="switchTab('leadership-training')" class="act-tab-btn px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-star mr-2"></i>Leadership
+                </button>
+                <button onclick="switchTab('school-camps')" class="act-tab-btn px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-school mr-2"></i>School Camps
+                </button>
+                <button onclick="switchTab('skill-dev')" class="act-tab-btn px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-tools mr-2"></i>Skill Dev
+                </button>
+                <button onclick="switchTab('podcast')" class="act-tab-btn px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-400 transition-all">
+                    <i class="fas fa-microphone mr-2"></i>Podcast
+                </button>
+            </div>
+
+            <!-- Panels -->
+            <!-- Community Health Camps -->
+            <div id="tab-health-camps" class="act-panel active">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-clinic-medical text-2xl text-teal-600 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Community Health Camps</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Bringing healthcare directly to communities — urban and rural alike.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-stethoscope text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Health Check-ups</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Free basic health screenings including BP, sugar, BMI and general consultation for underserved populations.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-eye text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Screening Initiatives</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Anemia checks, vision screening, dental checks, and early disease detection programs at scale.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-map-marker-alt text-amber-600 dark:text-amber-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Rural & Urban Outreach</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Taking camps to remote villages and urban slums where access to healthcare is limited or unavailable.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-comments text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Preventive Counseling</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">One-on-one sessions to guide individuals on lifestyle choices, diet, and preventive health measures.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Awareness Sessions -->
+            <div id="tab-awareness" class="act-panel">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-bullhorn text-2xl text-rose-600 dark:text-rose-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Awareness Sessions</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Education that empowers — from schools to streets.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-graduation-cap text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">School & College Programs</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Menstrual health education, puberty guidance, and reproductive health awareness for students in a safe, empathetic environment.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-apple-alt text-amber-600 dark:text-amber-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Nutrition & Hygiene Workshops</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Practical workshops on balanced diets, hand hygiene, sanitation, and lifestyle disease awareness for all age groups.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-first-aid text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Basic First Aid & Emergency</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Teaching communities how to respond to medical emergencies — CPR, wound care, choking response, and when to call for help.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-tooth text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Oral Health & Caries Prevention</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Spreading awareness about dental hygiene, cavity prevention, regular check-ups, and fluoride use among children and adults.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Force -->
+            <div id="tab-team-force" class="act-panel">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-users text-2xl text-teal-600 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Our Team Force</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">The backbone of every camp — people who show up and make it happen.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift text-center">
+                            <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-crown text-teal-600 dark:text-teal-400 text-xl"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Core Student Leadership</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm">Students driving strategy, operations, and vision across all MAAI programmes.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift text-center">
+                            <div class="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-user-md text-rose-600 dark:text-rose-400 text-xl"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Medical Volunteers</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm">Doctors, nurses, and medical students providing clinical expertise at every camp.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift text-center">
+                            <div class="w-14 h-14 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-map-signs text-amber-600 dark:text-amber-400 text-xl"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Field Coordinators</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm">On-the-ground leaders managing venue setup, patient flow, and logistics in real time.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift text-center">
+                            <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-sitemap text-teal-600 dark:text-teal-400 text-xl"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Program Directors</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm">Senior members overseeing specific verticals — camps, awareness, partnerships, and content.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leadership Training -->
+            <div id="tab-leadership-training" class="act-panel">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-amber-100 dark:bg-amber-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-star text-2xl text-amber-600 dark:text-amber-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Leadership Training & Exposure</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Building the next generation of community health leaders.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-chess-king text-amber-600 dark:text-amber-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Structured Leadership Roles</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Providing real leadership responsibilities within committees and projects, building accountability from day one.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-lightbulb text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Youth Mentoring</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Mentoring youth in project planning, team coordination, and decision-making to become effective community leaders.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-comments text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Collaborative Learning</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Promoting peer-led discussions, cross-team collaboration, and shared learning to foster growth across all levels.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- School & College Camps -->
+            <div id="tab-school-camps" class="act-panel">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-school text-2xl text-teal-600 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">School & College Camps</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Healthy students, stronger futures.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-weight text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Health Check-up Camps</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Organizing basic check-ups — BMI, malnutrition assessment, anemia and vision screening within school and college campuses.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-brain text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Mental Well-being Sessions</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Facilitating discussions on stress management, exam anxiety, and emotional well-being tailored for students.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-running text-amber-600 dark:text-amber-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Healthy Habits</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Encouraging physical activity, balanced nutrition, hygiene practices, and vaccination awareness among young students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skill Development -->
+            <div id="tab-skill-dev" class="act-panel">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-tools text-2xl text-rose-600 dark:text-rose-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Skill Development Workshops</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1">Building capable, confident health volunteers from the ground up.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-stethoscope text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Camp Organization Skills</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Workshops on health camp organization, screening protocols, and epidemiological basics to run efficient camps.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-microphone-alt text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Communication & Soft Skills</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Sessions on patient communication, public speaking, professional etiquette, and community engagement skills.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-heart-pulse text-amber-600 dark:text-amber-400 fas fa-heartbeat"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">BLS & Emergency Preparedness</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Basic Life Support awareness, triage principles, and disaster/emergency preparedness training for all volunteers.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Podcast -->
+            <div id="tab-podcast" class="act-panel">
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 md:p-12">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                            <i class="fas fa-microphone text-2xl text-teal-600 dark:text-teal-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">MAAI Podcast</h3>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm mt-1 italic">Tuning into voices that drive change.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-user-tie text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Expert Conversations</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Engaging conversations with healthcare professionals and industry experts sharing insights on public health and preventive care.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-rose-100 dark:bg-rose-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-chart-line text-rose-600 dark:text-rose-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Public Health Trends</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Discussing emerging trends in community health, preventive medicine, and the real-world impact of grassroots organisations.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-hands-helping text-amber-600 dark:text-amber-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Volunteer Stories</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Inspiring stories from volunteers and organizers sharing their on-ground experiences, challenges, and moments of impact.</p>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover-lift">
+                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4"><i class="fas fa-broadcast-tower text-teal-600 dark:text-teal-400"></i></div>
+                            <h4 class="font-bold text-slate-900 dark:text-white mb-2">Actionable Advice</h4>
+                            <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">Broadcasting health advice and organisational leadership tips to empower a wider audience beyond our immediate reach.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ FLAGSHIP INITIATIVES ══════════════ -->
+    <section id="initiatives" class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Our Projects</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Flagship <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Initiatives</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">Explore what's happening on the ground — and where you can help.</p>
+            </div>
+            <div id="initiatives-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 max-w-6xl mx-auto">
+                <div class="col-span-full text-center py-16"><i class="fas fa-circle-notch fa-spin text-3xl text-teal-500 mb-4 block"></i><p class="text-slate-500">Fetching initiatives...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ STATS ══════════════ -->
+    <section class="py-24 bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Our Impact</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white">Numbers That <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-teal-500">Matter</span></h2>
+            </div>
+            <div class="stat-card bg-white dark:bg-[#0a0f1c]/80 dark:backdrop-blur-xl border border-teal-200 dark:border-teal-500/30 mx-auto max-w-5xl rounded-3xl shadow-xl p-10">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <div id="stat-camps" class="text-4xl md:text-5xl font-black text-teal-600 dark:text-teal-400 mb-2 font-display glow-teal">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Camps Conducted</div>
+                    </div>
+                    <div>
+                        <div id="stat-beneficiaries" class="text-4xl md:text-5xl font-black text-rose-500 dark:text-rose-400 mb-2 font-display glow-rose">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Beneficiaries Reached</div>
+                    </div>
+                    <div>
+                        <div id="stat-volunteers" class="text-4xl md:text-5xl font-black text-amber-500 dark:text-amber-400 mb-2 font-display glow-amber">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Volunteers Engaged</div>
+                    </div>
+                    <div>
+                        <div id="stat-awareness" class="text-4xl md:text-5xl font-black text-teal-600 dark:text-teal-400 mb-2 font-display glow-teal">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Awareness Sessions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ MENTORS ══════════════ -->
+    <section id="mentors" class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Guiding Lights</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Our <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Mentors</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">Experienced professionals guiding our mission and strategy.</p>
+            </div>
+            <div id="mentors-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 max-w-5xl mx-auto">
+                <div class="col-span-full text-center py-16"><i class="fas fa-circle-notch fa-spin text-3xl text-teal-500 mb-4 block"></i><p class="text-slate-500">Loading mentors...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ MEET THE TEAM ══════════════ -->
+    <section id="team" class="py-24 bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Our Leadership</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Meet the <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-teal-500">Team</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">The dedicated minds driving MAAI's mission forward.</p>
+            </div>
+            <div id="team-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+                <div class="col-span-full text-center py-16"><i class="fas fa-circle-notch fa-spin text-3xl text-rose-500 mb-4 block"></i><p class="text-slate-500">Loading team...</p></div>
+            </div>
+            <div class="text-center mt-12">
+                <a href="our-team.html" class="inline-block bg-gradient-to-r from-teal-600 to-rose-500 hover:from-teal-500 hover:to-rose-400 text-white px-10 py-4 rounded-full font-bold transition-all hover:scale-105 shadow-lg shadow-teal-500/30">Meet Our Full Team</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ WHO CAN JOIN ══════════════ -->
+    <section class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Open to All</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Who Can <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Join?</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">No barriers. If you care, there's a place for you.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-7 text-center hover-lift">
+                    <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-user-graduate text-teal-600 dark:text-teal-400 text-xl"></i></div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">Medical Students</h4>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm">Gain hands-on clinical exposure while making a real difference at camps.</p>
+                </div>
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-7 text-center hover-lift">
+                    <div class="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-briefcase text-rose-600 dark:text-rose-400 text-xl"></i></div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">Working Professionals</h4>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm">Contribute your skills — medical, creative, tech, or logistics — on weekends.</p>
+                </div>
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-7 text-center hover-lift">
+                    <div class="w-14 h-14 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-university text-amber-600 dark:text-amber-400 text-xl"></i></div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">College Students</h4>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm">Build leadership skills, earn certificates, and expand your network meaningfully.</p>
+                </div>
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-7 text-center hover-lift">
+                    <div class="w-14 h-14 bg-teal-100 dark:bg-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-heart text-teal-600 dark:text-teal-400 text-xl"></i></div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">Anyone Who Cares</h4>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm">No medical background needed. If you want to help, we'll find a role for you.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ HOW IT WORKS ══════════════ -->
+    <section class="py-24 bg-[#f8fafc] dark:bg-[#030712] relative overflow-hidden">
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] -z-10"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-[120px] -z-10"></div>
+
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-20">
+            <span class="inline-block bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold px-4 py-1.5 rounded-full text-xs uppercase tracking-widest mb-4">The Process</span>
+            <h2 class="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
+                Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-emerald-500">Journey</span> as a Volunteer
+            </h2>
+            <p class="text-slate-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">Four simple steps to get you on the ground making a tangible difference.</p>
+        </div>
+
+        <div class="relative max-w-6xl mx-auto">
+            <div class="hidden md:block absolute top-12 left-0 w-full h-[2px] bg-gray-200 dark:bg-white/5 z-0">
+                <div class="h-full bg-gradient-to-r from-teal-500 via-rose-500 to-teal-500 w-1/2 animate-pulse"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+                <div class="group text-center">
+                    <div class="w-24 h-24 mx-auto bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110 group-hover:border-teal-500/50 shadow-xl shadow-gray-200/50 dark:shadow-none">
+                        <span class="text-3xl font-black text-teal-500">01</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Create Account</h3>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed px-4">Sign up on the MAAI platform with your basic details.</p>
+                </div>
+
+                <div class="group text-center">
+                    <div class="w-24 h-24 mx-auto bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110 group-hover:border-rose-500/50 shadow-xl shadow-gray-200/50 dark:shadow-none">
+                        <span class="text-3xl font-black text-rose-500">02</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Browse Initiatives</h3>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed px-4">Explore upcoming medical camps and health drives.</p>
+                </div>
+
+                <div class="group text-center">
+                    <div class="w-24 h-24 mx-auto bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110 group-hover:border-teal-500/50 shadow-xl shadow-gray-200/50 dark:shadow-none">
+                        <span class="text-3xl font-black text-teal-500">03</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Sign Up</h3>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed px-4">Register for your chosen camp — our team will brief you.</p>
+                </div>
+
+                <div class="group text-center">
+                    <div class="w-24 h-24 mx-auto bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl flex items-center justify-center mb-8 transition-all duration-500 group-hover:scale-110 group-hover:border-rose-500/50 shadow-xl shadow-gray-200/50 dark:shadow-none">
+                        <span class="text-3xl font-black text-rose-500">04</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Impact</h3>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed px-4">Show up, contribute, and earn your verified certificate.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- ══════════════ CAMP REELS ══════════════ -->
+    <section class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Camp Reels</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Watch Us in <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-teal-500">Action</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">Glimpses of our on-ground impact.</p>
+            </div>
+            <div id="reels-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <div class="col-span-full text-center py-16"><i class="fas fa-circle-notch fa-spin text-3xl text-rose-500 mb-4 block"></i><p class="text-slate-500">Loading reels...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ TESTIMONIALS ══════════════ -->
+    <section class="py-24 bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Testimonials</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">What Volunteers <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Say</span></h2>
+            </div>
+            <div id="testimonials-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 max-w-6xl mx-auto">
+                <div class="col-span-full text-center py-16"><i class="fas fa-circle-notch fa-spin text-3xl text-teal-500 mb-4 block"></i><p class="text-slate-500">Loading testimonials...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ FIND YOUR NEXT INITIATIVE ══════════════ -->
+    <section id="next-camp" class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Get Involved</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Find Your Next <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Initiative</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">Browse upcoming camps, awareness sessions, and NGO drives.</p>
+            </div>
+
+            <!-- Filter pills -->
+            <div class="flex flex-wrap justify-center gap-3 mb-8">
+                <button onclick="filterDrives('all')" class="filter-pill active px-5 py-2 rounded-full border border-gray-300 dark:border-white/20 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-500 transition-all">All</button>
+                <button onclick="filterDrives('camp')" class="filter-pill px-5 py-2 rounded-full border border-gray-300 dark:border-white/20 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-500 transition-all">Camps</button>
+                <button onclick="filterDrives('awareness')" class="filter-pill px-5 py-2 rounded-full border border-gray-300 dark:border-white/20 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-500 transition-all">Awareness</button>
+                <button onclick="filterDrives('ngo')" class="filter-pill px-5 py-2 rounded-full border border-gray-300 dark:border-white/20 text-sm font-bold text-slate-600 dark:text-gray-300 hover:border-teal-500 transition-all">NGO Drives</button>
+            </div>
+
+            <!-- Drive cards -->
+            <div id="drives-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-8">
+                <div class="col-span-full text-center py-12"><i class="fas fa-circle-notch fa-spin text-2xl text-teal-500 mb-3 block"></i><p class="text-slate-500 text-sm">Fetching active initiatives...</p></div>
+            </div>
+
+            <!-- Detail box -->
+            <div id="initiative-detail-box" class="hidden max-w-4xl mx-auto bg-white dark:bg-[#0a0f1c] border border-teal-200 dark:border-teal-500/30 rounded-3xl p-8 shadow-xl">
+                <div class="flex justify-between items-start mb-5">
+                    <h3 id="detail-title" class="text-2xl font-extrabold text-slate-900 dark:text-white"></h3>
+                    <button onclick="document.getElementById('initiative-detail-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors ml-4 shrink-0"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="flex flex-wrap gap-3 mb-5">
+                    <span id="detail-location" class="bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 text-xs font-bold px-3 py-1.5 rounded-full"><i class="fas fa-map-marker-alt mr-1"></i></span>
+                    <span id="detail-category" class="bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-bold px-3 py-1.5 rounded-full"></span>
+                </div>
+                <p id="detail-desc" class="text-slate-600 dark:text-gray-400 leading-relaxed mb-6"></p>
+                <a href="login.html?tab=signup" class="inline-flex items-center bg-gradient-to-r from-teal-600 to-teal-500 text-white px-7 py-3 rounded-full font-bold hover:from-teal-500 hover:to-teal-400 transition-all shadow-lg shadow-teal-500/30">
+                    Volunteer for This <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ CAREERS ══════════════ -->
+    <section id="careers" class="py-24 bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Join Our Team</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">Open <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-rose-500">Careers</span></h2>
+                <p class="text-slate-600 dark:text-gray-400 text-lg">Looking for a more structured role? We have positions open.</p>
+            </div>
+            <div id="careers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 max-w-6xl mx-auto">
+                <div class="col-span-full text-center py-16"><i class="fas fa-circle-notch fa-spin text-3xl text-teal-500 mb-4 block"></i><p class="text-slate-500">Loading opportunities...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════ SOCIALS ══════════════ -->
+    <section id="socials" class="py-24 bg-[#f1f5f9] dark:bg-[#0a0f1c] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6 text-center">
+            <span class="inline-block bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Connect With Us</span>
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-12">Our <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-teal-500">Socials</span></h2>
+            <div class="flex flex-wrap justify-center gap-6">
+                <a href="https://instagram.com/maai.cares" target="_blank" class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-8 rounded-3xl flex flex-col items-center gap-4 hover:-translate-y-2 hover:shadow-xl hover:border-pink-300 dark:hover:border-pink-500/50 transition-all group w-40 md:w-52">
+                    <div class="w-14 h-14 rounded-2xl bg-pink-50 dark:bg-pink-500/10 text-pink-500 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform"><i class="fab fa-instagram"></i></div>
+                    <span class="font-bold text-slate-900 dark:text-white">Instagram</span>
+                    <span class="text-slate-500 text-xs">@maai.cares</span>
+                </a>
+                <a href="https://linkedin.com/company/maai-organisation" target="_blank" class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-8 rounded-3xl flex flex-col items-center gap-4 hover:-translate-y-2 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-500/50 transition-all group w-40 md:w-52">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform"><i class="fab fa-linkedin-in"></i></div>
+                    <span class="font-bold text-slate-900 dark:text-white">LinkedIn</span>
+                    <span class="text-slate-500 text-xs">maai organisation</span>
+                </a>
+                <a href="#" target="_blank" class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 p-8 rounded-3xl flex flex-col items-center gap-4 hover:-translate-y-2 hover:shadow-xl hover:border-red-300 dark:hover:border-red-500/50 transition-all group w-40 md:w-52">
+                    <div class="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-500 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform"><i class="fab fa-youtube"></i></div>
+                    <span class="font-bold text-slate-900 dark:text-white">YouTube</span>
+                    <span class="text-slate-500 text-xs">Subscribe</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10 py-10 text-center">
+        <p class="text-slate-500 text-xs uppercase tracking-[0.4em]">Maai Organisation Mission @ 2026. All rights reserved.</p>
+        <p class="text-slate-500 text-xs">Designed with ❤️ by the MAAI Team.</p>
+    </footer>
+
+    <!-- ══════════════ SCRIPTS ══════════════ -->
+    <script>
+    const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+
+    // Mobile menu
+    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    // Sync theme toggle checkbox on load
+    document.getElementById('theme-toggle').checked = document.documentElement.classList.contains('dark');
+
+    // ── Activity tabs ──
+    function switchTab(id) {
+        document.querySelectorAll('.act-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.act-panel').forEach(p => p.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById('tab-' + id).classList.add('active');
+    }
+
+    // ── Counter animation ──
+    function animateValue(id, end, duration) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let start = null;
+        const step = ts => {
+            if (!start) start = ts;
+            const prog = Math.min((ts - start) / duration, 1);
+            const ease = 1 - Math.pow(1 - prog, 4);
+            el.textContent = Math.floor(ease * end) + '+';
+            if (prog < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }
+
+    // ── All drives data for filtering ──
+    let allDrives = [];
+
+    function filterDrives(type) {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById('initiative-detail-box').classList.add('hidden');
+        const filtered = type === 'all' ? allDrives : allDrives.filter(d => {
+            const cat = (d.category || d.camp_type || '').toLowerCase();
+            if (type === 'camp') return cat.includes('camp') || cat.includes('health') || cat.includes('medical');
+            if (type === 'awareness') return cat.includes('aware') || cat.includes('session') || cat.includes('workshop');
+            if (type === 'ngo') return cat.includes('ngo') || cat.includes('drive') || cat.includes('outreach');
+            return true;
+        });
+        renderDrives(filtered);
+    }
+
+    function showDriveDetail(d) {
+        document.getElementById('detail-title').textContent = d.title || d.camp_type || 'Initiative';
+        document.getElementById('detail-location').innerHTML = '<i class="fas fa-map-marker-alt mr-1"></i>' + (d.location || 'India');
+        document.getElementById('detail-category').textContent = d.category || d.camp_type || 'Drive';
+        document.getElementById('detail-desc').textContent = d.description || 'Join us for this exciting community health initiative. Volunteers of all backgrounds are welcome.';
+        const box = document.getElementById('initiative-detail-box');
+        box.classList.remove('hidden');
+        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderDrives(drives) {
+        const c = document.getElementById('drives-container');
+        if (!drives.length) {
+            c.innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">No active initiatives found right now. Check back soon!</p>';
+            return;
+        }
+        c.innerHTML = drives.map(d => `
+            <div onclick='showDriveDetail(${JSON.stringify(d).replace(/'/g, "&#39;")})' 
+                 class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 cursor-pointer hover-lift hover:border-teal-300 dark:hover:border-teal-500/40 transition-all">
+                <div class="flex items-start justify-between mb-3">
+                    <span class="bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg">${d.category || d.camp_type || 'Drive'}</span>
+                    <i class="fas fa-arrow-right text-slate-400 dark:text-gray-500 text-sm mt-1"></i>
+                </div>
+                <h4 class="font-bold text-slate-900 dark:text-white text-lg mb-2">${d.title || d.camp_type || 'Community Drive'}</h4>
+                <p class="text-slate-500 dark:text-gray-400 text-sm line-clamp-2">${d.description || 'Join this community health initiative as a volunteer.'}</p>
+                <div class="mt-4 flex items-center gap-2 text-xs text-slate-400 dark:text-gray-500 font-semibold">
+                    <i class="fas fa-map-marker-alt text-teal-500"></i> ${d.location || 'India'}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Load all data ──
+    async function loadAll() {
+        // Stats
+        try {
+            const s = await fetch(`${API_BASE}/stats`).then(r => r.json());
+            animateValue('stat-camps', s.camps || 22, 2000);
+            animateValue('stat-beneficiaries', s.beneficiaries || 8100, 2500);
+            animateValue('stat-volunteers', s.volunteers || 1100, 2500);
+            animateValue('stat-awareness', s.camps || 22, 2000);
+        } catch { animateValue('stat-camps',22,2000); animateValue('stat-beneficiaries',8100,2500); animateValue('stat-volunteers',1100,2500); animateValue('stat-awareness',22,2000); }
+
+        // Flagship initiatives
+        try {
+            const inits = await fetch(`${API_BASE}/initiatives`).then(r => r.json());
+            document.getElementById('initiatives-container').innerHTML = inits.length ? inits.map(i => `
+                <div onclick="window.location.href='initiative-details.html?id=${i.id}'" 
+                     class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden hover-lift cursor-pointer group">
+                    <div class="h-48 overflow-hidden">
+                        <img src="${i.imageUrl || i.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/400x250?text=MAAI'">
+                    </div>
+                    <div class="p-6">
+                        <span class="text-teal-600 dark:text-teal-400 text-[10px] font-black uppercase tracking-widest">${i.category || 'Initiative'}</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mt-2 mb-3">${i.title}</h3>
+                        <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed line-clamp-3">${i.description}</p>
+                        <div class="mt-4 text-teal-600 dark:text-teal-400 text-xs font-bold uppercase flex items-center gap-2">Read Full Story <i class="fas fa-arrow-right text-[10px]"></i></div>
+                    </div>
+                </div>
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-10">No initiatives added yet.</p>';
+        } catch { document.getElementById('initiatives-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load initiatives.</p>'; }
+
+        // Leadership: split mentors vs team
+        try {
+            const leaders = await fetch(`${API_BASE}/leadership`).then(r => r.json());
+            const mentors = leaders.filter(l => (l.position || '').toLowerCase().includes('mentor'));
+            const team    = leaders.filter(l => !(l.position || '').toLowerCase().includes('mentor'));
+
+            document.getElementById('mentors-container').innerHTML = mentors.length ? mentors.map(m => `
+                <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-7 text-center hover-lift">
+                    <img src="${m.imageUrl || m.image_url}" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-2 border-teal-200 dark:border-teal-500/30" onerror="this.src='https://via.placeholder.com/150'">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-lg">${m.name}</h3>
+                    <p class="text-teal-600 dark:text-teal-400 text-xs font-semibold uppercase tracking-wider mt-1">${m.position}</p>
+                    ${m.linkedinUrl ? `<a href="${m.linkedinUrl}" target="_blank" class="mt-3 inline-block text-blue-500 hover:text-blue-400 text-sm"><i class="fab fa-linkedin"></i></a>` : ''}
+                </div>
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">No mentors added yet.</p>';
+
+            document.getElementById('team-container').innerHTML = team.length ? team.map(l => `
+                <div class="text-center group">
+                    <img src="${l.imageUrl || l.image_url}" class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-2 border-gray-200 dark:border-white/10 group-hover:border-teal-400 transition-all" onerror="this.src='https://via.placeholder.com/150'">
+                    <h4 class="font-bold text-slate-900 dark:text-white text-sm">${l.name}</h4>
+                    <p class="text-teal-600 dark:text-teal-400 text-[10px] font-bold uppercase tracking-wider mt-1">${l.position}</p>
+                    ${l.linkedinUrl ? `<a href="${l.linkedinUrl}" target="_blank" class="mt-2 inline-block text-blue-500 hover:text-blue-400 text-xs"><i class="fab fa-linkedin"></i></a>` : ''}
+                </div>
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">No team members added yet.</p>';
+        } catch { 
+            document.getElementById('mentors-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-8">Could not load mentors.</p>';
+            document.getElementById('team-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-8">Could not load team.</p>';
+        }
+
+        // Reels
+        try {
+            const reels = await fetch(`${API_BASE}/reels`).then(r => r.json());
+            document.getElementById('reels-container').innerHTML = reels.length ? reels.map(r => `
+                <div class="aspect-[9/16] bg-black rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 relative group">
+                    <iframe src="${r.videoUrl || r.video_url}" class="w-full h-full border-0" allowfullscreen></iframe>
+                    <div class="absolute bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent w-full">
+                        <p class="text-white text-xs font-bold">${r.title}</p>
+                    </div>
+                </div>
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-10">No reels uploaded yet.</p>';
+        } catch { document.getElementById('reels-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load reels.</p>'; }
+
+        // Testimonials
+        try {
+            const tests = await fetch(`${API_BASE}/testimonials`).then(r => r.json());
+            document.getElementById('testimonials-container').innerHTML = tests.length ? tests.map(t => `
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 hover-lift">
+                    <div class="text-teal-500 mb-4 text-xl"><i class="fas fa-quote-left"></i></div>
+                    <p class="text-slate-600 dark:text-gray-300 italic mb-6 leading-relaxed">"${t.text}"</p>
+                    <h4 class="font-bold text-slate-900 dark:text-white">${t.author}</h4>
+                    <p class="text-teal-600 dark:text-teal-400 text-xs font-semibold uppercase tracking-wider mt-1">${t.authorPosition || t.author_position || 'Volunteer'}</p>
+                </div>
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-10">No testimonials yet.</p>';
+        } catch { document.getElementById('testimonials-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load testimonials.</p>'; }
+
+        // Active drives (find your next initiative)
+        try {
+            const drives = await fetch(`${API_BASE}/active-drives`).then(r => r.json());
+            allDrives = drives;
+            renderDrives(drives);
+        } catch { document.getElementById('drives-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load active initiatives.</p>'; }
+
+        // Careers
+        try {
+            const jobs = await fetch(`${API_BASE}/careers`).then(r => r.json());
+            document.getElementById('careers-container').innerHTML = jobs.length ? jobs.map(j => `
+                <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 hover-lift">
+                    <div class="w-12 h-12 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-5"><i class="fas fa-briefcase text-teal-600 dark:text-teal-400"></i></div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3">${j.title}</h3>
+                    <p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed mb-5">${j.description}</p>
+                    <a href="${j.apply_link || 'login.html?tab=signup'}" target="_blank" class="text-teal-600 dark:text-teal-400 font-bold text-sm hover:underline">Apply Now <i class="fas fa-arrow-right ml-1 text-xs"></i></a>
+                </div>
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-10">No open positions right now. Check back soon!</p>';
+        } catch { document.getElementById('careers-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load careers.</p>'; }
+    }
+
+    window.onload = loadAll;
+    </script>
+</body>
+</html>
