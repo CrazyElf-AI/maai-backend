@@ -230,7 +230,7 @@
         Join the Movement
     </a>
 
-    <a href="camps.html" 
+    <a href="Camps.html" 
        class="inline-flex items-center px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px]
               bg-white/10 dark:bg-white/5 
               backdrop-blur-md
@@ -936,10 +936,10 @@
         try {
             const s = await fetch(`${API_BASE}/stats`).then(r => r.json());
             animateValue('stat-camps', s.camps || 22, 2000);
-            animateValue('stat-beneficiaries', s.beneficiaries || 8100, 2500);
-            animateValue('stat-volunteers', s.volunteers || 1100, 2500);
-            animateValue('stat-awareness', s.camps || 22, 2000);
-        } catch { animateValue('stat-camps',22,2000); animateValue('stat-beneficiaries',8100,2500); animateValue('stat-volunteers',1100,2500); animateValue('stat-awareness',22,2000); }
+            animateValue('stat-beneficiaries', s.beneficiaries || 800, 2500);
+            animateValue('stat-volunteers', s.volunteers || 500, 2500);
+            animateValue('stat-awareness', s.camps || 17, 2000);
+        } catch { animateValue('stat-camps',22,2000); animateValue('stat-beneficiaries',800,2500); animateValue('stat-volunteers',500,2500); animateValue('stat-awareness',17,2000); }
 
         // Flagship initiatives
         try {

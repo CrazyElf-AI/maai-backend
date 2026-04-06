@@ -172,6 +172,14 @@
         .dark .glow-text-blue { text-shadow: 0 0 20px rgba(96, 165, 250, 0.8), 0 0 40px rgba(96, 165, 250, 0.5); }
         .dark .glow-text-orange { text-shadow: 0 0 20px rgba(251, 146, 60, 0.8), 0 0 40px rgba(251, 146, 60, 0.5); }
         .dark .glow-text-teal { text-shadow: 0 0 20px rgba(45, 212, 191, 0.8), 0 0 40px rgba(45, 212, 191, 0.5); }
+
+        /* Glow text from volunteer.html */
+        .glow-teal  { text-shadow:0 0 15px rgba(13,148,136,.5),0 0 30px rgba(13,148,136,.25); }
+        .glow-rose  { text-shadow:0 0 15px rgba(244,63,94,.5),0 0 30px rgba(244,63,94,.25); }
+        .glow-amber { text-shadow:0 0 15px rgba(245,158,11,.5),0 0 30px rgba(245,158,11,.25); }
+        .dark .glow-teal  { text-shadow:0 0 20px rgba(45,212,191,.8),0 0 40px rgba(45,212,191,.4); }
+        .dark .glow-rose  { text-shadow:0 0 20px rgba(251,113,133,.8),0 0 40px rgba(251,113,133,.4); }
+        .dark .glow-amber { text-shadow:0 0 20px rgba(252,211,77,.8),0 0 40px rgba(252,211,77,.4); }
     </style>
     <script>
         if (localStorage.getItem('theme') === 'dark') {
@@ -208,7 +216,7 @@
                 <a href="index.html" class="hover:text-blue-400 transition-colors">Home</a>
                 <a href="#about" class="hover:text-blue-400 transition-colors">About</a>
                 <a href="#initiatives" class="hover:text-blue-400 transition-colors">Initiatives</a>
-                <a href="camps.html" class="hover:text-blue-400 transition-colors">Camps</a>
+                <a href="Camps.html" class="hover:text-blue-400 transition-colors">Camps</a>
                 <a href="#careers" class="hover:text-blue-400 transition-colors">Careers</a>
                 <a href="#socials" class="hover:text-blue-400 transition-colors">Socials</a>
             </div>
@@ -244,7 +252,7 @@
     </nav>
 
     <header class="relative bg-[#030712] h-[80vh] flex items-center pt-16">
-        <img src="bannerforngopage.JPG" alt="Organizers" class="absolute inset-0 w-full h-full object-cover object-[center_35%] opacity-40">
+        <img src="https://i.postimg.cc/PqwJdMKS/bannerforngopage.jpg" alt="NGO Partnership" class="absolute inset-0 w-full h-full object-cover opacity-60">
         <div class="absolute inset-0 bg-gradient-to-b from-[#030712]/50 via-transparent to-[#030712]"></div>
         <div class="container mx-auto px-4 relative z-10">
             <div class="max-w-2xl">
@@ -441,29 +449,30 @@
     </section>
 
     <!-- Our Impact / Quick Stats -->
-    <section class="py-24 bg-[#030712] border-t border-white/10 relative">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-16 max-w-3xl mx-auto">
-                <span class="inline-block bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-6">
-                    Our Impact
-                </span>
-                <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-                    Numbers That <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-blue-400">Matter</span>
-                </h2>
+    <section class="py-24 bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-14">
+                <span class="inline-block bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 font-semibold px-4 py-1.5 rounded-full text-sm mb-5">Our Impact</span>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white">Numbers That <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-teal-500">Matter</span></h2>
             </div>
-            <div class="bg-[#0a0f1c]/80 backdrop-blur-xl border border-blue-500/30 text-white relative z-20 mx-auto max-w-5xl rounded-3xl shadow-[0_0_40px_rgba(59,130,246,0.15)] overflow-hidden p-10" id="stats-section">
-                <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-rose-500/10 opacity-50 z-0 pointer-events-none"></div>
-                <div class="text-4xl md:text-5xl font-black text-brand-blue mb-2 font-display glow-text-blue" id="stat-camps">0+</div>
-            <div class="text-gray-500 font-bold tracking-wider uppercase text-sm">Camps Conducted</div>
-
-            <div class="text-4xl md:text-5xl font-black text-orange-500 mb-2 font-display glow-text-orange" id="stat-beneficiaries">0+</div>
-            <div class="text-gray-500 font-bold tracking-wider uppercase text-sm">Beneficiaries Reached</div>
-
-            <div class="text-4xl md:text-5xl font-black text-brand-teal mb-2 font-display glow-text-teal" id="stat-volunteers">0+</div>
-            <div class="text-gray-500 font-bold tracking-wider uppercase text-sm">Volunteers Engaged</div>
-
-            <div class="text-4xl md:text-5xl font-black text-brand-teal mb-2 font-display glow-text-teal" id="stat-awareness">0+</div>
-            <div class="text-gray-500 font-bold tracking-wider uppercase text-sm">Awareness Sessions</div>
+            <div class="stat-card bg-white dark:bg-[#0a0f1c]/80 dark:backdrop-blur-xl border border-teal-200 dark:border-teal-500/30 mx-auto max-w-5xl rounded-3xl shadow-xl p-10">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <div id="stat-camps" class="text-4xl md:text-5xl font-black text-teal-600 dark:text-teal-400 mb-2 font-display glow-teal">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Camps Conducted</div>
+                    </div>
+                    <div>
+                        <div id="stat-beneficiaries" class="text-4xl md:text-5xl font-black text-rose-500 dark:text-rose-400 mb-2 font-display glow-rose">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Beneficiaries Reached</div>
+                    </div>
+                    <div>
+                        <div id="stat-volunteers" class="text-4xl md:text-5xl font-black text-amber-500 dark:text-amber-400 mb-2 font-display glow-amber">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Volunteers Engaged</div>
+                    </div>
+                    <div>
+                        <div id="stat-awareness" class="text-4xl md:text-5xl font-black text-teal-600 dark:text-teal-400 mb-2 font-display glow-teal">0+</div>
+                        <div class="text-slate-500 font-bold tracking-wider uppercase text-xs">Awareness Sessions</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -804,9 +813,9 @@ function animateValue(id, start, end, duration) {
 document.addEventListener('DOMContentLoaded', () => {
     // Hardcoded to match your official MAAI graphic 
     animateValue("stat-camps", 0, 22, 2000); 
-    animateValue("stat-beneficiaries", 0, 8100, 2500); 
-    animateValue("stat-volunteers", 0, 1100, 2500);
-    animateValue("stat-awareness", 0, 22, 2000);
+    animateValue("stat-beneficiaries", 0, 800, 2500); 
+    animateValue("stat-volunteers", 0, 500, 2500);
+    animateValue("stat-awareness", 0, 17, 2000);
 });
 
     // 2. Camp Registration Form Handler
