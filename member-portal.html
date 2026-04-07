@@ -258,22 +258,37 @@
     }
 
     // --- 5. DATA FUNCTIONS ---
-    async function loadUserProfile() {
-        try {
-            const data = await apiCall('/me');
-            if (!data) return;
+    // Inside loadUserProfile() function
+async function loadUserProfile() {
+    try {
+        const data = await apiCall('/me');
+        if (!data) return;
 
-            // Update UI
-            userNameEl.textContent = data.full_name?.split(' ')[0] || 'Member';
-            userProfessionEl.textContent = data.profession || getDefaultProfession(data.role);
-            userHoursEl.innerHTML = `${data.hours_volunteered ?? 0} <span class="text-sm text-gray-500 dark:text-slate-400 font-sans font-normal lowercase">hrs</span>`;
-            
-            setBadge(data.role);
-            setRoleUI(data.role);
-        } catch (error) {
-            console.error("Profile load error:", error);
+        userNameEl.textContent = data.full_name?.split(' ')[0] || 'Member';
+        userProfessionEl.textContent = data.profession || getDefaultProfession(data.role);
+        userHoursEl.innerHTML = `${data.hours_volunteered ?? 0} <span class="text-sm text-gray-500 dark:text-slate-400 font-sans font-normal lowercase">hrs</span>`;
+        
+        // --- NEW: Certificate Logic ---
+        const certLink = document.querySelector('a[href*="Certificates"]');
+        if (certLink) {
+            certLink.href = "#"; // Prevent default
+            certLink.onclick = (e) => {
+                e.preventDefault();
+                if (data.certificate_url) {
+                    window.open(data.certificate_url, '_blank');
+                } else {
+                    alert("Your certificate has not been uploaded yet. Please check back later!");
+                }
+            };
         }
+        // ------------------------------
+
+        setBadge(data.role);
+        setRoleUI(data.role);
+    } catch (error) {
+        console.error("Profile load error:", error);
     }
+}
 
     async function loadActiveDrives() {
         try {

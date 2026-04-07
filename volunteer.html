@@ -932,14 +932,11 @@
 
     // ── Load all data ──
     async function loadAll() {
-        // Stats
-        try {
-            const s = await fetch(`${API_BASE}/stats`).then(r => r.json());
-            animateValue('stat-camps', s.camps || 22, 2000);
-            animateValue('stat-beneficiaries', s.beneficiaries || 800, 2500);
-            animateValue('stat-volunteers', s.volunteers || 500, 2500);
-            animateValue('stat-awareness', s.camps || 17, 2000);
-        } catch { animateValue('stat-camps',22,2000); animateValue('stat-beneficiaries',800,2500); animateValue('stat-volunteers',500,2500); animateValue('stat-awareness',17,2000); }
+        // Force these specific numbers regardless of the database
+            animateValue('stat-camps', 22, 2000); 
+            animateValue('stat-beneficiaries', 800, 2500); 
+            animateValue('stat-volunteers', 500, 2500); 
+            animateValue('stat-awareness', 17, 2000);
 
         // Flagship initiatives
         try {
@@ -962,7 +959,26 @@
 
         // Leadership: split mentors vs team
         try {
-            const leaders = await fetch(`${API_BASE}/leadership`).then(r => r.json());
+            // Inside loadAll() / loadAllContent()
+try {
+    const leaders = await fetch(`${API_BASE}/leadership`).then(r => r.json());
+    
+    // FILTER: Only show "Founders" on this specific page
+    const founders = leaders.filter(l => l.category === 'Founders');
+
+    const container = document.getElementById('team-container') || document.getElementById('leadership-container');
+    if (container) {
+        container.innerHTML = founders.length ? founders.map(l => `
+            <div class="text-center group">
+                <img src="${l.image_url}" class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-2 border-gray-200 dark:border-white/10 group-hover:border-teal-400 transition-all">
+                <h4 class="font-bold text-slate-900 dark:text-white text-sm">${l.name}</h4>
+                <p class="text-teal-600 dark:text-teal-400 text-[10px] font-bold uppercase tracking-wider mt-1">${l.position}</p>
+            </div>
+        `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">Founders will be displayed here soon.</p>';
+    }
+} catch (err) {
+    console.error("Leadership filter failed", err);
+}
             const mentors = leaders.filter(l => (l.position || '').toLowerCase().includes('mentor'));
             const team    = leaders.filter(l => !(l.position || '').toLowerCase().includes('mentor'));
 
@@ -1020,6 +1036,30 @@
             allDrives = drives;
             renderDrives(drives);
         } catch { document.getElementById('drives-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load active initiatives.</p>'; }
+
+        async function loadUserProfile() {
+    try {
+        const data = await apiCall('/me');
+        if (!data) return;
+
+        // Update existing UI...
+        userNameEl.textContent = data.full_name?.split(' ')[0] || 'Member';
+
+        // Find the Certificate link in the sidebar
+        const certLink = document.querySelector('a[href*="Certificates"]');
+        if (certLink) {
+            certLink.onclick = (e) => {
+                e.preventDefault();
+                if (data.certificate_url) {
+                    window.open(data.certificate_url, '_blank'); // Opens the Drive link
+                } else {
+                    alert("No certificates have been uploaded for you yet.");
+                }
+            };
+        }
+        // ... rest of your code
+    } catch (error) { console.error(error); }
+}
 
         // Careers
         try {
