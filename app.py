@@ -12,7 +12,13 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app,
+     resources={r"/api/*": {
+         "origins": ["https://crazyelf-ai.github.io"],
+         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"]
+     }},
+     supports_credentials=True)
 
 # Database & Security Config
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
@@ -747,6 +753,16 @@ def update_initiative(item_id):
     item.category = data.get('category', item.category)
     db.session.commit()
     return jsonify({'message': 'Initiative updated'})
+
+@app.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        from flask import Response
+        res = Response()
+        res.headers['Access-Control-Allow-Origin'] = 'https://crazyelf-ai.github.io'
+        res.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        res.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return res, 200
 
 @app.route('/api/admin/camps', methods=['POST'])
 @admin_required
