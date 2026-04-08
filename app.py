@@ -53,7 +53,15 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
-    
+class Certificate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    camp_title = db.Column(db.String(150), nullable=False)
+    url = db.Column(db.String(500), nullable=False) # Google Drive Link
+    issued_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Link back to user
+    user = db.relationship('User', backref=db.backref('certificates', lazy=True))
 
 class CampProposal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -594,6 +602,51 @@ def get_admin_announcements():
         'id': a.id, 'title': a.title, 'content': a.content,
         'date': a.created_at.strftime('%Y-%m-%d')
     } for a in notices])
+
+@app.route('/api/admin/users/<int:user_id>/certificates', methods=['POST'])
+@admin_required # Ensures only authorized staff can issue certs
+def issue_certificate(user_id):
+    data = request.get_json()
+    
+    if not data or 'url' not in data or 'camp_title' not in data:
+        return jsonify({'error': 'Camp title and Drive URL are required'}), 400
+        
+    user = User.query.get_or_404(user_id)
+    
+    new_cert = Certificate(
+        user_id=user.id,
+        camp_title=data['camp_title'],
+        url=data['url']
+    )
+    
+    db.session.add(new_cert)
+    db.session.commit()
+    
+    return jsonify({'message': f'Certificate for {data["camp_title"]} issued to {user.full_name}'}), 201
+
+@app.route('/api/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    email = get_jwt_identity()
+    user = User.query.filter_by(email=email).first_or_404()
+    
+    # Fetch all certificates linked to this user
+    certs = [{
+        'camp_title': c.camp_title,
+        'url': c.url,
+        'date': c.issued_at.strftime('%Y-%m-%d')
+    } for c in user.certificates]
+
+    response = jsonify({
+        'full_name': user.full_name,
+        'role': user.role,
+        'profession': user.city, # Using city as placeholder for profession if needed
+        'certificates': certs # This is what the new frontend logic expects!
+    })
+    
+    # Security headers to ensure data is always fresh
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
 
 @app.route('/api/admin/announcements', methods=['POST'])
 @admin_required
