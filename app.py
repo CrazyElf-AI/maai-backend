@@ -388,24 +388,6 @@ def delete_leadership(leader_id):
     db.session.commit()
     return jsonify({'message': 'Leadership profile deleted'})
 
-@app.route('/api/me', methods=['GET'])
-@jwt_required()
-def get_current_user():
-    email = get_jwt_identity()
-    user = User.query.filter_by(email=email).first_or_404()
-    
-    response = jsonify({
-        'full_name': user.full_name,
-        'role': user.role
-    })
-    
-    # Force the browser to ignore its cache for this specific request
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    
-    return response
-
 @app.route('/api/profile', methods=['GET'])
 @jwt_required()
 def get_profile():

@@ -70,9 +70,12 @@
             <a href="#" class="flex items-center gap-3 bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-500 px-4 py-3 rounded-xl font-semibold transition-colors border dark:border-orange-500/20">
                 <i class="fas fa-home w-5"></i> Home
             </a>
-            <a href="#" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors">
-                <i class="fas fa-certificate w-5"></i> My Certificates
-            </a>
+            <div class="px-4 py-2">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Certificates</p>
+                <div id="certificates-list" class="space-y-1">
+                    <p class="text-xs text-gray-500 px-2 italic">No certificates issued yet.</p>
+                </div>
+            </div>
             <a href="#" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors">
                 <i class="fas fa-book w-5"></i> Resources
             </a>
@@ -269,25 +272,16 @@ async function loadUserProfile() {
         userHoursEl.innerHTML = `${data.hours_volunteered ?? 0} <span class="text-sm text-gray-500 dark:text-slate-400 font-sans font-normal lowercase">hrs</span>`;
         
         // --- NEW: Certificate Logic ---
-        const certLink = document.querySelector('a[href*="Certificates"]');
-        if (certLink) {
-            certLink.href = "#"; // Prevent default
-            certLink.onclick = (e) => {
-                e.preventDefault();
-                if (data.certificate_url) {
-                    window.open(data.certificate_url, '_blank');
-                } else {
-                    alert("Your certificate has not been uploaded yet. Please check back later!");
-                }
-            };
+       const certContainer = document.getElementById('certificates-list');
+        if (data.certificates && data.certificates.length > 0) {
+            certContainer.innerHTML = data.certificates.map(cert => `
+                <a href="${cert.url}" target="_blank" class="flex items-center justify-between gap-3 text-gray-600 dark:text-slate-400 hover:text-orange-600 px-2 py-2 rounded-lg text-sm transition-all hover:bg-orange-50/50">
+                    <span class="truncate" title="${cert.camp_title}">${cert.camp_title}</span>
+                    <i class="fas fa-external-link-alt text-[10px]"></i>
+                </a>
+            `).join('');
         }
-        // ------------------------------
-
-        setBadge(data.role);
-        setRoleUI(data.role);
-    } catch (error) {
-        console.error("Profile load error:", error);
-    }
+    } catch (error) { console.error("Profile load error:", error); }
 }
 
     async function loadActiveDrives() {
