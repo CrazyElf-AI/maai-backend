@@ -227,7 +227,7 @@
 <script>
     // --- 0. SMART CONFIGURATION ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
+    const API_BASE = isLocal ? 'https://maai-backend.onrender.com' : 'https://maai-backend.onrender.com';
     const token = localStorage.getItem('token');
 
     async function loadTeam() {

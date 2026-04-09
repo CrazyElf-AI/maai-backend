@@ -229,7 +229,7 @@
 // --- 0. SMART CONFIGURATION ---
 // Automatically switches between your local computer and the live Render server
 const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
+const API_BASE = isLocal ? 'https://maai-backend.onrender.com' : 'https://maai-backend.onrender.com';
 const token = localStorage.getItem('token'); // <-- Crucial for God Mode and IT Panel
 
 function getTokenPayload(rawToken) {

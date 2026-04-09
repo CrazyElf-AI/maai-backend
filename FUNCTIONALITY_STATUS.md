@@ -34,7 +34,7 @@ The following public data endpoints correctly fetch data from the Flask API and 
 - **Resolved:** The UI toggle switch now accurately syncs its visual on/off state to match the currently applied `dark` class mode on page load. 
 
 ### 3. Inconsistent API Base URLs
-- **Resolved:** The frontend constants defining the backend URL (`API_BASE`) have been standardized globally across all HTML files. They now strictly use the base origin `http://127.0.0.1:5000` (local) or `https://maai-backend.onrender.com` (production) and explicitly append `/api/` in individual `fetch()` route calls, reducing potential network and maintenance errors.
+- **Resolved:** The frontend constants defining the backend URL (`API_BASE`) have been standardized globally across all HTML files. They now strictly use the base origin `https://maai-backend.onrender.com` (local) or `https://maai-backend.onrender.com` (production) and explicitly append `/api/` in individual `fetch()` route calls, reducing potential network and maintenance errors.
 
 ## ❌ What is NOT Functional (Bugs & Issues)
 

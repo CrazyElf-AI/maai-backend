@@ -216,7 +216,7 @@
     // --- 0. SMART CONFIGURATION (Global) ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const token = localStorage.getItem('token');
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
+    const API_BASE = isLocal ? 'https://maai-backend.onrender.com' : 'https://maai-backend.onrender.com';
     console.log("🚀 Initializing Portal using:", API_BASE);
 
     function getTokenPayload(rawToken) {
