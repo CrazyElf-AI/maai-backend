@@ -842,15 +842,11 @@
         </div>
     </section>
 
-    <footer class="bg-white dark:bg-[#030712] border-t border-gray-200 dark:border-white/10 py-10 text-center">
-        <p class="text-slate-500 text-xs uppercase tracking-[0.4em]">Maai Organisation Mission @ 2026. All rights reserved.</p>
-        <p class="text-slate-500 text-xs">Designed with ❤️ by the MAAI Team.</p>
-    </footer>
 
     <!-- ══════════════ SCRIPTS ══════════════ -->
     <script>
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
 
     // Mobile menu
     document.getElementById('mobile-menu-btn').addEventListener('click', () => {
@@ -942,7 +938,7 @@
 
         // Flagship initiatives
         try {
-            const inits = await fetch(`${API_BASE}/initiatives`).then(r => r.json());
+            const inits = await fetch(`${API_BASE}/api/initiatives`).then(r => r.json());
             document.getElementById('initiatives-container').innerHTML = inits.length ? inits.map(i => `
                 <div onclick="window.location.href='initiative-details.html?id=${i.id}'" 
                      class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden hover-lift cursor-pointer group">
@@ -959,30 +955,17 @@
             `).join('') : '<p class="col-span-full text-center text-slate-500 py-10">No initiatives added yet.</p>';
         } catch { document.getElementById('initiatives-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load initiatives.</p>'; }
 
-        // Leadership: split mentors vs team
+        // Leadership: founders on team section, mentors on mentors section
         try {
-            // Inside loadAll() / loadAllContent()
-try {
-    const leaders = await fetch(`${API_BASE}/leadership`).then(r => r.json());
-    
-    // FILTER: Only show "Founders" on this specific page
-    const founders = leaders.filter(l => l.category === 'Founders');
+            const leaders = await fetch(`${API_BASE}/api/leadership`).then(r => r.json());
+            const isFounder = leader => {
+                const category = (leader.category || '').trim().toLowerCase();
+                const position = (leader.position || leader.role || '').trim().toLowerCase();
+                return category === 'founder' || category === 'founders' || position.includes('founder');
+            };
 
-    const container = document.getElementById('team-container') || document.getElementById('leadership-container');
-    if (container) {
-        container.innerHTML = founders.length ? founders.map(l => `
-            <div class="text-center group">
-                <img src="${l.image_url}" class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-2 border-gray-200 dark:border-white/10 group-hover:border-teal-400 transition-all">
-                <h4 class="font-bold text-slate-900 dark:text-white text-sm">${l.name}</h4>
-                <p class="text-teal-600 dark:text-teal-400 text-[10px] font-bold uppercase tracking-wider mt-1">${l.position}</p>
-            </div>
-        `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">Founders will be displayed here soon.</p>';
-    }
-} catch (err) {
-    console.error("Leadership filter failed", err);
-}
-            const mentors = leaders.filter(l => (l.position || '').toLowerCase().includes('mentor'));
-            const team    = leaders.filter(l => !(l.position || '').toLowerCase().includes('mentor'));
+            const mentors = leaders.filter(l => (l.position || l.role || '').toLowerCase().includes('mentor'));
+            const founders = leaders.filter(isFounder);
 
             document.getElementById('mentors-container').innerHTML = mentors.length ? mentors.map(m => `
                 <div class="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-7 text-center hover-lift">
@@ -993,14 +976,14 @@ try {
                 </div>
             `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">No mentors added yet.</p>';
 
-            document.getElementById('team-container').innerHTML = team.length ? team.map(l => `
+            document.getElementById('team-container').innerHTML = founders.length ? founders.map(l => `
                 <div class="text-center group">
                     <img src="${l.imageUrl || l.image_url}" class="w-24 h-24 rounded-full mx-auto mb-3 object-cover border-2 border-gray-200 dark:border-white/10 group-hover:border-teal-400 transition-all" onerror="this.src='https://via.placeholder.com/150'">
                     <h4 class="font-bold text-slate-900 dark:text-white text-sm">${l.name}</h4>
                     <p class="text-teal-600 dark:text-teal-400 text-[10px] font-bold uppercase tracking-wider mt-1">${l.position}</p>
                     ${l.linkedinUrl ? `<a href="${l.linkedinUrl}" target="_blank" class="mt-2 inline-block text-blue-500 hover:text-blue-400 text-xs"><i class="fab fa-linkedin"></i></a>` : ''}
                 </div>
-            `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">No team members added yet.</p>';
+            `).join('') : '<p class="col-span-full text-center text-slate-500 py-8">No founders added yet.</p>';
         } catch { 
             document.getElementById('mentors-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-8">Could not load mentors.</p>';
             document.getElementById('team-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-8">Could not load team.</p>';
@@ -1008,7 +991,7 @@ try {
 
         // Reels
         try {
-            const reels = await fetch(`${API_BASE}/reels`).then(r => r.json());
+            const reels = await fetch(`${API_BASE}/api/reels`).then(r => r.json());
             document.getElementById('reels-container').innerHTML = reels.length ? reels.map(r => `
                 <div class="aspect-[9/16] bg-black rounded-3xl overflow-hidden border border-gray-200 dark:border-white/10 relative group">
                     <iframe src="${r.videoUrl || r.video_url}" class="w-full h-full border-0" allowfullscreen></iframe>
@@ -1021,7 +1004,7 @@ try {
 
         // Testimonials
         try {
-            const tests = await fetch(`${API_BASE}/testimonials`).then(r => r.json());
+            const tests = await fetch(`${API_BASE}/api/testimonials`).then(r => r.json());
             document.getElementById('testimonials-container').innerHTML = tests.length ? tests.map(t => `
                 <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 hover-lift">
                     <div class="text-teal-500 mb-4 text-xl"><i class="fas fa-quote-left"></i></div>
@@ -1034,7 +1017,7 @@ try {
 
         // Active drives (find your next initiative)
         try {
-            const drives = await fetch(`${API_BASE}/active-drives`).then(r => r.json());
+            const drives = await fetch(`${API_BASE}/api/active-drives`).then(r => r.json());
             allDrives = drives;
             renderDrives(drives);
         } catch { document.getElementById('drives-container').innerHTML = '<p class="col-span-full text-center text-slate-500 py-10">Could not load active initiatives.</p>'; }
@@ -1065,7 +1048,7 @@ try {
 
         // Careers
         try {
-            const jobs = await fetch(`${API_BASE}/careers`).then(r => r.json());
+            const jobs = await fetch(`${API_BASE}/api/careers`).then(r => r.json());
             document.getElementById('careers-container').innerHTML = jobs.length ? jobs.map(j => `
                 <div class="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-3xl p-8 hover-lift">
                     <div class="w-12 h-12 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-5"><i class="fas fa-briefcase text-teal-600 dark:text-teal-400"></i></div>
@@ -1079,5 +1062,40 @@ try {
 
     window.onload = loadAll;
     </script>
+    <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-[#030712] text-slate-700 dark:text-slate-200">
+        <div class="container mx-auto px-6 max-w-6xl py-14">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-gray-200 dark:border-white/10">
+                <div>
+                    <a href="index.html" class="inline-flex items-center gap-3">
+                        <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-11 h-11 object-contain">
+                        <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">MAAI</span>
+                    </a>
+                    <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-500 dark:text-slate-400">Medical Awareness and Assistance Initiative building stronger communities through camps, volunteers, and partner-led outreach.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
+                    <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-phone mr-2 text-teal-500"></i>2882883441</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Quick Links</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <a href="index.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Home</a>
+                        <a href="volunteer.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Volunteer</a>
+                        <a href="ngo.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Partner Portal</a>
+                        <a href="Camps.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Camps</a>
+                        <a href="our-team.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Our Team</a>
+                        <a href="login.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Login</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
+                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
+

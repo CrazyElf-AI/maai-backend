@@ -57,6 +57,9 @@
                 <button onclick="showSection('members')" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-800 transition-all font-semibold">
                     <i class="fas fa-users w-5 text-center"></i> Members
                 </button>
+                <button onclick="showSection('camps')" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-800 transition-all font-semibold">
+                    <i class="fas fa-campground w-5 text-center"></i> Camps
+                </button>
                 <button onclick="showSection('gallery')" class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-800 transition-all font-semibold">
                     <i class="fas fa-images w-5 text-center"></i> Gallery
                 </button>
@@ -156,6 +159,20 @@
                             </thead>
                             <tbody id="user-list" class="divide-y divide-slate-800"></tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="camps" class="space-y-8">
+                <h2 class="text-3xl font-display font-black text-white italic underline decoration-brand-orange decoration-4 underline-offset-8">Camp Applications</h2>
+                <div id="god-camp-proposals" class="space-y-6">
+                    <div class="glass p-8 rounded-3xl text-slate-400 italic">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>Loading NGO event proposals...
+                    </div>
+                </div>
+                <div id="god-camps-list" class="space-y-6">
+                    <div class="glass p-8 rounded-3xl text-slate-400 italic">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>Loading member camp registrations...
                     </div>
                 </div>
             </section>
@@ -325,8 +342,8 @@
     <script>
     // ─── 0. CONFIGURATION ────────────────────────────────────────────────────
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
-    const token = localStorage.getItem('token');
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
+        const token = localStorage.getItem('token');
 
     // Gatekeeper – redirect immediately if no token
     if (!token || token === 'null' || token === 'undefined') {
@@ -374,6 +391,7 @@
 
         // Auto-load data when switching sections
         if (sectionId === 'members')     fetchUsers();
+        if (sectionId === 'camps')       loadCampApplications();
         if (sectionId === 'gallery')     loadGallery();
         if (sectionId === 'leadership')  loadLeadership();
         if (sectionId === 'careers')     loadJobs();
@@ -516,6 +534,148 @@ window.saveCert = async (userId) => {
         rows.forEach(row => {
             row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
         });
+    };
+
+    async function loadCampApplications() {
+        const proposalsContainer = document.getElementById('god-camp-proposals');
+        const container = document.getElementById('god-camps-list');
+        if (!container || !proposalsContainer) return;
+
+        try {
+            const proposals = await apiCall('/admin/camp-proposals');
+            if (!Array.isArray(proposals) || !proposals.length) {
+                proposalsContainer.innerHTML = '<div class="glass p-8 rounded-3xl text-slate-400 italic">No NGO event proposals yet.</div>';
+            } else {
+                proposalsContainer.innerHTML = proposals.map(proposal => {
+                    const statusClasses = proposal.status === 'approved'
+                        ? 'bg-brand-teal/10 text-brand-teal border-brand-teal/30'
+                        : proposal.status === 'rejected'
+                        ? 'bg-brand-rose/10 text-brand-rose border-brand-rose/30'
+                        : 'bg-brand-orange/10 text-brand-orange border-brand-orange/30';
+                    const whatsappLink = proposal.phone
+                        ? `https://wa.me/${String(proposal.phone).replace(/[^\\d]/g, '')}`
+                        : null;
+
+                    return `
+                        <div class="glass rounded-3xl p-6 space-y-5">
+                            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                <div class="space-y-2">
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <h3 class="text-xl font-display font-bold text-white">${proposal.camp_type || 'Camp Proposal'}</h3>
+                                        <span class="px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusClasses}">${proposal.status || 'pending'}</span>
+                                    </div>
+                                    <p class="text-sm text-slate-300"><span class="font-semibold text-white">NGO:</span> ${proposal.ngo_name || '—'}</p>
+                                    <p class="text-sm text-slate-400">${proposal.location || [proposal.city, proposal.state].filter(Boolean).join(', ') || 'Location not provided'}</p>
+                                    <p class="text-sm text-slate-400">${proposal.date || 'Date not provided'}</p>
+                                </div>
+                                <div class="flex flex-wrap gap-3">
+                                    ${whatsappLink ? `<a href="${whatsappLink}" target="_blank" class="px-4 py-2 rounded-xl bg-green-500/15 text-green-400 border border-green-500/30 font-bold text-sm"><i class="fab fa-whatsapp mr-2"></i>WhatsApp NGO</a>` : ''}
+                                    ${proposal.status === 'pending' ? `
+                                        <button onclick="updateCampProposalStatus(${proposal.id}, 'approved')" class="px-4 py-2 rounded-xl bg-brand-teal text-white font-bold text-sm">Accept</button>
+                                        <button onclick="updateCampProposalStatus(${proposal.id}, 'rejected')" class="px-4 py-2 rounded-xl bg-brand-rose text-white font-bold text-sm">Reject</button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-sm">
+                                <div class="bg-slate-900/60 rounded-2xl p-4">
+                                    <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Contact Number</p>
+                                    <p class="text-white font-semibold">${proposal.phone || '—'}</p>
+                                </div>
+                                <div class="bg-slate-900/60 rounded-2xl p-4">
+                                    <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Email</p>
+                                    <p class="text-white font-semibold break-all">${proposal.email || '—'}</p>
+                                </div>
+                                <div class="bg-slate-900/60 rounded-2xl p-4">
+                                    <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Beneficiaries</p>
+                                    <p class="text-white font-semibold">${proposal.beneficiaries ?? 0}</p>
+                                </div>
+                                <div class="bg-slate-900/60 rounded-2xl p-4">
+                                    <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Volunteers Needed</p>
+                                    <p class="text-white font-semibold">${proposal.volunteers_required ?? 0}</p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-900/60 rounded-2xl p-4">
+                                <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Description</p>
+                                <p class="text-slate-300 leading-relaxed">${proposal.description || 'No description provided.'}</p>
+                                ${proposal.rejection_reason ? `<p class="mt-3 text-sm text-brand-rose"><span class="font-bold">Rejection Reason:</span> ${proposal.rejection_reason}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (err) {
+            proposalsContainer.innerHTML = '<div class="glass p-8 rounded-3xl text-brand-rose">Failed to load NGO event proposals.</div>';
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/camp-registrations`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (res.status === 401 || res.status === 403) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            const camps = await res.json();
+            if (!Array.isArray(camps) || !camps.length) {
+                container.innerHTML = '<div class="glass p-8 rounded-3xl text-slate-400 italic">No camp applications yet.</div>';
+                return;
+            }
+
+            container.innerHTML = camps.map(camp => `
+                <div class="glass rounded-3xl overflow-hidden">
+                    <div class="p-6 border-b border-slate-800">
+                        <h3 class="text-xl font-display font-bold text-white">${camp.camp_title || 'Camp'}</h3>
+                        <p class="text-sm text-slate-400 mt-1">${camp.camp_location || 'Location not set'}</p>
+                    </div>
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-900 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                                <tr>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Phone</th>
+                                    <th class="px-6 py-4">Field Of Study</th>
+                                    <th class="px-6 py-4">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                ${camp.registrations.map(reg => `
+                                    <tr>
+                                        <td class="px-6 py-4 text-white font-semibold">${reg.name || '—'}</td>
+                                        <td class="px-6 py-4 text-slate-300">${reg.phone_number || '—'}</td>
+                                        <td class="px-6 py-4 text-slate-300">${reg.field_of_study || '—'}</td>
+                                        <td class="px-6 py-4 text-slate-400 text-sm">${reg.email || '—'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            container.innerHTML = '<div class="glass p-8 rounded-3xl text-brand-rose">Failed to load camp applications.</div>';
+        }
+    }
+
+    window.updateCampProposalStatus = async (proposalId, status) => {
+        let rejectionReason = null;
+        if (status === 'rejected') {
+            rejectionReason = window.prompt('Enter rejection reason for the NGO:', '') || 'Rejected by admin';
+        }
+
+        const res = await apiCall(`/admin/camp-proposals/${proposalId}/status`, 'PUT', {
+            status,
+            rejection_reason: rejectionReason
+        });
+        if (res) {
+            showModal('Success', `Camp proposal ${status}.`);
+            loadCampApplications();
+            updateDashboardStats();
+        }
     };
 
     // ─── 5. GALLERY ──────────────────────────────────────────────────────────
@@ -825,6 +985,7 @@ window.saveCert = async (userId) => {
         // Load dashboard stats and default section data
         updateDashboardStats();
         fetchUsers(); // pre-load member list for when user visits members tab
+        loadCampApplications();
     };
 </script>
 </body>

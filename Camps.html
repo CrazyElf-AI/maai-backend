@@ -249,42 +249,6 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-[#030712] border-t border-white/10 pt-16 pb-8 text-white">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12 border-b border-gray-800 pb-12">
-                <div class="col-span-1 md:col-span-2">
-                    <a href="index.html" class="flex items-center gap-2">
-    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
-    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
-</a>
-                    <p class="text-gray-400 max-w-sm mb-6 leading-relaxed">Empowering communities through care, education, and organized medical support. Join us in making a real difference.</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-6">Quick Links</h4>
-                    <ul class="space-y-3 text-gray-400">
-                        <li><a href="index.html" class="hover:text-teal-400 transition-colors">Home</a></li>
-                        <li><a href="volunteer.html" class="hover:text-teal-400 transition-colors">Volunteer Portal</a></li>
-                        <li><a href="ngo.html" class="hover:text-teal-400 transition-colors">Partner with Us</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-6">Connect</h4>
-                    <p class="text-gray-400 mb-4 text-sm"><i class="fas fa-envelope mr-2"></i> maaiorganisation@gmail.com</p>
-                    <div class="flex space-x-4">
-                        <a href="https://instagram.com/maai.cares" target="_blank" title="Follow us on Instagram" aria-label="Instagram" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-teal-500 text-slate-100 transition-all">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="https://linkedin.com/company/maai-organisation" target="_blank" title="Connect with us on LinkedIn" aria-label="LinkedIn" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-teal-500 text-slate-100 transition-all">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center text-sm text-gray-600">
-                <p>&copy; 2026 MAAI Organization. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -299,13 +263,13 @@
     <script type="module">
     // --- 0. SMART CONFIGURATION ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
     const token = localStorage.getItem('token');
 
     async function loadPublicCamps() {
         try {
         // Fetch only 'approved' proposals from your backend
-        const res = await fetch(`${API_BASE}/active-drives`);
+        const res = await fetch(`${API_BASE}/api/active-drives`);
         const drives = await res.json();
         
         const container = document.getElementById('camps-grid');
@@ -334,7 +298,7 @@ async function loadLiveCamps() {
     if (!container) return;
 
     try {
-        const res = await fetch(`${API_BASE}/active-drives`); //
+        const res = await fetch(`${API_BASE}/api/active-drives`); //
         const drives = await res.json();
 
         if (drives.length === 0) {
@@ -361,7 +325,7 @@ window.onload = loadLiveCamps;
         // 2. Fetch Past/Completed Camps
         const pastContainer = document.getElementById('past-camps-container');
         try {
-            const res = await fetch(`${API_BASE}/camps`);
+            const res = await fetch(`${API_BASE}/api/camps`);
             const camps = await res.json();
             
             if (camps.length === 0) {
@@ -404,7 +368,7 @@ window.onload = loadLiveCamps;
 async function loadTestimonials() {
     const container = document.getElementById('testimonials-container');
     try {
-        const res = await fetch(`${API_BASE}/testimonials`);
+        const res = await fetch(`${API_BASE}/api/testimonials`);
         const data = await res.json();
         container.innerHTML = data.map(t => `
             <div class="bg-white/5 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-lg">
@@ -422,7 +386,7 @@ async function loadTestimonials() {
 async function loadReels() {
     const container = document.getElementById('reels-container');
     try {
-        const res = await fetch(`${API_BASE}/reels`);
+        const res = await fetch(`${API_BASE}/api/reels`);
         const data = await res.json();
         container.innerHTML = data.map(r => `
             <div class="aspect-[9/16] bg-black rounded-3xl overflow-hidden border border-white/10 shadow-lg group relative">
@@ -442,5 +406,40 @@ window.onload = () => {
     loadReels();
 };
 </script>
+    <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-[#030712] text-slate-700 dark:text-slate-200">
+        <div class="container mx-auto px-6 max-w-6xl py-14">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-gray-200 dark:border-white/10">
+                <div>
+                    <a href="index.html" class="inline-flex items-center gap-3">
+                        <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-11 h-11 object-contain">
+                        <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">MAAI</span>
+                    </a>
+                    <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-500 dark:text-slate-400">Medical Awareness and Assistance Initiative building stronger communities through camps, volunteers, and partner-led outreach.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
+                    <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-phone mr-2 text-teal-500"></i>2882883441</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Quick Links</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <a href="index.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Home</a>
+                        <a href="volunteer.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Volunteer</a>
+                        <a href="ngo.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Partner Portal</a>
+                        <a href="Camps.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Camps</a>
+                        <a href="our-team.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Our Team</a>
+                        <a href="login.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Login</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
+                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
+

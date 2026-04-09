@@ -90,15 +90,12 @@
             </div>
         </main>
         
-        <footer class="py-12 border-t border-white/5 text-center">
-            <p class="text-gray-600 text-[10px] uppercase tracking-[0.5em]">Medical Awareness & Assistance Initiative © 2026</p>
-        </footer>
     </div>
 
     <script>
         // --- 0. SMART CONFIGURATION ---
         const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-        const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+        const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
 
         async function loadInitiativeDetails() {
             // 1. Get ID from URL
@@ -112,7 +109,7 @@
 
             try {
                 // 2. Fetch from PostgreSQL
-                const res = await fetch(`${API_BASE}/initiatives/${id}`);
+                const res = await fetch(`${API_BASE}/api/initiatives/${id}`);
                 if (!res.ok) throw new Error("Initiative Not Found");
                 const data = await res.json();
 
@@ -147,5 +144,40 @@
         // Initialize on load
         window.onload = loadInitiativeDetails;
     </script>
+    <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50/80 dark:bg-[#030712]/80 backdrop-blur-xl">
+        <div class="max-w-6xl mx-auto px-6 py-14">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-gray-200 dark:border-white/10">
+                <div>
+                    <a href="index.html" class="inline-flex items-center gap-3">
+                        <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-11 h-11 object-contain">
+                        <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">MAAI</span>
+                    </a>
+                    <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-500 dark:text-slate-400">Medical Awareness and Assistance Initiative building stronger communities through camps, volunteers, and partner-led outreach.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
+                    <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-phone mr-2 text-teal-500"></i>2882883441</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Quick Links</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <a href="index.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Home</a>
+                        <a href="volunteer.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Volunteer</a>
+                        <a href="ngo.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Partner Portal</a>
+                        <a href="Camps.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Camps</a>
+                        <a href="our-team.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Our Team</a>
+                        <a href="login.html" class="text-slate-500 dark:text-slate-400 hover:text-teal-500 transition-colors">Login</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
+                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
+

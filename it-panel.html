@@ -52,6 +52,9 @@
                 <button onclick="showITSection('members')" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all">
                     <i class="fas fa-users w-5"></i> System Members
                 </button>
+                <button onclick="showITSection('camps')" class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all">
+                    <i class="fas fa-campground w-5"></i> Camps
+                </button>
                 <button class="sidebar-item w-full flex items-center gap-4 px-4 py-3 rounded-xl opacity-50 cursor-not-allowed">
                     <i class="fas fa-lock w-5 text-brand-rose"></i> Core Settings
                 </button>
@@ -188,7 +191,7 @@
                     
                 </div>
             </section>
-            <section id="it-members" class="space-y-8">
+<section id="it-members" class="space-y-8">
     <header class="flex justify-between items-center">
     <h2 class="text-3xl font-display font-black text-white">System Members</h2>
     <button onclick="openModal('add-member-modal')" class="bg-brand-blue px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-blue/20 hover:scale-105 transition-transform">
@@ -227,6 +230,15 @@
         </table>
     </div>
 </section>
+
+            <section id="it-camps" class="space-y-8">
+                <header><h2 class="text-3xl font-display font-black text-white">Camp Applications</h2></header>
+                <div id="it-camps-list" class="space-y-6">
+                    <div class="glass p-8 rounded-[2rem] text-slate-400 italic">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i>Loading camp applications...
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -235,8 +247,8 @@
     <script>
     // ─── 1. CONFIGURATION ────────────────────────────────────────────────────
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
-    // FIX: was 'API_URL' in apiCall below — now consistently API_BASE everywhere
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
+        // FIX: was 'API_URL' in apiCall below — now consistently API_BASE everywhere
     const token = localStorage.getItem('token');
 
     if (!token || token === 'null' || token === 'undefined') {
@@ -254,6 +266,7 @@
 
         // Auto-refresh data on tab switch
         if (id === 'members')     loadMembers();
+        if (id === 'camps')       loadCampApplications();
         if (id === 'leadership')  loadLeadership();
         if (id === 'media')       loadMedia();
         if (id === 'testimonials') loadTestimonials();
@@ -416,6 +429,64 @@
             : '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500 italic">No members found.</td></tr>';
     }
 
+    async function loadCampApplications() {
+        const container = document.getElementById('it-camps-list');
+        if (!container) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/camp-registrations`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (res.status === 401 || res.status === 403) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            const camps = await res.json();
+            if (!Array.isArray(camps) || !camps.length) {
+                container.innerHTML = '<div class="glass p-8 rounded-[2rem] text-slate-400 italic">No camp applications yet.</div>';
+                return;
+            }
+
+            container.innerHTML = camps.map(camp => `
+                <div class="glass rounded-[2rem] overflow-hidden">
+                    <div class="p-6 border-b border-slate-800">
+                        <h3 class="text-xl font-display font-bold text-white">${camp.camp_title || 'Camp'}</h3>
+                        <p class="text-sm text-slate-400 mt-1">${camp.camp_location || 'Location not set'}</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                                <tr>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Phone</th>
+                                    <th class="px-6 py-4">Field Of Study</th>
+                                    <th class="px-6 py-4">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                ${camp.registrations.map(reg => `
+                                    <tr>
+                                        <td class="px-6 py-4 font-bold text-white">${reg.name || '—'}</td>
+                                        <td class="px-6 py-4 text-slate-300">${reg.phone_number || '—'}</td>
+                                        <td class="px-6 py-4 text-slate-300">${reg.field_of_study || '—'}</td>
+                                        <td class="px-6 py-4 text-slate-400 text-sm">${reg.email || '—'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            container.innerHTML = '<div class="glass p-8 rounded-[2rem] text-brand-rose">Failed to load camp applications.</div>';
+        }
+    }
+
     // Add member form submission
     document.getElementById('add-member-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -461,6 +532,7 @@
     window.onload = () => {
         loadMembers();
         loadMedia();
+        loadCampApplications();
     };
 </script>
 </body>

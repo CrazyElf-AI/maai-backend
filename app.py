@@ -1,910 +1,1373 @@
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, get_jwt
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-from sqlalchemy import func
 from flask_cors import CORS
-from datetime import datetime, timezone
 from dotenv import load_dotenv
+from functools import wraps
+import bcrypt
+import datetime
+import jwt
+import mysql.connector
+from mysql.connector import Error
 import os
+
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app,
-     resources={r"/api/*": {
-         "origins": ["https://crazyelf-ai.github.io"],
-         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         "allow_headers": ["Content-Type", "Authorization"]
-     }},
-     supports_credentials=True)
+CORS(app)
 
-# Database & Security Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-_secret_key = os.environ.get('SECRET_KEY')
-_jwt_secret_key = os.environ.get('JWT_SECRET_KEY')
+SECRET_KEY = os.getenv("SECRET_KEY")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "myapp")
 
-if not _secret_key:
-    raise RuntimeError("FATAL: SECRET_KEY environment variable is not set. Set it on Render before deploying.")
-if not _jwt_secret_key:
-    raise RuntimeError("FATAL: JWT_SECRET_KEY environment variable is not set. Set it on Render before deploying.")
 
-app.config['SECRET_KEY'] = _secret_key
-app.config['JWT_SECRET_KEY'] = _jwt_secret_key
-
-# THE SSL FIX: Prevents "Connection closed unexpectedly" errors
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,
-    "pool_recycle": 300,
-}
-
-db = SQLAlchemy(app)
-jwt = JWTManager(app)
-
-# --- Models ---
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
-    password_hash = db.Column(db.String(256))
-    role = db.Column(db.String(20), nullable=False, default='member') # member, admin, god
-    city = db.Column(db.String(50))
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    
-class Certificate(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    camp_title = db.Column(db.String(150), nullable=False)
-    url = db.Column(db.String(500), nullable=False) # Google Drive Link
-    issued_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
-    # Link back to user
-    user = db.relationship('User', backref=db.backref('certificates', lazy=True))
-
-class CampProposal(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ngo_name = db.Column(db.String(120), nullable=True) # made nullable for compatibility
-    email = db.Column(db.String(120), nullable=True)
-    phone = db.Column(db.String(20), nullable=True)
-    city = db.Column(db.String(50), nullable=True)
-    state = db.Column(db.String(50), nullable=True)
-    camp_type = db.Column(db.String(50), nullable=False) # Maps to event name
-    proposal_file = db.Column(db.String(200), nullable=True)
-    location = db.Column(db.String(100), nullable=True) # from ngo-dashboard
-    date = db.Column(db.String(50), nullable=True) # from ngo-dashboard
-    description = db.Column(db.Text, nullable=True) # from ngo-dashboard
-    beneficiaries = db.Column(db.Integer, nullable=True) # from ngo-dashboard
-    volunteers_required = db.Column(db.Integer, nullable=True) # from ngo-dashboard
-    created_by = db.Column(db.String(120), nullable=True) # User email/id
-    status = db.Column(db.String(20), nullable=False, default='pending')
-    rejection_reason = db.Column(db.Text, nullable=True)
-
-class Leadership(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    position = db.Column(db.String(100), nullable=False) # Maps to 'role' in the UI
-    image_url = db.Column(db.String(200), nullable=False)
-    linkedin_url = db.Column(db.String(200), nullable=True)
-    instagram_url = db.Column(db.String(200), nullable=True) # New
-    bio = db.Column(db.Text, nullable=True) # New
-    category = db.Column(db.String(50), nullable=False, default='Current Core Team') # New
-
-class FlagshipInitiative(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    image_url = db.Column(db.String(200), nullable=False)
-    category = db.Column(db.String(50), nullable=False, default='General')
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-
-class Gallery(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    image_url = db.Column(db.String(200), nullable=False)
-    caption = db.Column(db.String(200), nullable=True)
-
-class CampReel(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    video_url = db.Column(db.String(200), nullable=False)
-    title = db.Column(db.String(100), nullable=False)
-
-class Testimonial(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.Text, nullable=False)
-    author = db.Column(db.String(100), nullable=False)
-    author_position = db.Column(db.String(100), nullable=True)
-    image_url = db.Column(db.String(200), nullable=True) # Add this
-
-class Career(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    apply_link = db.Column(db.String(200), nullable=False)
-
-class Announcement(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
-
-# Add this after your CampProposal model
-class Camp(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
-    location = db.Column(db.String(100), nullable=False)
-    date = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    beneficiaries = db.Column(db.Integer, default=0)
-    volunteers = db.Column(db.Integer, default=0)
-    image_url = db.Column(db.String(200)) # <--- Add this line for the camp photos
-
-class SystemSetting(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    key = db.Column(db.String(50), unique=True, nullable=False)
-    value = db.Column(db.String(100), nullable=False)
-
-# --- Role-based Access Control Decorators ---
-# --- Role-based Access Control Decorators ---
-def admin_required(fn):
-    @wraps(fn)
-    @jwt_required()
-    def wrapper(*args, **kwargs):
-        claims = get_jwt()
-        # Include 'it' in the authorized list for content management
-        if claims.get('role') not in ['admin', 'god', 'it']:
-            return jsonify({'error': 'Unauthorized access!'}), 403
-        return fn(*args, **kwargs)
-    return wrapper
-
-def god_required(fn):
-    @wraps(fn)
-    @jwt_required()
-    def wrapper(*args, **kwargs):
-        claims = get_jwt()
-        if claims.get('role') != 'god':
-            return jsonify({'error': 'God mode access required!'}), 403
-        return fn(*args, **kwargs)
-    return wrapper
-
-# --- JWT Claims ---
-@jwt.additional_claims_loader
-def add_role_to_access_token(identity):
-    # Now that identity is just a string (email), we look up the user to attach their role
-    user = User.query.filter_by(email=identity).first()
-    return {'role': user.role if user else 'member'}
-
-# --- Public Routes ---
-@app.route('/api/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    # ... (existing check code) ...
-    new_user = User(
-        full_name=data['full_name'],
-        email=data['email'],
-        phone_number=data['phone_number'],
-        city=data.get('city') # <--- ADD THIS LINE
+def get_db():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
     )
-    new_user.set_password(data['password'])
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({'message': 'User created successfully'}), 201
 
-@app.route('/api/register-ngo', methods=['POST'])
-def register_ngo():
-    data = request.get_json()
-    
-    # Check if email already exists
-    existing_user = User.query.filter_by(email=data['email']).first()
-    if existing_user:
-        return jsonify({'error': 'Email already registered'}), 409
-    
-    try:
-        # Create user account in the main PostgreSQL table, but tag them as an NGO
-        new_user = User(
-            full_name=data.get('ngo_name', ''), # Store NGO name as their main name
-            email=data['email'],
-            phone_number=data.get('contact_number', '0000000000'),
-            city=data.get('address', 'Unknown'),
-            role='ngo'  # <--- This is the magic key that gives them NGO permissions!
+
+def get_table_columns(conn, table_name):
+    cursor = conn.cursor()
+    cursor.execute(f"SHOW COLUMNS FROM {table_name}")
+    columns = {row[0] for row in cursor.fetchall()}
+    cursor.close()
+    return columns
+
+
+def ensure_schema():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(120) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(20) NOT NULL DEFAULT 'member',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-        new_user.set_password(data['password'])
-        
-        db.session.add(new_user)
-        db.session.commit()
-        
-        return jsonify({'message': 'NGO registered successfully'}), 201
-        
-    except Exception as error:
-        db.session.rollback()
-        return jsonify({'error': 'Database error occurred'}), 500
-    
-@app.route('/api/login', methods=['POST'])
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS members (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(120) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(20) NOT NULL DEFAULT 'member',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ngos (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            ngo_name VARCHAR(150) NOT NULL,
+            founder_name VARCHAR(150),
+            registration_number VARCHAR(100) NOT NULL UNIQUE,
+            contact_number VARCHAR(30) NOT NULL,
+            email VARCHAR(120) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            address TEXT,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    existing_user_columns = get_table_columns(conn, "users")
+    existing_member_columns = get_table_columns(conn, "members")
+    missing_user_columns = {
+        "phone_number": "ALTER TABLE users ADD COLUMN phone_number VARCHAR(30) NULL",
+        "city": "ALTER TABLE users ADD COLUMN city VARCHAR(100) NULL",
+        "field_of_study": "ALTER TABLE users ADD COLUMN field_of_study VARCHAR(150) NULL",
+        "college": "ALTER TABLE users ADD COLUMN college VARCHAR(150) NULL",
+        "year_of_study": "ALTER TABLE users ADD COLUMN year_of_study VARCHAR(50) NULL",
+        "motivation": "ALTER TABLE users ADD COLUMN motivation TEXT NULL",
+        "date_of_birth": "ALTER TABLE users ADD COLUMN date_of_birth DATE NULL",
+        "certificate_url": "ALTER TABLE users ADD COLUMN certificate_url TEXT NULL",
+    }
+    for column_name, ddl in missing_user_columns.items():
+        if column_name not in existing_user_columns:
+            cursor.execute(ddl)
+        if column_name not in existing_member_columns:
+            cursor.execute(ddl.replace("ALTER TABLE users", "ALTER TABLE members"))
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS camp_proposals (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            ngo_name VARCHAR(120),
+            email VARCHAR(120),
+            phone VARCHAR(20),
+            city VARCHAR(80),
+            state VARCHAR(80),
+            camp_type VARCHAR(150) NOT NULL,
+            proposal_file TEXT,
+            location VARCHAR(255),
+            date VARCHAR(50),
+            description TEXT,
+            beneficiaries INT DEFAULT 0,
+            volunteers_required INT DEFAULT 0,
+            created_by VARCHAR(120),
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            rejection_reason TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS announcements (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS drives (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255),
+            description TEXT,
+            location VARCHAR(255),
+            date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS camp_registrations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            source_type VARCHAR(20) NOT NULL,
+            source_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_registration (user_id, source_type, source_id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS leadership (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            position VARCHAR(150) NOT NULL,
+            image_url TEXT,
+            linkedin_url TEXT,
+            instagram_url TEXT,
+            bio TEXT,
+            category VARCHAR(80) DEFAULT 'Current Core',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS initiatives (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            category VARCHAR(100) DEFAULT 'General',
+            image_url TEXT,
+            description TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS reels (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            video_url TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS testimonials (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            author VARCHAR(100) NOT NULL,
+            author_position VARCHAR(150),
+            image_url TEXT,
+            text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS careers (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            type VARCHAR(100),
+            description TEXT NOT NULL,
+            apply_link TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS gallery (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150),
+            url TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS camps (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            location VARCHAR(255),
+            date_completed VARCHAR(50),
+            description TEXT,
+            beneficiaries INT DEFAULT 0,
+            volunteers INT DEFAULT 0,
+            image_url TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS settings (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            setting_key VARCHAR(100) NOT NULL UNIQUE,
+            setting_value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        INSERT IGNORE INTO members (
+            id, name, email, password_hash, role, created_at,
+            phone_number, city, field_of_study, college, year_of_study, motivation, date_of_birth, certificate_url
+        )
+        SELECT
+            id, name, email, password_hash, role, created_at,
+            phone_number, city, field_of_study, college, year_of_study, motivation, date_of_birth, certificate_url
+        FROM users
+        WHERE role = 'member'
+        """
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def generate_token(user, account_type="staff"):
+    payload = {
+        "id": user["id"],
+        "email": user["email"],
+        "role": user["role"],
+        "account_type": account_type,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Token missing"}), 401
+
+        try:
+            token = auth_header.split(" ", 1)[1]
+            request.user = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        except Exception:
+            return jsonify({"error": "Invalid token"}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def staff_required(f):
+    @wraps(f)
+    @token_required
+    def decorated(*args, **kwargs):
+        if request.user.get("role") not in ["god", "it"]:
+            return jsonify({"error": "Staff access required"}), 403
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def admin_required(f):
+    @wraps(f)
+    @token_required
+    def decorated(*args, **kwargs):
+        if request.user.get("role") not in ["admin", "god", "it"]:
+            return jsonify({"error": "Admin access required"}), 403
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def query_all(sql, params=None):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(sql, params or ())
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return rows
+
+
+def query_one(sql, params=None):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(sql, params or ())
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row
+
+
+def execute_write(sql, params=None):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(sql, params or ())
+    conn.commit()
+    lastrowid = cursor.lastrowid
+    cursor.close()
+    conn.close()
+    return lastrowid
+
+
+def get_member_by_email(email):
+    return query_one("SELECT * FROM members WHERE email = %s", (email,))
+
+
+def get_staff_by_email(email):
+    return query_one("SELECT * FROM users WHERE email = %s", (email,))
+
+
+def get_ngo_by_email(email):
+    return query_one("SELECT * FROM ngos WHERE email = %s", (email,))
+
+
+def build_profile_response(table_name, email):
+    conn = get_db()
+    table_columns = get_table_columns(conn, table_name)
+    cursor = conn.cursor(dictionary=True)
+    select_fields = ["id", "email", "created_at"]
+
+    if table_name == "ngos":
+        select_fields.extend([
+            "ngo_name",
+            "founder_name",
+            "registration_number",
+            "contact_number",
+            "address",
+            "description",
+        ])
+    else:
+        select_fields.extend(["name", "role"])
+        for optional_field in ["phone_number", "city", "field_of_study", "college", "year_of_study", "certificate_url"]:
+            if optional_field in table_columns:
+                select_fields.append(optional_field)
+
+    cursor.execute(
+        f"SELECT {', '.join(select_fields)} FROM {table_name} WHERE email = %s",
+        (email,),
+    )
+    record = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not record:
+        return None
+
+    if table_name != "ngos":
+        for optional_field in ["phone_number", "city", "field_of_study", "college", "year_of_study", "certificate_url"]:
+            record.setdefault(optional_field, None)
+
+    return record
+
+
+@app.route("/")
+def home():
+    return "API running"
+
+
+@app.route("/signup", methods=["POST"])
+@app.route("/member/signup", methods=["POST"])
+def signup():
+    data = request.get_json() or {}
+    name = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    phone_number = data.get("phone_number")
+    city = data.get("city")
+    field_of_study = data.get("field_of_study")
+    college = data.get("college")
+    year_of_study = data.get("year_of_study")
+    motivation = data.get("motivation")
+    date_of_birth = data.get("date_of_birth")
+
+    if not name or not email or not password:
+        return jsonify({"error": "Missing fields"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    user_columns = get_table_columns(conn, "members")
+
+    cursor.execute("SELECT id FROM members WHERE email = %s", (email,))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "Member already exists"}), 400
+
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    insert_fields = ["name", "email", "password_hash", "role"]
+    insert_values = [name, email, password_hash, "member"]
+
+    optional_fields = {
+        "phone_number": phone_number,
+        "city": city,
+        "field_of_study": field_of_study,
+        "college": college,
+        "year_of_study": year_of_study,
+        "motivation": motivation,
+        "date_of_birth": date_of_birth or None,
+    }
+    for field_name, field_value in optional_fields.items():
+        if field_name in user_columns:
+            insert_fields.append(field_name)
+            insert_values.append(field_value)
+
+    placeholders = ", ".join(["%s"] * len(insert_fields))
+    field_list = ", ".join(insert_fields)
+    cursor.execute(
+        f"INSERT INTO members ({field_list}) VALUES ({placeholders})",
+        tuple(insert_values),
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Member created"}), 201
+
+
+@app.route("/login", methods=["POST"])
+@app.route("/member/login", methods=["POST"])
 def login():
-    data = request.get_json()
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'error': 'Email and password required'}), 400
+    data = request.get_json() or {}
+    email = data.get("email")
+    password = data.get("password")
 
-    user = User.query.filter_by(email=data['email']).first()
+    if not email or not password:
+        return jsonify({"error": "Email and password required"}), 400
 
-    if not user or not user.check_password(data['password']):
-        return jsonify({'error': 'Invalid credentials'}), 401
+    user = get_member_by_email(email)
+    account_type = "member"
 
-    # THE FIX: Only pass the email string!
-    access_token = create_access_token(identity=user.email) 
-    return jsonify(access_token=access_token)
-
-@app.route('/api/camps/apply', methods=['POST'])
-@jwt_required()
-def apply_for_camp():
-    data = request.get_json()
-    # Basic validation — all 7 fields required
-    required_fields = ['ngo_name', 'email', 'phone', 'city', 'state', 'camp_type', 'proposal_file']
-    missing = [f for f in required_fields if f not in data or not data[f]]
-    if missing:
-        return jsonify({'error': f'Missing required fields: {", ".join(missing)}'}), 400
-
-    # Only store known model fields to avoid unexpected keyword errors
-    new_proposal = CampProposal(
-        ngo_name=data['ngo_name'],
-        email=data['email'],
-        phone=data['phone'],
-        city=data['city'],
-        state=data['state'],
-        camp_type=data['camp_type'],
-        proposal_file=data['proposal_file'],
-        location=data.get('location'),
-        date=data.get('date'),
-        description=data.get('description'),
-        beneficiaries=data.get('beneficiaries'),
-        volunteers_required=data.get('volunteers_required'),
-        created_by=get_jwt_identity()
-    )
-    db.session.add(new_proposal)
-    db.session.commit()
-
-    return jsonify({'message': 'Camp proposal submitted successfully'}), 201
-
-@app.route('/api/leadership', methods=['GET'])
-def get_leadership():
-    leaders = Leadership.query.all()
-    return jsonify([{
-        'id': l.id, 
-        'name': l.name, 
-        'role': l.position, 
-        'imageUrl': l.image_url, 
-        'linkedin': l.linkedin_url,
-        'instagram': l.instagram_url,
-        'bio': l.bio,
-        'category': l.category
-    } for l in leaders])
-
-@app.route('/api/gallery', methods=['GET'])
-def get_gallery():
-    items = Gallery.query.all()
-    return jsonify([{'id': i.id, 'image_url': i.image_url, 'caption': i.caption} for i in items])
-
-@app.route('/api/reels', methods=['GET'])
-def get_reels():
-    reels = CampReel.query.all()
-    return jsonify([{'id': r.id, 'videoUrl': r.video_url, 'title': r.title} for r in reels])
-
-@app.route('/api/testimonials', methods=['GET'])
-def get_testimonials():
-    testimonials = Testimonial.query.all()
-    return jsonify([{'id': t.id, 'text': t.text, 'author': t.author, 'authorPosition': t.author_position} for t in testimonials])
-
-@app.route('/api/careers', methods=['GET'])
-def get_careers():
-    careers = Career.query.all()
-    return jsonify([{'id': c.id, 'title': c.title, 'description': c.description, 'apply_link': c.apply_link} for c in careers])
-
-@app.route('/api/admin/camps', methods=['GET'])
-@admin_required
-def get_all_camps():
-    camps = CampProposal.query.all()
-    return jsonify([{
-        'id': c.id, 'ngo_name': c.ngo_name, 'email': c.email, 'status': c.status
-    } for c in camps])
-
-@app.route('/api/admin/camps/<int:camp_id>/status', methods=['PUT'])
-@admin_required
-def update_camp_status(camp_id):
-    camp = CampProposal.query.get_or_404(camp_id)
-    data = request.get_json()
-    if not data or 'status' not in data:
-        return jsonify({'error': 'Status not provided'}), 400
-    
-    new_status = data['status']
-    if new_status not in ['approved', 'rejected']:
-        return jsonify({'error': 'Invalid status'}), 400
-    
-    if new_status == 'rejected' and 'rejection_reason' not in data:
-        return jsonify({'error': 'Rejection reason required'}), 400
-
-    camp.status = new_status
-    if new_status == 'rejected':
-        camp.rejection_reason = data['rejection_reason']
-
-    db.session.commit()
-    return jsonify({'message': f'Camp {camp.id} status updated to {camp.status}'})
-
-@app.route('/api/admin/gallery', methods=['POST'])
-@admin_required
-def add_gallery_item():
-    data = request.get_json()
-    if not data or 'image_url' not in data:
-        return jsonify({'error': 'Image URL required'}), 400
-    
-    new_item = Gallery(image_url=data['image_url'], caption=data.get('caption'))
-    db.session.add(new_item)
-    db.session.commit()
-    return jsonify({'id': new_item.id, 'image_url': new_item.image_url, 'caption': new_item.caption}), 201
-
-@app.route('/api/admin/gallery/<int:item_id>', methods=['DELETE'])
-@admin_required
-def delete_gallery_item(item_id):
-    item = Gallery.query.get_or_404(item_id)
-    db.session.delete(item)
-    db.session.commit()
-    return jsonify({'message': 'Gallery item deleted'})
-
-@app.route('/api/admin/leadership', methods=['POST'])
-@admin_required
-def add_leadership():
-    data = request.get_json()
-    new_leader = Leadership(
-        name=data['name'],
-        position=data['position'],
-        image_url=data.get('image_url', data.get('imageUrl')),
-        linkedin_url=data.get('linkedin_url', data.get('linkedinUrl')),
-        instagram_url=data.get('instagram_url', data.get('instagramUrl')), # Add this
-        bio=data.get('bio'), # Add this
-        category=data.get('category', 'Current Core Team') # Add this
-    )
-    db.session.add(new_leader)
-    db.session.commit()
-    return jsonify({'id': new_leader.id, 'message': 'Leader added'}), 201
-
-@app.route('/api/admin/leadership/<int:leader_id>', methods=['PUT'])
-@admin_required
-def update_leadership(leader_id):
-    leader = Leadership.query.get_or_404(leader_id)
-    data = request.get_json()
-    
-    leader.name = data.get('name', leader.name)
-    leader.position = data.get('position', leader.position)
-    leader.image_url = data.get('imageUrl', data.get('image_url', leader.image_url))
-    leader.linkedin_url = data.get('linkedinUrl', data.get('linkedin_url', leader.linkedin_url))
-    
-    db.session.commit()
-    return jsonify({'message': 'Leadership profile updated'})
-
-@app.route('/api/admin/leadership/<int:leader_id>', methods=['DELETE'])
-@admin_required
-def delete_leadership(leader_id):
-    leader = Leadership.query.get_or_404(leader_id)
-    db.session.delete(leader)
-    db.session.commit()
-    return jsonify({'message': 'Leadership profile deleted'})
-
-@app.route('/api/profile', methods=['GET'])
-@jwt_required()
-def get_profile():
-    email = get_jwt_identity() # This is now just a string!
-    user = User.query.filter_by(email=email).first()
-    
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        user = get_staff_by_email(email)
+        account_type = "staff"
 
-    return jsonify({
-        'full_name': user.full_name,
-        'email': user.email,
-        'role': user.role,
-        'phone': user.phone_number
-    })
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
-@jwt_required()
-def delete_user(user_id):
-    current_user_email = get_jwt_identity()
-    admin = User.query.filter_by(email=current_user_email).first()
-    
-    # Security: Only 'god' can purge users
-    if not admin or admin.role not in ['god', 'it']:
-        return jsonify({'error': 'Higher clearance required'}), 403
-    
-    user_to_delete = User.query.get_or_404(user_id)
-    
-    # Safety Check: Prevent accidental self-deletion
-    if user_to_delete.email == current_user_email:
-        return jsonify({'error': 'You cannot delete your own soul!'}), 400
-        
-    db.session.delete(user_to_delete)
-    db.session.commit()
-    return jsonify({'message': f'User {user_to_delete.full_name} has been purged.'})
+    if not bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8")):
+        return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/admin/users', methods=['GET', 'POST'])
-@admin_required # This ensures only Admin/God/IT can touch this
-def manage_users():
-    # --- METHOD 1: GET (Fetching the list for God Mode) ---
-    if request.method == 'GET':
-        users = User.query.all()
-        return jsonify([{
-            'id': u.id, 
-            'full_name': u.full_name, 
-            'email': u.email, 
-            'role': u.role,
-            'city': u.city
-        } for u in users]), 200
+    return jsonify({"token": generate_token(user, account_type), "account_type": account_type})
 
-    # --- METHOD 2: POST (Adding a new member from the form) ---
-    if request.method == 'POST':
-        data = request.get_json()
-        
-        # Validation
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({'error': 'User already exists'}), 400
 
-        new_user = User(
-            full_name=data['full_name'],
-            email=data['email'],
-            phone_number=data.get('phone_number', '0000000000'),
-            role=data.get('role', 'member'),
-            city=data.get('city', 'Mumbai')
+@app.route("/ngo/signup", methods=["POST"])
+@app.route("/register-ngo", methods=["POST"])
+def register_ngo():
+    data = request.get_json() or {}
+    required = [
+        "ngo_name",
+        "registration_number",
+        "contact_number",
+        "email",
+        "password",
+    ]
+    missing = [field for field in required if not data.get(field)]
+    if missing:
+        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+
+    existing = get_ngo_by_email(data.get("email"))
+    if existing:
+        return jsonify({"error": "NGO already exists"}), 400
+
+    registration_exists = query_one(
+        "SELECT id FROM ngos WHERE registration_number = %s",
+        (data.get("registration_number"),),
+    )
+    if registration_exists:
+        return jsonify({"error": "Registration number already exists"}), 400
+
+    password_hash = bcrypt.hashpw(
+        data.get("password").encode("utf-8"),
+        bcrypt.gensalt(),
+    ).decode("utf-8")
+    ngo_id = execute_write(
+        """
+        INSERT INTO ngos (
+            ngo_name, founder_name, registration_number, contact_number,
+            email, password_hash, address, description
         )
-        
-        # Set a default temporary password
-        new_user.set_password(data.get('password', 'MAAI2026!'))
-
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({'message': 'Member added successfully!'}), 201
-
-# --- Gallery Admin ---
-@app.route('/api/admin/gallery', methods=['GET'])
-@jwt_required()
-def admin_get_gallery():
-    items = Gallery.query.order_by(Gallery.id.desc()).all()
-    return jsonify([{'id': i.id, 'image_url': i.image_url, 'caption': i.caption} for i in items])
-
-# --- Leadership Admin ---
-@app.route('/api/admin/leadership', methods=['GET'])
-@jwt_required()
-def admin_get_leadership():
-    leaders = Leadership.query.all()
-    return jsonify([{'id': l.id, 'name': l.name, 'position': l.position, 'imageUrl': l.image_url, 'linkedinUrl': l.linkedin_url} for l in leaders])
-
-# --- Careers Admin ---
-@app.route('/api/admin/careers', methods=['GET'])
-@jwt_required()
-def admin_get_careers():
-    jobs = Career.query.all()
-    return jsonify([{'id': j.id, 'title': j.title, 'description': j.description} for j in jobs])
-
-@app.route('/api/admin/careers/<int:career_id>', methods=['DELETE'])
-@god_required
-def delete_career(career_id):
-    job = Career.query.get_or_404(career_id)
-    db.session.delete(job)
-    db.session.commit()
-    return jsonify({'message': 'Job posting removed'})
-
-@app.route('/api/admin/users/<int:user_id>/role', methods=['PUT'])
-@god_required
-def update_user_role(user_id):
-    user = User.query.get_or_404(user_id)
-    data = request.get_json()
-    
-    if not data or 'role' not in data:
-        return jsonify({'error': 'No role provided'}), 400
-        
-    user.role = data['role']
-    db.session.commit() # This makes it "stick" in PostgreSQL!
-    return jsonify({'message': f'User {user.full_name} is now a {user.role}'})
-
-
-@app.route('/api/admin/careers', methods=['POST'])
-@admin_required
-def add_career():
-    data = request.get_json()
-    new_job = Career(
-        title=data['title'],
-        description=data['description'],
-        apply_link=data['apply_link']
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+            data.get("ngo_name"),
+            data.get("founder_name"),
+            data.get("registration_number"),
+            data.get("contact_number"),
+            data.get("email"),
+            password_hash,
+            data.get("address"),
+            data.get("description"),
+        ),
     )
-    db.session.add(new_job)
-    db.session.commit()
-    return jsonify({'message': 'Job posting published'}), 201
+    return jsonify({"id": ngo_id, "message": "NGO created"}), 201
 
-@app.route('/api/admin/reels', methods=['GET'])
-@admin_required
-def admin_get_reels():
-    reels = CampReel.query.order_by(CampReel.id.desc()).all()
-    return jsonify([{'id': r.id, 'title': r.title, 'videoUrl': r.video_url} for r in reels])
 
-@app.route('/api/admin/reels', methods=['POST'])
-@admin_required
-def admin_handle_add_reel():
-    data = request.get_json()
-    if not data or 'video_url' not in data:
-        return jsonify({'error': 'Video URL is required'}), 400
-        
-    new_reel = CampReel(
-        title=data.get('title', 'New Reel'),
-        video_url=data['video_url']
-    )
-    db.session.add(new_reel)
-    db.session.commit()
-    return jsonify({'message': 'Reel added successfully!'}), 201
+@app.route("/ngo/login", methods=["POST"])
+def ngo_login():
+    data = request.get_json() or {}
+    email = data.get("email")
+    password = data.get("password")
 
-@app.route('/api/admin/reels/<int:reel_id>', methods=['PUT'])
-@admin_required
-def update_reel(reel_id):
-    reel = CampReel.query.get_or_404(reel_id)
-    data = request.get_json()
-    reel.title = data.get('title', reel.title)
-    reel.video_url = data.get('videoUrl', data.get('video_url', reel.video_url))
-    db.session.commit()
-    return jsonify({'message': 'Reel updated'})
+    if not email or not password:
+        return jsonify({"error": "Email and password required"}), 400
 
-@app.route('/api/admin/testimonials', methods=['POST'])
-@admin_required
-def add_testimonial():
-    data = request.get_json()
-    if not data or 'text' not in data:
-        return jsonify({'error': 'Testimonial text is required'}), 400
-        
-    new_test = Testimonial(
-        author=data.get('author', 'Anonymous'),
-        author_position=data.get('author_position', 'Volunteer'),
-        text=data['text'],
-        image_url=data.get('image_url')
-    )
-    db.session.add(new_test)
-    db.session.commit()
-    return jsonify({'message': 'Testimonial added successfully!'}), 201
+    ngo = get_ngo_by_email(email)
+    if not ngo:
+        return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/admin/testimonials/<int:test_id>', methods=['PUT'])
-@admin_required
-def update_testimonial(test_id):
-    test = Testimonial.query.get_or_404(test_id)
-    data = request.get_json()
-    test.author = data.get('author', test.author)
-    test.author_position = data.get('authorPosition', data.get('author_position', test.author_position))
-    test.text = data.get('text', test.text)
-    db.session.commit()
-    return jsonify({'message': 'Testimonial updated'})
+    if not bcrypt.checkpw(password.encode("utf-8"), ngo["password_hash"].encode("utf-8")):
+        return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/admin/announcements', methods=['GET'])
-@admin_required
-def get_admin_announcements():
-    notices = Announcement.query.order_by(Announcement.created_at.desc()).all()
-    return jsonify([{
-        'id': a.id, 'title': a.title, 'content': a.content,
-        'date': a.created_at.strftime('%Y-%m-%d')
-    } for a in notices])
+    return jsonify({"token": generate_token({**ngo, "role": "ngo"}, "ngo"), "account_type": "ngo"})
 
-@app.route('/api/admin/users/<int:user_id>/certificates', methods=['POST'])
-@admin_required # Ensures only authorized staff can issue certs
-def issue_certificate(user_id):
-    data = request.get_json()
-    
-    if not data or 'url' not in data or 'camp_title' not in data:
-        return jsonify({'error': 'Camp title and Drive URL are required'}), 400
-        
-    user = User.query.get_or_404(user_id)
-    
-    new_cert = Certificate(
-        user_id=user.id,
-        camp_title=data['camp_title'],
-        url=data['url']
-    )
-    
-    db.session.add(new_cert)
-    db.session.commit()
-    
-    return jsonify({'message': f'Certificate for {data["camp_title"]} issued to {user.full_name}'}), 201
 
-@app.route('/api/me', methods=['GET'])
-@jwt_required()
-def get_current_user():
-    email = get_jwt_identity()
-    user = User.query.filter_by(email=email).first_or_404()
-    
-    # Fetch all certificates linked to this user
-    certs = [{
-        'camp_title': c.camp_title,
-        'url': c.url,
-        'date': c.issued_at.strftime('%Y-%m-%d')
-    } for c in user.certificates]
+@app.route("/profile", methods=["GET"])
+@token_required
+def profile():
+    account_type = request.user.get("account_type", "staff")
+    table_name = "members" if account_type == "member" else "users"
+    user = build_profile_response(table_name, request.user["email"])
 
-    response = jsonify({
-        'full_name': user.full_name,
-        'role': user.role,
-        'profession': user.city, # Using city as placeholder for profession if needed
-        'certificates': certs # This is what the new frontend logic expects!
-    })
-    
-    # Security headers to ensure data is always fresh
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    return response
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
-@app.route('/api/admin/announcements', methods=['POST'])
-@admin_required
-def send_broadcast():
-    data = request.get_json()
-    if not data or 'content' not in data:
-        return jsonify({'error': 'Announcement content is required'}), 400
-        
-    new_notif = Announcement(
-        title=data.get('title', 'Important Update'),
-        content=data['content']
-    )
-    db.session.add(new_notif)
-    db.session.commit()
-    return jsonify({'message': 'Broadcast sent to all members'}), 201
+    return jsonify(user)
 
-@app.route('/api/admin/announcements/<int:ann_id>', methods=['PUT'])
-@admin_required
-def update_announcement(ann_id):
-    ann = Announcement.query.get_or_404(ann_id)
-    data = request.get_json()
-    ann.title = data.get('title', ann.title)
-    ann.content = data.get('content', ann.content)
-    db.session.commit()
-    return jsonify({'message': 'Announcement updated'})
 
-def it_required(fn):
-    @wraps(fn)
-    @jwt_required()
-    def wrapper(*args, **kwargs):
-        claims = get_jwt()
-        # Allows access to both 'god' and 'it' roles
-        if claims.get('role') not in ['god', 'it']:
-            return jsonify({'error': 'IT or God clearance required!'}), 403
-        return fn(*args, **kwargs)
-    return wrapper  
-@app.route('/api/initiatives', methods=['GET'])
-def get_initiatives():
-    items = FlagshipInitiative.query.order_by(FlagshipInitiative.created_at.desc()).all()
-    return jsonify([{'id': i.id, 'title': i.title, 'description': i.description, 'imageUrl': i.image_url, 'category': i.category, 'createdAt': i.created_at.strftime('%Y-%m-%d')} for i in items])
+@app.route("/ngo/profile", methods=["GET"])
+@token_required
+def ngo_profile():
+    if request.user.get("account_type") != "ngo":
+        return jsonify({"error": "NGO access required"}), 403
 
-@app.route('/api/announcements', methods=['GET'])
-def get_announcements_live():
-    notices = Announcement.query.order_by(Announcement.created_at.desc()).all()
-    return jsonify([{
-        'id': a.id, 'title': a.title, 'content': a.content, 
-        'date': a.created_at.strftime('%Y-%m-%d')
-    } for a in notices])
+    ngo = build_profile_response("ngos", request.user["email"])
+    if not ngo:
+        return jsonify({"error": "NGO not found"}), 404
+    return jsonify(ngo)
 
-@app.route('/api/active-drives', methods=['GET'])
-def get_active_drives():
-    # Only show APPROVED proposals on the public website
-    drives = CampProposal.query.filter_by(status='approved').all()
-    return jsonify([{
-        'title': d.camp_type, 
-        'location': f"{d.city}, {d.state}", 
-        'description': f"Coordinated with {d.ngo_name}",
-        'category': d.camp_type
-    } for d in drives])
 
-@app.route('/api/camps', methods=['GET'])
-def get_past_camps():
-    camps = Camp.query.order_by(Camp.id.desc()).all()
-    return jsonify([{
-        'id': c.id, 
-        'title': c.title, 
-        'location': c.location, 
-        'dateCompleted': c.date, # Matches frontend 'dateCompleted'
-        'description': c.description, 
-        'beneficiaries': c.beneficiaries, 
-        'volunteers': c.volunteers,
-        'imageUrl': c.image_url # Matches frontend 'imageUrl'
-    } for c in camps])
-
-@app.route('/api/admin/initiatives', methods=['POST'])
-@admin_required
-def create_initiative():
+@app.route("/drives", methods=["GET"])
+@token_required
+def get_drives():
     try:
-        data = request.get_json()
-        
-        # 1. Use .get() to prevent crashes if a field is missing
-        # 2. Check for both 'image_url' and 'imageUrl' to be safe
-        title = data.get('title')
-        description = data.get('description')
-        img = data.get('image_url') or data.get('imageUrl')
-        cat = data.get('category', 'General')
-
-        if not title or not description:
-            return jsonify({'error': 'Title and Description are required'}), 400
-
-        new_init = FlagshipInitiative(
-            title=title,
-            category=cat,
-            image_url=img or "https://via.placeholder.com/800x400?text=MAAI+Initiative",
-            description=description
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            """
+            SELECT
+                id,
+                title,
+                COALESCE(location, 'India') AS location,
+                COALESCE(description, '') AS description,
+                'drive' AS source_type,
+                date,
+                created_at
+            FROM drives
+            """
         )
-        
-        db.session.add(new_init)
-        db.session.commit()
-        return jsonify({'message': 'Initiative created', 'id': new_init.id}), 201
+        drives = cursor.fetchall()
 
-    except Exception as e:
-        db.session.rollback()
-        # This will now appear in your Render "Logs" tab!
-        print(f"DEBUG ERROR: {str(e)}") 
-        return jsonify({'error': 'Server processed a bad request', 'details': str(e)}), 500
+        cursor.execute(
+            """
+            SELECT
+                id,
+                camp_type AS title,
+                COALESCE(location, CONCAT_WS(', ', city, state), city, state, 'India') AS location,
+                COALESCE(description, CONCAT('Organized by ', COALESCE(ngo_name, 'MAAI'))) AS description,
+                'proposal' AS source_type,
+                date,
+                created_at
+            FROM camp_proposals
+            WHERE status = 'approved'
+            """
+        )
+        drives.extend(cursor.fetchall())
+        drives.sort(key=lambda item: item.get("created_at") or "", reverse=True)
 
-@app.route('/api/admin/initiatives/<int:item_id>', methods=['PUT'])
-@admin_required
-def update_initiative(item_id):
-    item = FlagshipInitiative.query.get_or_404(item_id)
-    data = request.get_json()
-    item.title = data.get('title', item.title)
-    item.description = data.get('description', item.description)
-    item.image_url = data.get('imageUrl', data.get('image_url', item.image_url))
-    item.category = data.get('category', item.category)
-    db.session.commit()
-    return jsonify({'message': 'Initiative updated'})
+        cursor.close()
+        conn.close()
+        return jsonify(drives)
+    except Error as exc:
+        return jsonify({"error": f"Failed to load drives: {exc.msg}"}), 500
 
-@app.before_request
-def handle_options():
-    if request.method == "OPTIONS":
-        from flask import Response
-        res = Response()
-        res.headers['Access-Control-Allow-Origin'] = 'https://crazyelf-ai.github.io'
-        res.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        res.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return res, 200
 
-@app.route('/api/admin/camps', methods=['POST'])
-@admin_required
-def add_past_camp():
-    data = request.get_json()
-    new_camp = Camp(
-        title=data['title'],
-        location=data['location'],
-        date=data.get('dateCompleted', data.get('date')),
-        description=data['description'],
-        beneficiaries=data.get('beneficiaries', 0),
-        volunteers=data.get('volunteers', 0),
-        image_url=data.get('imageUrl', data.get('image_url'))
+@app.route("/notices", methods=["GET"])
+@token_required
+def get_notices():
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT id, title, content, created_at FROM announcements ORDER BY created_at DESC"
+        )
+        notices = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(notices)
+    except Error:
+        return jsonify([])
+
+
+@app.route("/api/me", methods=["GET"])
+@token_required
+def api_me():
+    if request.user.get("account_type") == "ngo":
+        ngo = ngo_profile().get_json()
+        return jsonify({
+            "full_name": ngo.get("ngo_name"),
+            "role": "ngo",
+            "profession": ngo.get("registration_number"),
+        })
+    profile_data = profile().get_json()
+    return jsonify({
+        "full_name": profile_data.get("name"),
+        "role": profile_data.get("role"),
+        "profession": profile_data.get("field_of_study") or profile_data.get("city"),
+        "certificate_url": profile_data.get("certificate_url"),
+    })
+
+
+@app.route("/api/active-drives", methods=["GET"])
+def api_active_drives():
+    drives = query_all(
+        """
+        SELECT id, title, COALESCE(location, 'India') AS location, COALESCE(description, '') AS description, title AS category, 'drive' AS source_type
+        FROM drives
+        """
     )
-    db.session.add(new_camp)
-    db.session.commit()
-    return jsonify({'message': 'Past camp record created'}), 201
+    drives.extend(query_all(
+        """
+        SELECT
+            id,
+            camp_type AS title,
+            COALESCE(location, CONCAT_WS(', ', city, state), city, state, 'India') AS location,
+            COALESCE(description, CONCAT('Organized by ', COALESCE(ngo_name, 'MAAI'))) AS description,
+            camp_type AS category,
+            'proposal' AS source_type
+        FROM camp_proposals
+        WHERE status = 'approved'
+        ORDER BY created_at DESC
+        """
+    ))
+    return jsonify(drives)
 
-@app.route('/api/admin/camps/<int:camp_id>', methods=['PUT'])
-@admin_required
-def update_camp(camp_id):
-    camp = Camp.query.get_or_404(camp_id)
-    data = request.get_json()
-    camp.title = data.get('title', camp.title)
-    camp.location = data.get('location', camp.location)
-    camp.date = data.get('dateCompleted', data.get('date', camp.date))
-    camp.description = data.get('description', camp.description)
-    camp.beneficiaries = data.get('beneficiaries', camp.beneficiaries)
-    camp.volunteers = data.get('volunteers', camp.volunteers)
-    camp.image_url = data.get('imageUrl', data.get('image_url', camp.image_url))
-    db.session.commit()
-    return jsonify({'message': 'Camp updated'})
 
-@app.route('/api/admin/initiatives/<int:item_id>', methods=['DELETE'])
-@admin_required
-def delete_initiative(item_id):
-    item = FlagshipInitiative.query.get_or_404(item_id)
-    db.session.delete(item)
-    db.session.commit()
-    return jsonify({'message': 'Initiative deleted'})
+@app.route("/api/camps/apply", methods=["POST"])
+@token_required
+def api_apply_camp():
+    return apply_camp()
 
-@app.route('/api/admin/camps/<int:camp_id>', methods=['DELETE'])
-@admin_required
-def delete_camp(camp_id):
-    camp = Camp.query.get_or_404(camp_id)
-    db.session.delete(camp)
-    db.session.commit()
-    return jsonify({'message': 'Camp deleted'})
 
-@app.route('/api/admin/reels/<int:reel_id>', methods=['DELETE'])
-@admin_required
-def delete_reel(reel_id):
-    reel = CampReel.query.get_or_404(reel_id)
-    db.session.delete(reel)
-    db.session.commit()
-    return jsonify({'message': 'Reel deleted'})
+@app.route("/api/initiatives", methods=["GET"])
+def api_get_initiatives():
+    rows = query_all(
+        """
+        SELECT id, title, category, image_url, description, created_at
+        FROM initiatives
+        ORDER BY created_at DESC
+        """
+    )
+    return jsonify([
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "category": row["category"],
+            "image_url": row["image_url"],
+            "imageUrl": row["image_url"],
+            "description": row["description"],
+            "createdAt": str(row["created_at"]),
+        }
+        for row in rows
+    ])
 
-@app.route('/api/admin/testimonials/<int:test_id>', methods=['DELETE'])
-@admin_required
-def delete_testimonial(test_id):
-    test = Testimonial.query.get_or_404(test_id)
-    db.session.delete(test)
-    db.session.commit()
-    return jsonify({'message': 'Testimonial deleted'})
 
-@app.route('/api/admin/announcements/<int:ann_id>', methods=['DELETE'])
-@admin_required
-def delete_announcement(ann_id):
-    ann = Announcement.query.get_or_404(ann_id)
-    db.session.delete(ann)
-    db.session.commit()
-    return jsonify({'message': 'Announcement deleted'})
-
-@app.route('/api/admin/stats', methods=['GET'])
-@admin_required
-def get_admin_stats():
-    total_users = User.query.count()
-    active_volunteers = User.query.filter_by(role='member').count()
-    pending_requests = CampProposal.query.filter_by(status='pending').count()
+@app.route("/api/initiatives/<int:item_id>", methods=["GET"])
+def api_get_initiative(item_id):
+    row = query_one(
+        """
+        SELECT id, title, category, image_url, description, created_at
+        FROM initiatives
+        WHERE id = %s
+        """,
+        (item_id,),
+    )
+    if not row:
+        return jsonify({"error": "Initiative not found"}), 404
     return jsonify({
-        'total_users': total_users,
-        'active_volunteers': active_volunteers,
-        'pending_requests': pending_requests
+        "id": row["id"],
+        "title": row["title"],
+        "category": row["category"],
+        "image_url": row["image_url"],
+        "imageUrl": row["image_url"],
+        "description": row["description"],
+        "date": str(row["created_at"]),
     })
 
-@app.route('/api/stats', methods=['GET'])
-def get_platform_stats():
-    # 1. Count total completed camps
-    total_camps = Camp.query.count()
-    
-    # 2. Sum up all beneficiaries from those camps
-    db_beneficiaries = db.session.query(func.sum(Camp.beneficiaries)).scalar() or 0
-    
-    # 3. Sum up all volunteers engaged
-    db_volunteers = db.session.query(func.sum(Camp.volunteers)).scalar() or 0
-    
-    # PRO-TIP: Add your established base numbers so your site never 
-    # dips below your current achievements (22, 8100, 1100) while you migrate!
+
+@app.route("/api/leadership", methods=["GET"])
+def api_get_leadership():
+    rows = query_all(
+        """
+        SELECT id, name, position, image_url, linkedin_url, instagram_url, bio, category
+        FROM leadership
+        ORDER BY created_at DESC
+        """
+    )
+    return jsonify([
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "position": row["position"],
+            "role": row["position"],
+            "image_url": row["image_url"],
+            "imageUrl": row["image_url"],
+            "linkedin_url": row["linkedin_url"],
+            "linkedin": row["linkedin_url"],
+            "instagram_url": row["instagram_url"],
+            "instagram": row["instagram_url"],
+            "bio": row["bio"],
+            "category": row["category"],
+        }
+        for row in rows
+    ])
+
+
+@app.route("/api/reels", methods=["GET"])
+def api_get_reels():
+    rows = query_all("SELECT id, title, video_url FROM reels ORDER BY created_at DESC")
+    return jsonify([
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "video_url": row["video_url"],
+            "videoUrl": row["video_url"],
+        }
+        for row in rows
+    ])
+
+
+@app.route("/api/testimonials", methods=["GET"])
+def api_get_testimonials():
+    rows = query_all(
+        """
+        SELECT id, author, author_position, image_url, text
+        FROM testimonials
+        ORDER BY created_at DESC
+        """
+    )
+    return jsonify([
+        {
+            "id": row["id"],
+            "author": row["author"],
+            "author_position": row["author_position"],
+            "authorPosition": row["author_position"],
+            "image_url": row["image_url"],
+            "text": row["text"],
+        }
+        for row in rows
+    ])
+
+
+@app.route("/api/careers", methods=["GET"])
+def api_get_careers():
+    rows = query_all(
+        """
+        SELECT id, title, type, description, apply_link
+        FROM careers
+        ORDER BY created_at DESC
+        """
+    )
+    return jsonify(rows)
+
+
+@app.route("/api/gallery", methods=["GET"])
+def api_get_gallery():
+    rows = query_all("SELECT id, title, url FROM gallery ORDER BY created_at DESC")
+    return jsonify(rows)
+
+
+@app.route("/api/camps", methods=["GET"])
+def api_get_camps():
+    rows = query_all(
+        """
+        SELECT id, title, location, date_completed, description, beneficiaries, volunteers, image_url
+        FROM camps
+        ORDER BY created_at DESC
+        """
+    )
+    return jsonify([
+        {
+            "id": row["id"],
+            "title": row["title"],
+            "location": row["location"],
+            "dateCompleted": row["date_completed"],
+            "description": row["description"],
+            "beneficiaries": row["beneficiaries"],
+            "volunteers": row["volunteers"],
+            "image_url": row["image_url"],
+            "imageUrl": row["image_url"],
+        }
+        for row in rows
+    ])
+
+
+@app.route("/api/admin/initiatives", methods=["GET", "POST"])
+@admin_required
+def api_admin_initiatives():
+    if request.method == "GET":
+        return api_get_initiatives()
+
+    data = request.get_json() or {}
+    if not data.get("title") or not data.get("description"):
+        return jsonify({"error": "Title and description are required"}), 400
+    item_id = execute_write(
+        """
+        INSERT INTO initiatives (title, category, image_url, description)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (
+            data.get("title"),
+            data.get("category", "General"),
+            data.get("image_url") or data.get("imageUrl"),
+            data.get("description"),
+        ),
+    )
+    return jsonify({"id": item_id, "message": "Initiative created"}), 201
+
+
+@app.route("/api/admin/initiatives/<int:item_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_initiative(item_id):
+    execute_write("DELETE FROM initiatives WHERE id = %s", (item_id,))
+    return jsonify({"message": "Initiative deleted"})
+
+
+@app.route("/api/admin/leadership", methods=["POST"])
+@admin_required
+def api_admin_add_leadership():
+    data = request.get_json() or {}
+    if not data.get("name") or not data.get("position"):
+        return jsonify({"error": "Name and position are required"}), 400
+    leader_id = execute_write(
+        """
+        INSERT INTO leadership (name, position, image_url, linkedin_url, instagram_url, bio, category)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+            data.get("name"),
+            data.get("position"),
+            data.get("image_url") or data.get("imageUrl"),
+            data.get("linkedin_url") or data.get("linkedinUrl"),
+            data.get("instagram_url") or data.get("instagramUrl"),
+            data.get("bio"),
+            data.get("category", "Current Core"),
+        ),
+    )
+    return jsonify({"id": leader_id, "message": "Leader added"}), 201
+
+
+@app.route("/api/admin/leadership/<int:leader_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_leadership(leader_id):
+    execute_write("DELETE FROM leadership WHERE id = %s", (leader_id,))
+    return jsonify({"message": "Leader deleted"})
+
+
+@app.route("/api/admin/reels", methods=["POST"])
+@admin_required
+def api_admin_add_reel():
+    data = request.get_json() or {}
+    if not data.get("title") or not data.get("video_url"):
+        return jsonify({"error": "Title and video URL are required"}), 400
+    reel_id = execute_write(
+        "INSERT INTO reels (title, video_url) VALUES (%s, %s)",
+        (data.get("title"), data.get("video_url")),
+    )
+    return jsonify({"id": reel_id, "message": "Reel added"}), 201
+
+
+@app.route("/api/admin/reels/<int:reel_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_reel(reel_id):
+    execute_write("DELETE FROM reels WHERE id = %s", (reel_id,))
+    return jsonify({"message": "Reel deleted"})
+
+
+@app.route("/api/admin/testimonials", methods=["POST"])
+@admin_required
+def api_admin_add_testimonial():
+    data = request.get_json() or {}
+    if not data.get("author") or not data.get("text"):
+        return jsonify({"error": "Author and text are required"}), 400
+    testimonial_id = execute_write(
+        """
+        INSERT INTO testimonials (author, author_position, image_url, text)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (
+            data.get("author"),
+            data.get("author_position") or data.get("authorPosition"),
+            data.get("image_url"),
+            data.get("text"),
+        ),
+    )
+    return jsonify({"id": testimonial_id, "message": "Testimonial added"}), 201
+
+
+@app.route("/api/admin/testimonials/<int:testimonial_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_testimonial(testimonial_id):
+    execute_write("DELETE FROM testimonials WHERE id = %s", (testimonial_id,))
+    return jsonify({"message": "Testimonial deleted"})
+
+
+@app.route("/api/admin/careers", methods=["GET", "POST"])
+@admin_required
+def api_admin_careers():
+    if request.method == "GET":
+        return api_get_careers()
+
+    data = request.get_json() or {}
+    if not data.get("title"):
+        return jsonify({"error": "Title is required"}), 400
+    career_id = execute_write(
+        """
+        INSERT INTO careers (title, type, description, apply_link)
+        VALUES (%s, %s, %s, %s)
+        """,
+        (
+            data.get("title"),
+            data.get("type"),
+            data.get("description", ""),
+            data.get("apply_link"),
+        ),
+    )
+    return jsonify({"id": career_id, "message": "Career added"}), 201
+
+
+@app.route("/api/admin/careers/<int:career_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_career(career_id):
+    execute_write("DELETE FROM careers WHERE id = %s", (career_id,))
+    return jsonify({"message": "Career deleted"})
+
+
+@app.route("/api/admin/gallery", methods=["POST"])
+@admin_required
+def api_admin_add_gallery():
+    data = request.get_json() or {}
+    image_url = data.get("url") or data.get("image_url")
+    if not image_url:
+        return jsonify({"error": "Image URL is required"}), 400
+    gallery_id = execute_write(
+        "INSERT INTO gallery (title, url) VALUES (%s, %s)",
+        (data.get("title"), image_url),
+    )
+    return jsonify({"id": gallery_id, "message": "Gallery item added"}), 201
+
+
+@app.route("/api/admin/gallery/<int:item_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_gallery(item_id):
+    execute_write("DELETE FROM gallery WHERE id = %s", (item_id,))
+    return jsonify({"message": "Gallery item deleted"})
+
+
+@app.route("/api/admin/users", methods=["GET", "POST"])
+@admin_required
+def api_admin_users():
+    if request.method == "GET":
+        rows = query_all(
+            """
+            SELECT id, name, email, role, certificate_url
+            FROM users
+            ORDER BY created_at DESC
+            """
+        )
+        return jsonify([
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "full_name": row["name"],
+                "email": row["email"],
+                "role": row["role"],
+                "certificate_url": row.get("certificate_url"),
+            }
+            for row in rows
+        ])
+
+    data = request.get_json() or {}
+    name = data.get("full_name") or data.get("name")
+    email = data.get("email")
+    role = data.get("role", "member")
+    if not name or not email:
+        return jsonify({"error": "Name and email are required"}), 400
+    existing = query_one("SELECT id FROM users WHERE email = %s", (email,))
+    if existing:
+        return jsonify({"error": "User already exists"}), 400
+    hashed = bcrypt.hashpw("MAAI2026!".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    user_id = execute_write(
+        "INSERT INTO users (name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
+        (name, email, hashed, role),
+    )
+    return jsonify({"id": user_id, "message": "User added"}), 201
+
+
+@app.route("/api/admin/users/<int:user_id>/role", methods=["PUT"])
+@admin_required
+def api_admin_update_user_role(user_id):
+    data = request.get_json() or {}
+    if not data.get("role"):
+        return jsonify({"error": "Role is required"}), 400
+    execute_write("UPDATE users SET role = %s WHERE id = %s", (data.get("role"), user_id))
+    return jsonify({"message": "Role updated"})
+
+
+@app.route("/api/admin/users/<int:user_id>/certificate", methods=["PUT"])
+@admin_required
+def api_admin_update_user_certificate(user_id):
+    data = request.get_json() or {}
+    execute_write("UPDATE users SET certificate_url = %s WHERE id = %s", (data.get("certificate_url"), user_id))
+    return jsonify({"message": "Certificate updated"})
+
+
+@app.route("/api/admin/users/<int:user_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_user(user_id):
+    execute_write("DELETE FROM users WHERE id = %s", (user_id,))
+    return jsonify({"message": "User deleted"})
+
+
+@app.route("/api/admin/stats", methods=["GET"])
+@admin_required
+def api_admin_stats():
+    users_count = query_one("SELECT COUNT(*) AS count FROM users")
+    members_count = query_one("SELECT COUNT(*) AS count FROM members")
+    pending_count = query_one("SELECT COUNT(*) AS count FROM camp_proposals WHERE status = 'pending'")
+    initiatives_count = query_one("SELECT COUNT(*) AS count FROM initiatives")
     return jsonify({
-        'camps': total_camps + 22,
-        'beneficiaries': db_beneficiaries + 8100,
-        'volunteers': db_volunteers + 1100
+        "total_users": users_count["count"] + members_count["count"],
+        "active_volunteers": members_count["count"],
+        "pending_requests": pending_count["count"],
+        "initiatives": initiatives_count["count"],
     })
 
-@app.route('/api/admin/settings', methods=['GET'])
+
+@app.route("/api/admin/camp-proposals", methods=["GET"])
 @admin_required
-def get_settings():
-    settings = SystemSetting.query.all()
-    return jsonify({s.key: s.value for s in settings})
+def api_admin_camp_proposals():
+    proposals = query_all(
+        """
+        SELECT
+            id,
+            ngo_name,
+            email,
+            phone,
+            city,
+            state,
+            camp_type,
+            location,
+            date,
+            description,
+            beneficiaries,
+            volunteers_required,
+            status,
+            rejection_reason,
+            created_at
+        FROM camp_proposals
+        ORDER BY
+            CASE status
+                WHEN 'pending' THEN 0
+                WHEN 'approved' THEN 1
+                WHEN 'rejected' THEN 2
+                ELSE 3
+            END,
+            created_at DESC
+        """
+    )
+    return jsonify(proposals)
 
-@app.route('/api/admin/settings', methods=['POST'])
+
+@app.route("/api/admin/camp-proposals/<int:proposal_id>/status", methods=["PUT"])
 @admin_required
-def update_settings():
-    data = request.get_json()
-    for key, value in data.items():
-        setting = SystemSetting.query.filter_by(key=key).first()
-        if setting:
-            setting.value = str(value)
-        else:
-            db.session.add(SystemSetting(key=key, value=str(value)))
-    db.session.commit()
-    return jsonify({'message': 'Settings updated'})
+def api_admin_update_camp_proposal_status(proposal_id):
+    data = request.get_json() or {}
+    status = (data.get("status") or "").strip().lower()
+    rejection_reason = data.get("rejection_reason")
+
+    if status not in ["approved", "rejected"]:
+        return jsonify({"error": "Status must be approved or rejected"}), 400
+
+    existing = query_one("SELECT id FROM camp_proposals WHERE id = %s", (proposal_id,))
+    if not existing:
+        return jsonify({"error": "Camp proposal not found"}), 404
+
+    execute_write(
+        """
+        UPDATE camp_proposals
+        SET status = %s, rejection_reason = %s
+        WHERE id = %s
+        """,
+        (status, rejection_reason if status == "rejected" else None, proposal_id),
+    )
+    return jsonify({"message": f"Camp proposal {status}."})
 
 
-@app.route('/api/initiatives/<int:item_id>', methods=['GET'])
-def get_single_initiative(item_id):
-    # This looks into your FlagshipInitiative table for the specific ID
-    item = FlagshipInitiative.query.get_or_404(item_id)
-    return jsonify({
-        'id': item.id,
-        'title': item.title,
-        'category': item.category,
-        'description': item.description,
-        'imageUrl': item.image_url,
-        'date': item.created_at.strftime('%d %B %Y')
-    })
+@app.route("/apply-camp", methods=["POST"])
+@token_required
+def apply_camp():
+    if request.user.get("account_type") not in ["ngo", "staff"]:
+        return jsonify({"error": "Only NGO and staff accounts can submit camp proposals"}), 403
 
-# ... after all your routes and models ...
+    data = request.get_json() or {}
+    required = ["ngo_name", "email", "phone", "city", "state", "camp_type"]
+    missing = [field for field in required if not data.get(field)]
+    if missing:
+        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
-# This ensures tables are created even when running on Render/Gunicorn
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO camp_proposals
+        (ngo_name, email, phone, city, state, camp_type, proposal_file, location, date,
+         description, beneficiaries, volunteers_required, created_by, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+            data.get("ngo_name"),
+            data.get("email"),
+            data.get("phone"),
+            data.get("city"),
+            data.get("state"),
+            data.get("camp_type"),
+            data.get("proposal_file"),
+            data.get("location"),
+            data.get("date"),
+            data.get("description"),
+            data.get("beneficiaries", 0),
+            data.get("volunteers_required", 0),
+            request.user["email"],
+            "pending",
+        ),
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"message": "Camp proposal submitted"}), 201
+
+
+@app.route("/ngo/camp-proposals", methods=["GET"])
+@token_required
+def ngo_camp_proposals():
+    if request.user.get("account_type") != "ngo":
+        return jsonify({"error": "NGO access required"}), 403
+
+    proposals = query_all(
+        """
+        SELECT
+            id,
+            camp_type AS title,
+            location,
+            date,
+            description,
+            beneficiaries,
+            volunteers_required,
+            status,
+            rejection_reason,
+            created_at
+        FROM camp_proposals
+        WHERE created_by = %s
+        ORDER BY created_at DESC
+        """,
+        (request.user["email"],),
+    )
+    return jsonify(proposals)
+
+
+@app.route("/camp-registrations", methods=["POST"])
+@token_required
+def register_for_camp():
+    if request.user.get("account_type") != "member":
+        return jsonify({"error": "Only members can register for drives"}), 403
+
+    data = request.get_json() or {}
+    source_type = data.get("source_type")
+    source_id = data.get("source_id")
+
+    if source_type not in ["drive", "proposal"] or not source_id:
+        return jsonify({"error": "Invalid camp reference"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT id, role FROM members WHERE email = %s", (request.user["email"],))
+    user = cursor.fetchone()
+    if not user:
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "User not found"}), 404
+
+    if source_type == "drive":
+        cursor.execute("SELECT id FROM drives WHERE id = %s", (source_id,))
+    else:
+        cursor.execute("SELECT id FROM camp_proposals WHERE id = %s", (source_id,))
+    camp = cursor.fetchone()
+
+    if not camp:
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "Camp not found"}), 404
+
+    insert_cursor = conn.cursor()
+    try:
+        insert_cursor.execute(
+            """
+            INSERT INTO camp_registrations (user_id, source_type, source_id)
+            VALUES (%s, %s, %s)
+            """,
+            (user["id"], source_type, source_id),
+        )
+        conn.commit()
+    except Error as exc:
+        insert_cursor.close()
+        cursor.close()
+        conn.close()
+        if exc.errno == 1062:
+            return jsonify({"error": "You have already registered for this camp"}), 409
+        return jsonify({"error": exc.msg}), 500
+
+    insert_cursor.close()
+    cursor.close()
+    conn.close()
+    return jsonify({"message": "Registered successfully"}), 201
+
+
+@app.route("/camp-registrations", methods=["GET"])
+@staff_required
+def get_camp_registrations():
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT
+            cr.id,
+            cr.source_type,
+            cr.source_id,
+            cr.created_at AS registered_at,
+            u.name,
+            u.email,
+            u.phone_number,
+            u.field_of_study,
+            CASE
+                WHEN cr.source_type = 'drive' THEN d.title
+                WHEN cr.source_type = 'proposal' THEN cp.camp_type
+                ELSE 'Camp'
+            END AS camp_title,
+            CASE
+                WHEN cr.source_type = 'drive' THEN d.location
+                WHEN cr.source_type = 'proposal' THEN COALESCE(cp.location, CONCAT_WS(', ', cp.city, cp.state))
+                ELSE NULL
+            END AS camp_location
+        FROM camp_registrations cr
+        JOIN members u ON u.id = cr.user_id
+        LEFT JOIN drives d ON cr.source_type = 'drive' AND cr.source_id = d.id
+        LEFT JOIN camp_proposals cp ON cr.source_type = 'proposal' AND cr.source_id = cp.id
+        ORDER BY camp_title ASC, cr.created_at DESC
+        """
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    camps = {}
+    for row in rows:
+        key = f"{row['source_type']}:{row['source_id']}"
+        if key not in camps:
+            camps[key] = {
+                "source_type": row["source_type"],
+                "source_id": row["source_id"],
+                "camp_title": row["camp_title"],
+                "camp_location": row["camp_location"],
+                "registrations": [],
+            }
+        camps[key]["registrations"].append(
+            {
+                "name": row["name"],
+                "email": row["email"],
+                "phone_number": row["phone_number"],
+                "field_of_study": row["field_of_study"],
+                "registered_at": row["registered_at"],
+            }
+        )
+
+    return jsonify(list(camps.values()))
+
+
 with app.app_context():
-    db.create_all()
+    ensure_schema()
 
 if __name__ == "__main__":
     app.run(debug=True)

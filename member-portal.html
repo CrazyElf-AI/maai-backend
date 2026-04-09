@@ -58,6 +58,17 @@
         <i class="fas fa-circle-notch fa-spin text-5xl text-orange-500 mb-4 block"></i>
         <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white font-display">Verifying Access...</h2>
     </div>
+    <div id="portal-popup" class="fixed top-5 right-5 z-[70] hidden max-w-sm rounded-2xl border border-orange-200 bg-white px-5 py-4 text-sm text-gray-800 shadow-2xl dark:border-slate-700 dark:bg-navy-800 dark:text-slate-200">
+        <div class="flex items-start gap-3">
+            <i id="portal-popup-icon" class="fas fa-check-circle text-orange-500 mt-0.5"></i>
+            <div class="flex-1">
+                <p id="portal-popup-message" class="font-medium">Done</p>
+            </div>
+            <button id="portal-popup-close" class="text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
 
     <div id="app-body" class="hidden flex h-screen w-full relative">
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
@@ -178,6 +189,15 @@
                     </div>
                 </div>
 
+                <div id="staff-camps-section" class="hidden">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 border-l-4 border-orange-500 pl-3">Camp Registrations</h2>
+                    <div id="staff-camps-container" class="space-y-6">
+                        <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-gray-500 dark:text-slate-500 italic shadow-md">
+                            <i class="fas fa-circle-notch fa-spin mr-2"></i>Loading camp registrations...
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 border-l-4 border-orange-500 pl-3">Notice Board</h2>
                     <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-md dark:shadow-lg">
@@ -195,12 +215,24 @@
     <script>
     // --- 0. SMART CONFIGURATION (Global) ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
     const token = localStorage.getItem('token');
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
+    console.log("🚀 Initializing Portal using:", API_BASE);
+
+    function getTokenPayload(rawToken) {
+        try {
+            const payload = rawToken.split('.')[1];
+            return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+        } catch {
+            return null;
+        }
+    }
 
     // --- 1. THE GATEKEEPER (Immediate Check) ---
     if (!token || token === 'null' || token === 'undefined') {
         window.location.replace('login.html');
+    } else if (getTokenPayload(token)?.account_type === 'ngo') {
+        window.location.replace('ngo-dashboard.html');
     }
 
     // --- 2. ELEMENT SELECTORS ---
@@ -211,18 +243,47 @@
     const drivesContainer = document.getElementById('drives-container');
     const noticesContainer = document.getElementById('notices-container');
     const roleBadge = document.getElementById('user-role-badge');
+    const staffCampsSection = document.getElementById('staff-camps-section');
+    const staffCampsContainer = document.getElementById('staff-camps-container');
+    const popupEl = document.getElementById('portal-popup');
+    const popupMessageEl = document.getElementById('portal-popup-message');
+    const popupIconEl = document.getElementById('portal-popup-icon');
+    let currentUserRole = 'member';
+    let popupTimer = null;
+    const appliedCampStorageKey = 'appliedCampKeys';
+
+    function getAppliedCampKeys() {
+        try {
+            return JSON.parse(localStorage.getItem(appliedCampStorageKey) || '[]');
+        } catch {
+            return [];
+        }
+    }
+
+    function isCampApplied(sourceType, sourceId) {
+        return getAppliedCampKeys().includes(`${sourceType}:${sourceId}`);
+    }
+
+    function markCampApplied(sourceType, sourceId) {
+        const key = `${sourceType}:${sourceId}`;
+        const keys = getAppliedCampKeys();
+        if (!keys.includes(key)) {
+            keys.push(key);
+            localStorage.setItem(appliedCampStorageKey, JSON.stringify(keys));
+        }
+    }
 
     // --- 3. UNIFIED INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', async () => {
-        console.log("🚀 Initializing Portal using:", API_BASE);
+        
         
         setupMobileSidebar();
         setupThemeToggle();
 
         // Run all data fetches at once for speed
         try {
+            await loadUserProfile();
             await Promise.all([
-                loadUserProfile(),
                 loadActiveDrives(),
                 loadNotices()
             ]);
@@ -262,31 +323,46 @@
 
     // --- 5. DATA FUNCTIONS ---
     // Inside loadUserProfile() function
+
 async function loadUserProfile() {
     try {
-        const data = await apiCall('/me');
+        const data = await apiCall('/profile');
+
         if (!data) return;
 
-        userNameEl.textContent = data.full_name?.split(' ')[0] || 'Member';
-        userProfessionEl.textContent = data.profession || getDefaultProfession(data.role);
-        userHoursEl.innerHTML = `${data.hours_volunteered ?? 0} <span class="text-sm text-gray-500 dark:text-slate-400 font-sans font-normal lowercase">hrs</span>`;
-        
-        // --- NEW: Certificate Logic ---
-       const certContainer = document.getElementById('certificates-list');
-        if (data.certificates && data.certificates.length > 0) {
-            certContainer.innerHTML = data.certificates.map(cert => `
-                <a href="${cert.url}" target="_blank" class="flex items-center justify-between gap-3 text-gray-600 dark:text-slate-400 hover:text-orange-600 px-2 py-2 rounded-lg text-sm transition-all hover:bg-orange-50/50">
-                    <span class="truncate" title="${cert.camp_title}">${cert.camp_title}</span>
-                    <i class="fas fa-external-link-alt text-[10px]"></i>
-                </a>
-            `).join('');
+        if (userNameEl) {
+            userNameEl.textContent = data.name || "Member";
         }
-    } catch (error) { console.error("Profile load error:", error); }
+
+        if (userProfessionEl) {
+            userProfessionEl.textContent = data.field_of_study || getDefaultProfession(data.role);
+        }
+
+        currentUserRole = data.role || 'member';
+        setBadge(data.role);
+        setRoleUI(data.role);
+
+        if (data.role === 'god' || data.role === 'it') {
+            staffCampsSection?.classList.remove('hidden');
+            await loadStaffCamps();
+        } else {
+            staffCampsSection?.classList.add('hidden');
+        }
+
+    } catch (err) {
+        console.error("Profile load failed:", err);
+        if (userNameEl) {
+            userNameEl.textContent = 'Member';
+        }
+        if (userProfessionEl) {
+            userProfessionEl.textContent = 'Unable to load profile';
+        }
+    }
 }
 
     async function loadActiveDrives() {
         try {
-            const drives = await apiCall('/active-drives');
+            const drives = await apiCall('/drives')
             if (!drivesContainer) return;
 
             if (!drives || !drives.length) {
@@ -298,6 +374,21 @@ async function loadUserProfile() {
                 <div class="min-w-[320px] w-[320px] bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 shadow-md snap-start">
                     <h4 class="font-bold text-lg text-slate-800 dark:text-white">${drive.title}</h4>
                     <p class="text-sm text-gray-500 mt-2">${drive.location}</p>
+                    ${currentUserRole === 'member' ? `
+                        ${isCampApplied(drive.source_type, drive.id) ? `
+                            <button
+                                class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gray-300 text-gray-600 dark:bg-slate-700 dark:text-slate-300 text-sm font-semibold cursor-not-allowed"
+                                disabled>
+                                Applied
+                            </button>
+                        ` : `
+                        <button
+                            class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+                            onclick="registerForCamp(this, '${drive.source_type}', ${drive.id})">
+                            Apply
+                        </button>
+                        `}
+                    ` : ''}
                 </div>
             `).join('');
         } catch (error) {
@@ -307,7 +398,7 @@ async function loadUserProfile() {
 
     async function loadNotices() {
         try {
-            const notices = await apiCall('/announcements');
+            const notices = await apiCall('/notices');
             if (!noticesContainer) return;
 
             if (!notices || !notices.length) {
@@ -326,10 +417,106 @@ async function loadUserProfile() {
         }
     }
 
+    function showPopup(message, type = 'success') {
+        if (!popupEl || !popupMessageEl || !popupIconEl) return;
+        popupMessageEl.textContent = message;
+        popupIconEl.className = `fas mt-0.5 ${type === 'error' ? 'fa-circle-exclamation text-rose-500' : 'fa-check-circle text-orange-500'}`;
+        popupEl.classList.remove('hidden');
+
+        if (popupTimer) clearTimeout(popupTimer);
+        popupTimer = setTimeout(() => {
+            popupEl.classList.add('hidden');
+        }, 2600);
+    }
+
+    function setAppliedButton(button) {
+        if (!button) return;
+        button.textContent = 'Applied';
+        button.disabled = true;
+        button.className = 'mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gray-300 text-gray-600 dark:bg-slate-700 dark:text-slate-300 text-sm font-semibold cursor-not-allowed';
+    }
+
+    async function registerForCamp(button, sourceType, sourceId) {
+        try {
+            const response = await apiCall('/camp-registrations', {
+                method: 'POST',
+                body: JSON.stringify({ source_type: sourceType, source_id: sourceId })
+            });
+
+            if (response) {
+                markCampApplied(sourceType, sourceId);
+                setAppliedButton(button);
+                showPopup('Applied successfully.');
+            }
+        } catch (error) {
+            if ((error.message || '').toLowerCase().includes('already registered')) {
+                markCampApplied(sourceType, sourceId);
+                setAppliedButton(button);
+                showPopup('Already applied.');
+                return;
+            }
+            showPopup(error.message || 'Application failed.', 'error');
+        }
+    }
+
+    async function loadStaffCamps() {
+        if (!staffCampsContainer) return;
+
+        try {
+            const camps = await apiCall('/camp-registrations');
+            if (!camps || !camps.length) {
+                staffCampsContainer.innerHTML = `
+                    <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-gray-500 dark:text-slate-500 italic shadow-md">
+                        No member registrations yet.
+                    </div>
+                `;
+                return;
+            }
+
+            staffCampsContainer.innerHTML = camps.map(camp => `
+                <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-md">
+                    <div class="p-6 border-b border-gray-100 dark:border-slate-700/50">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">${camp.camp_title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">${camp.camp_location || 'Location not set'}</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 dark:bg-slate-800/60 text-left">
+                                <tr>
+                                    <th class="px-6 py-3 font-semibold text-gray-600 dark:text-slate-300">Name</th>
+                                    <th class="px-6 py-3 font-semibold text-gray-600 dark:text-slate-300">Phone</th>
+                                    <th class="px-6 py-3 font-semibold text-gray-600 dark:text-slate-300">Field of Study</th>
+                                    <th class="px-6 py-3 font-semibold text-gray-600 dark:text-slate-300">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-slate-700/50">
+                                ${camp.registrations.map(reg => `
+                                    <tr>
+                                        <td class="px-6 py-4 text-gray-900 dark:text-white">${reg.name || '-'}</td>
+                                        <td class="px-6 py-4 text-gray-600 dark:text-slate-300">${reg.phone_number || '-'}</td>
+                                        <td class="px-6 py-4 text-gray-600 dark:text-slate-300">${reg.field_of_study || '-'}</td>
+                                        <td class="px-6 py-4 text-gray-600 dark:text-slate-300">${reg.email || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            staffCampsContainer.innerHTML = `
+                <div class="bg-white dark:bg-navy-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 text-rose-500 shadow-md">
+                    Failed to load camp registrations.
+                </div>
+            `;
+        }
+    }
+
     // --- 6. UI HELPERS ---
     function getDefaultProfession(role) {
         if (role === 'ngo') return 'NGO Partner';
         if (role === 'admin' || role === 'god') return 'Platform Admin';
+        if (role === 'it') return 'IT Staff';
         return 'Community Volunteer';
     }
 
@@ -397,6 +584,11 @@ async function loadUserProfile() {
                 localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
             };
         }
+    }
+
+    const popupCloseBtn = document.getElementById('portal-popup-close');
+    if (popupCloseBtn && popupEl) {
+        popupCloseBtn.onclick = () => popupEl.classList.add('hidden');
     }
 </script>
 </body>

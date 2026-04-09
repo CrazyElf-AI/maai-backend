@@ -168,7 +168,18 @@
 
     <main class="container mx-auto px-4 pb-24 relative z-10 -mt-10">
         
-        <!-- Section 1: Founding Members -->
+        <!-- Section 1: Founders -->
+        <section class="mb-24 scroll-mt-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 border-b-2 border-brand-blue pb-2 inline-block">Founders</h2>
+                <p class="text-gray-400">The founding leadership that established MAAI.</p>
+            </div>
+            <div id="founders-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="col-span-full text-center text-gray-500 py-12 glass-panel rounded-3xl"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading Founders...</div>
+            </div>
+        </section>
+
+        <!-- Section 2: Founding Members -->
         <section class="mb-24 scroll-mt-24">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 border-b-2 border-brand-blue pb-2 inline-block">Founding Members</h2>
@@ -179,7 +190,7 @@
             </div>
         </section>
 
-        <!-- Section 1.5: Mentors -->
+        <!-- Section 3: Mentors -->
         <section class="mb-24 scroll-mt-24">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 border-b-2 border-orange-500 pb-2 inline-block">Our Mentors</h2>
@@ -190,7 +201,7 @@
             </div>
         </section>
 
-        <!-- Section 2: Current Core Team -->
+        <!-- Section 4: Current Core Team -->
         <section class="mb-24 scroll-mt-24">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 border-b-2 border-brand-teal pb-2 inline-block">Current Core Team</h2>
@@ -201,7 +212,7 @@
             </div>
         </section>
 
-        <!-- Section 3: Directors and Ambassadors -->
+        <!-- Section 5: Directors and Ambassadors -->
         <section class="mb-12 scroll-mt-24">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 border-b-2 border-purple-500 pb-2 inline-block">Directors & Ambassadors</h2>
@@ -213,23 +224,20 @@
         </section>
 
     </main>
-
-    <footer class="bg-[#030712] border-t border-white/10 text-white pt-16 pb-8 text-center text-sm text-gray-500 relative z-10">
-        <p>&copy; 2026 MAAI Organization. All rights reserved.</p>
-    </footer>
-
 <script>
     // --- 0. SMART CONFIGURATION ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
     const token = localStorage.getItem('token');
 
     async function loadTeam() {
         try {
-            const res = await fetch(`${API_BASE}/leadership`);
+            const res = await fetch(`${API_BASE}/api/leadership`);
             const leaders = await res.json();
             
             const containers = {
+                'Founder': document.getElementById('founders-container'),
+                'Founders': document.getElementById('founders-container'),
                 'Founding Members': document.getElementById('founding-container'),
                 'Mentors': document.getElementById('mentors-container'),
                 'Current Core Team': document.getElementById('core-container'),
@@ -243,7 +251,9 @@
                 const cat = data.category || 'Current Core Team';
                 let theme = { text: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/20' };
 
-                if(cat === 'Founding Members') theme = { text: 'text-brand-blue', bg: 'bg-blue-500/10', border: 'border-blue-500/20' };
+                if(cat === 'Founder' || cat === 'Founders' || (data.role || '').toLowerCase().includes('founder')) {
+                    theme = { text: 'text-brand-blue', bg: 'bg-blue-500/10', border: 'border-blue-500/20' };
+                } else if(cat === 'Founding Members') theme = { text: 'text-brand-blue', bg: 'bg-blue-500/10', border: 'border-blue-500/20' };
                 else if(cat === 'Mentors') theme = { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20' };
                 else if(cat === 'Directors and Ambassadors') theme = { text: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' };
 
@@ -263,6 +273,7 @@
                 `;
 
                 if(containers[cat]) containers[cat].innerHTML += cardHTML;
+                else if ((data.role || '').toLowerCase().includes('founder')) containers['Founders'].innerHTML += cardHTML;
                 else containers['Current Core Team'].innerHTML += cardHTML;
             });
         } catch (error) {
@@ -275,5 +286,40 @@
         document.getElementById('mobile-menu-btn').onclick = () => document.getElementById('mobile-menu').classList.toggle('hidden');
     };
 </script>
+    <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-[#030712] text-slate-700 dark:text-slate-200 relative z-10">
+        <div class="container mx-auto px-6 max-w-6xl py-14">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-gray-200 dark:border-white/10">
+                <div>
+                    <a href="index.html" class="inline-flex items-center gap-3">
+                        <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-11 h-11 object-contain">
+                        <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">MAAI</span>
+                    </a>
+                    <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-500 dark:text-slate-400">Medical Awareness and Assistance Initiative building stronger communities through camps, volunteers, and partner-led outreach.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
+                    <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                        <p><i class="fas fa-envelope mr-2 text-blue-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-phone mr-2 text-blue-500"></i>2882883441</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Quick Links</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <a href="index.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Home</a>
+                        <a href="volunteer.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Volunteer</a>
+                        <a href="ngo.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Partner Portal</a>
+                        <a href="Camps.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Camps</a>
+                        <a href="our-team.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Our Team</a>
+                        <a href="login.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Login</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
+                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
+

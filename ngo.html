@@ -244,7 +244,7 @@
                 <a href="#" class="hover:text-blue-400 transition-colors">Partnerships</a>
                 <a href="#careers" class="hover:text-blue-400 transition-colors">Careers</a>
                 <a href="#socials" class="hover:text-blue-400 transition-colors">Socials</a>
-                <a href="#register" class="inline-block bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-500 hover:to-rose-500 text-white px-6 py-2 rounded-full font-medium shadow-lg shadow-blue-500/30 w-full mt-2 transition-all">
+                <a href="ngo-dashboard.html" class="inline-block bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-500 hover:to-rose-500 text-white px-6 py-2 rounded-full font-medium shadow-lg shadow-blue-500/30 w-full mt-2 transition-all">
                     Partner Portal
                 </a>
             </div>
@@ -259,7 +259,7 @@
                 <span class="text-blue-400 font-semibold tracking-wider uppercase text-sm mb-4 block">Scale Your Impact</span>
                 <h1 class="text-5xl md:text-7xl font-bold text-white leading-tight mb-6 drop-shadow-md" style="color: #ffffff !important; text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);">Partner for<br>Greater Impact.</h1>
                 <p class="text-xl text-gray-300 mb-8" style="color: #ffffff !important; text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);">Collaborate with MAAI to scale your NGO initiatives. Utilize our network of medical professionals and volunteers to execute successful community drives.</p>
-                <a href="ngo-register.html" class="inline-block bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-500 hover:to-rose-500 text-white px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
+                <a href="ngo-register.html?tab=signup" class="inline-block bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-500 hover:to-rose-500 text-white px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
                     Register NGO
                 </a>
             </div>
@@ -706,23 +706,18 @@
             </div>
         </div>
     </section>
-
-    <footer class="bg-[#030712] border-t border-white/10 text-white pt-16 pb-8 text-center text-sm text-gray-500">
-        <p>&copy; 2026 MAAI Organization. All rights reserved.</p>
-    </footer>
-
     <!-- Flask API Integration Logic -->
     <script>
     // --- 0. SMART CONFIGURATION ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
     const token = localStorage.getItem('token');
 
     // 1. Unified Content Loader
     async function loadAllContent() {
         try {
             // Load Initiatives
-            const resInit = await fetch(`${API_BASE}/initiatives`);
+            const resInit = await fetch(`${API_BASE}/api/initiatives`);
             const initiatives = await resInit.json();
             document.getElementById('initiatives-container').innerHTML = initiatives.map(i => `
                 <div class="bg-white/5 border border-white/10 rounded-3xl p-6 hover-card">
@@ -733,32 +728,36 @@
             `).join('');
 
             // Load Leadership & Mentors
-            const resLead = await fetch(`${API_BASE}/leadership`);
+            const resLead = await fetch(`${API_BASE}/api/leadership`);
             const data = await resLead.json();
-            const mentors = data.filter(m => m.position.toLowerCase().includes('mentor'));
-            const leaders = data.filter(l => !l.position.toLowerCase().includes('mentor'));
+            const mentors = data.filter(m => (m.position || m.role || '').toLowerCase().includes('mentor'));
+            const leaders = data.filter(l => {
+                const category = (l.category || '').trim().toLowerCase();
+                const position = (l.position || l.role || '').trim().toLowerCase();
+                return category === 'founder' || category === 'founders' || position.includes('founder');
+            });
 
-            document.getElementById('leadership-container').innerHTML = leaders.map(l => `
+            document.getElementById('leadership-container').innerHTML = leaders.length ? leaders.map(l => `
                 <div class="text-center group">
                     <img src="${l.image_url}" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-2 border-blue-500/30 group-hover:border-blue-500 transition-all">
                     <h4 class="text-white font-bold font-display">${l.name}</h4>
                     <p class="text-blue-400 text-xs font-semibold uppercase">${l.position}</p>
                 </div>
-            `).join('');
+            `).join('') : '<p class="col-span-full text-center text-gray-500 font-medium">No founders added yet.</p>';
 
-            document.getElementById('mentors-container').innerHTML = mentors.map(m => `
+            document.getElementById('mentors-container').innerHTML = mentors.length ? mentors.map(m => `
                 <div class="bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 p-6 text-center hover-card">
                     <img src="${m.image_url}" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-2 border-orange-500/30" onerror="this.src='https://via.placeholder.com/150';">
                     <h3 class="text-lg font-bold text-white">${m.name}</h3>
                     <p class="text-sm text-orange-400 font-medium">${m.position}</p>
                 </div>
-            `).join('');
+            `).join('') : '<p class="col-span-full text-center text-gray-500 font-medium">No mentors added yet.</p>';
 
             // Load Reels, Testimonials, and Careers (Using standard Flask routes)
             const [reels, tests, jobs] = await Promise.all([
-                fetch(`${API_BASE}/reels`).then(r => r.json()),
-                fetch(`${API_BASE}/testimonials`).then(r => r.json()),
-                fetch(`${API_BASE}/careers`).then(r => r.json())
+                fetch(`${API_BASE}/api/reels`).then(r => r.json()),
+                fetch(`${API_BASE}/api/testimonials`).then(r => r.json()),
+                fetch(`${API_BASE}/api/careers`).then(r => r.json())
             ]);
 
             document.getElementById('reels-container').innerHTML = reels.map(r => `
@@ -825,6 +824,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('reg-submit-btn');
         const status = document.getElementById('reg-status-msg');
         
+        const token = localStorage.getItem('token');
+        if (!token) {
+            status.textContent = "Please login as an NGO or Staff to register a camp.";
+            status.className = "mt-4 text-sm text-rose-500 block font-medium";
+            return;
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i>Processing...';
 
@@ -851,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE}/camps/apply`, {
+            const res = await fetch(`${API_BASE}/api/camps/apply`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -865,10 +871,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 status.className = "mt-4 text-sm text-teal-400 block";
                 regForm.reset();
             } else {
-                throw new Error("Submission failed.");
+                if (res.status === 401 || res.status === 403) {
+                    throw new Error("Unauthorized. Please login to register a camp.");
+                }
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || "Submission failed.");
             }
         } catch (err) {
-            status.textContent = "Error submitting. Please try again later.";
+            status.textContent = err.message || "Error submitting. Please try again later.";
             status.className = "mt-4 text-sm text-rose-500 block";
         } finally {
             btn.disabled = false;
@@ -888,9 +898,49 @@ document.addEventListener('DOMContentLoaded', () => {
             mobileMenu.classList.toggle('hidden');
         });
     }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.checked = document.documentElement.classList.contains('dark');
+    }
 });
 
     window.onload = loadAllContent;
 </script>
+    <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-[#030712] text-slate-700 dark:text-slate-200">
+        <div class="container mx-auto px-6 max-w-6xl py-14">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-gray-200 dark:border-white/10">
+                <div>
+                    <a href="index.html" class="inline-flex items-center gap-3">
+                        <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-11 h-11 object-contain">
+                        <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">MAAI</span>
+                    </a>
+                    <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-500 dark:text-slate-400">Medical Awareness and Assistance Initiative building stronger communities through camps, volunteers, and partner-led outreach.</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
+                    <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
+                        <p><i class="fas fa-envelope mr-2 text-blue-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-phone mr-2 text-blue-500"></i>2882883441</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Quick Links</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <a href="index.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Home</a>
+                        <a href="volunteer.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Volunteer</a>
+                        <a href="ngo.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Partner Portal</a>
+                        <a href="Camps.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Camps</a>
+                        <a href="our-team.html" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">Our Team</a>
+                        <a href="ngo-register.html?tab=login" class="text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">NGO Login</a>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
+                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
+

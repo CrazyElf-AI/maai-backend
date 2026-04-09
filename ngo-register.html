@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAAI - NGO Registration</title>
+    <title>MAAI - NGO Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -44,13 +44,42 @@
     <!-- Main App Container -->
     <div id="app-container" class="w-full max-w-2xl hidden">
         <div class="glass-panel rounded-2xl p-8 md:p-12 shadow-2xl border-t border-orange-500/30">
+            <div class="mb-6">
+                <a href="ngo.html" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Website</span>
+                </a>
+            </div>
             <div class="text-center mb-8">
                 <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
-                <h1 class="text-3xl font-display font-extrabold text-white">NGO Registration</h1>
-                <p class="text-slate-400 text-sm mt-2">Complete your organisation's profile to get started.</p>
+                <h1 class="text-3xl font-display font-extrabold text-white">NGO Portal</h1>
+                <p class="text-slate-400 text-sm mt-2">Sign in or register your organisation to access the partner dashboard.</p>
             </div>
 
-            <form id="ngo-registration-form" class="space-y-6">
+            <div class="flex border-b border-white/10 mb-8">
+                <button type="button" id="ngo-tab-login" class="flex-1 py-3 text-orange-500 border-b-2 border-orange-500 font-bold transition-colors">Sign In</button>
+                <button type="button" id="ngo-tab-signup" class="flex-1 py-3 text-slate-400 border-b-2 border-transparent hover:text-white font-bold transition-colors">Register NGO</button>
+            </div>
+
+            <form id="ngo-login-form" class="space-y-6">
+                <div>
+                    <label for="ngo-login-email" class="block text-sm font-medium text-slate-300 mb-2">Account Email *</label>
+                    <input type="email" id="ngo-login-email" required class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="ngo@example.com">
+                </div>
+                <div>
+                    <label for="ngo-login-password" class="block text-sm font-medium text-slate-300 mb-2">Password *</label>
+                    <input type="password" id="ngo-login-password" required minlength="6" class="w-full bg-[#030712]/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors" placeholder="••••••••">
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="ngo-login-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span>Sign In to Partner Portal</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <p id="ngo-login-status" class="text-rose-400 text-sm text-center mt-4 hidden font-medium"></p>
+                </div>
+            </form>
+
+            <form id="ngo-registration-form" class="space-y-6 hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="ngo-name" class="block text-sm font-medium text-slate-300 mb-2">NGO Name *</label>
@@ -96,9 +125,6 @@
                     </button>
                     <p id="status-msg" class="text-rose-400 text-sm text-center mt-4 hidden font-medium"></p>
                 </div>
-                <div class="mt-6 text-center border-t border-white/10 pt-6">
-                    <p class="text-sm text-slate-400">Already registered? <a href="login.html" class="text-orange-500 hover:text-orange-400 font-semibold transition-colors">Sign in here</a></p>
-                </div>
             </form>
         </div>
     </div>
@@ -106,24 +132,80 @@
     <script>
     // --- SMART CONFIGURATION ---
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-    const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+    const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
 
     const authOverlay = document.getElementById('auth-overlay');
     const appContainer = document.getElementById('app-container');
+    const loginForm = document.getElementById('ngo-login-form');
     const registrationForm = document.getElementById('ngo-registration-form');
     const registerBtn = document.getElementById('register-btn');
     const statusMsg = document.getElementById('status-msg');
+    const loginBtn = document.getElementById('ngo-login-btn');
+    const loginStatus = document.getElementById('ngo-login-status');
+    const tabLogin = document.getElementById('ngo-tab-login');
+    const tabSignup = document.getElementById('ngo-tab-signup');
+
+    function getTokenPayload(rawToken) {
+        try {
+            const payload = rawToken.split('.')[1];
+            return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+        } catch {
+            return null;
+        }
+    }
+
+    function setActiveTab(showLogin) {
+        loginForm.classList.toggle('hidden', !showLogin);
+        registrationForm.classList.toggle('hidden', showLogin);
+        tabLogin.className = `flex-1 py-3 font-bold transition-colors ${showLogin ? 'text-orange-500 border-b-2 border-orange-500' : 'text-slate-400 border-b-2 border-transparent hover:text-white'}`;
+        tabSignup.className = `flex-1 py-3 font-bold transition-colors ${showLogin ? 'text-slate-400 border-b-2 border-transparent hover:text-white' : 'text-orange-500 border-b-2 border-orange-500'}`;
+    }
 
     // --- GATEKEEPER (Replaces onAuthStateChanged) ---
     document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('token');
         if (token && token !== 'undefined' && token !== 'null') {
-            // User is already logged in to PostgreSQL, send to portal
-            window.location.replace('member-portal.html');
-        } else {
-            // Not logged in. Show the form.
-            if(authOverlay) authOverlay.style.display = 'none';
-            if(appContainer) appContainer.classList.remove('hidden');
+            const payload = getTokenPayload(token);
+            if (payload?.account_type === 'ngo') {
+                window.location.replace('ngo-dashboard.html');
+                return;
+            }
+        }
+        if(authOverlay) authOverlay.style.display = 'none';
+        if(appContainer) appContainer.classList.remove('hidden');
+        setActiveTab(new URLSearchParams(window.location.search).get('tab') !== 'signup');
+    });
+
+    tabLogin.addEventListener('click', () => setActiveTab(true));
+    tabSignup.addEventListener('click', () => setActiveTab(false));
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const originalBtnContent = loginBtn.innerHTML;
+        loginBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Signing in...';
+        loginBtn.disabled = true;
+        loginStatus.classList.add('hidden');
+
+        try {
+            const response = await fetch(`${API_BASE}/ngo/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('ngo-login-email').value,
+                    password: document.getElementById('ngo-login-password').value
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Login failed');
+            }
+            localStorage.setItem('token', data.token);
+            window.location.replace('ngo-dashboard.html');
+        } catch (error) {
+            loginStatus.textContent = error.message || 'Login failed';
+            loginStatus.className = "text-rose-400 text-sm text-center mt-4 block font-medium";
+            loginBtn.innerHTML = originalBtnContent;
+            loginBtn.disabled = false;
         }
     });
 
@@ -150,7 +232,7 @@
 
         try {
             // Send to your Flask SQL Database!
-            const response = await fetch(`${API_BASE}/register-ngo`, {
+            const response = await fetch(`${API_BASE}/ngo/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(ngoData)
@@ -163,8 +245,12 @@
                 statusMsg.className = "text-teal-400 text-sm text-center mt-4 block font-medium";
                 statusMsg.classList.remove('hidden');
                 
-                // Send them to the main login page so they get a proper JWT token
-                setTimeout(() => window.location.replace('login.html'), 2000);
+                setTimeout(() => {
+                    setActiveTab(true);
+                    document.getElementById('ngo-login-email').value = ngoData.email;
+                    document.getElementById('ngo-login-password').value = ngoData.password;
+                    statusMsg.classList.add('hidden');
+                }, 1800);
             } else {
                 throw new Error(data.error || 'Registration failed');
             }

@@ -229,13 +229,31 @@
 // --- 0. SMART CONFIGURATION ---
 // Automatically switches between your local computer and the live Render server
 const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-const API_BASE = isLocal ? 'http://127.0.0.1:5000/api' : 'https://maai-backend.onrender.com/api';
+const API_BASE = isLocal ? 'http://127.0.0.1:5000' : 'https://maai-backend.onrender.com';
 const token = localStorage.getItem('token'); // <-- Crucial for God Mode and IT Panel
+
+function getTokenPayload(rawToken) {
+    try {
+        const payload = rawToken.split('.')[1];
+        return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    } catch {
+        return null;
+    }
+}
+
+function getRedirectForPayload(payload) {
+    if (payload?.account_type === 'ngo') return 'ngo-dashboard.html';
+    if (payload?.role === 'god') return 'godmode.html';
+    if (payload?.role === 'it') return 'it-panel.html';
+    if (payload?.role === 'admin') return 'admin-dashboard.html';
+    return 'member-portal.html';
+}
 
 // --- 1. GATEKEEPER ---
 // Check if user is already logged in before showing the page
 if (token && token !== 'undefined' && token !== 'null') {
-    window.location.replace('member-portal.html');
+    const payload = getTokenPayload(token);
+    window.location.replace(getRedirectForPayload(payload));
 } else {
     const loader = document.getElementById('auth-loader');
     if (loader) {
@@ -265,6 +283,11 @@ const setActiveTab = (activeTab, inactiveTab, showSection, hideSection) => {
 tabLogin.addEventListener('click', () => setActiveTab(tabLogin, tabSignup, loginSection, signupSection));
 tabSignup.addEventListener('click', () => setActiveTab(tabSignup, tabLogin, signupSection, loginSection));
 
+const tabParam = new URLSearchParams(window.location.search).get('tab');
+if (tabParam === 'signup') {
+    tabSignup.click();
+}
+
 // --- 4. CONSOLIDATED LOGIN LOGIC ---
 const loginForm = document.getElementById('login-form');
 const loginBtn = document.getElementById('login-btn');
@@ -285,7 +308,7 @@ loginForm.addEventListener('submit', async (e) => {
     errorMsg.classList.add('hidden');
 
     try {
-        const response = await fetch(`${API_BASE}/login`, {
+        const response = await fetch(`${API_BASE}/member/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -297,7 +320,7 @@ loginForm.addEventListener('submit', async (e) => {
             const actualToken = data.access_token || data.token;
             if (actualToken) {
                 localStorage.setItem('token', actualToken);
-                window.location.replace('member-portal.html');
+                window.location.replace(getRedirectForPayload(getTokenPayload(actualToken)));
             }
         } else {
             throw new Error(data.error || 'Invalid credentials');
@@ -360,15 +383,20 @@ signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = {
-        full_name: document.getElementById('vol-name').value,
-        email: document.getElementById('vol-email').value,
-        password: document.getElementById('vol-password').value,
-        phone_number: document.getElementById('vol-phone').value,
-        city: document.getElementById('vol-city').value
+    name: document.getElementById('vol-name').value,
+    email: document.getElementById('vol-email').value,
+    password: document.getElementById('vol-password').value,
+    phone_number: document.getElementById('vol-phone').value,
+    city: document.getElementById('vol-city').value,
+    field_of_study: document.getElementById('vol-field').value,
+    college: document.getElementById('vol-college').value,
+    year_of_study: document.getElementById('vol-year').value,
+    motivation: document.getElementById('vol-motivation').value,
+    date_of_birth: document.getElementById('vol-dob').value
     };
 
     try {
-        const response = await fetch(`${API_BASE}/register`, {
+        const response = await fetch(`${API_BASE}/member/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
