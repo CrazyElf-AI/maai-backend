@@ -28,8 +28,9 @@ def get_db():
         user=DB_USER,
         password=DB_PASSWORD,
         database=DB_NAME,
+        port=int(os.getenv("DB_PORT", 3306)),
+        ssl_disabled=False
     )
-
 
 def get_table_columns(conn, table_name):
     cursor = conn.cursor()
