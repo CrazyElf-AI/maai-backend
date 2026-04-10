@@ -13,11 +13,29 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {
-        "origins": "https://crazyelf-ai.github.io"
-    }
-}, supports_credentials=True)
+
+# Explicit CORS on every response including OPTIONS preflights.
+# Critical for Render free tier cold starts — without this the browser
+# kills the request before retry logic can help.
+CORS(app, resources={r"/*": {"origins": "https://crazyelf-ai.github.io"}}, supports_credentials=True)
+
+@app.after_request
+def apply_cors(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://crazyelf-ai.github.io"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+@app.route("/", methods=["OPTIONS"])
+@app.route("/<path:path>", methods=["OPTIONS"])
+def handle_options(path=""):
+    response = app.make_default_options_response()
+    response.headers["Access-Control-Allow-Origin"] = "https://crazyelf-ai.github.io"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
