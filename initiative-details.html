@@ -141,8 +141,17 @@
             }
         }
 
+        async function wakeAndLoad() {
+            try { await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' }); } catch(e) {}
+            for (let i = 0; i < 15; i++) {
+                await new Promise(r => setTimeout(r, 3000));
+                try { await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' }); break; } catch(e) {}
+            }
+            loadInitiativeDetails();
+        }
+
         // Initialize on load
-        window.onload = loadInitiativeDetails;
+        window.onload = wakeAndLoad;
     </script>
     <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50/80 dark:bg-[#030712]/80 backdrop-blur-xl">
         <div class="max-w-6xl mx-auto px-6 py-14">
@@ -157,7 +166,7 @@
                 <div>
                     <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
                     <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8fe2eeeee6a1e0fde8eee1e6fceefbe6e0e1cfe8e2eee6e3a1ece0e2">[email&#160;protected]</a></p>
                         <p><i class="fas fa-phone mr-2 text-teal-500"></i>2882883441</p>
                     </div>
                 </div>
@@ -174,10 +183,4 @@
                 </div>
             </div>
             <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
-                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
-
+                <

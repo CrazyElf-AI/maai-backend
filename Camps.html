@@ -320,8 +320,6 @@ async function loadLiveCamps() {
         console.error("Camps sync failed");
     }
 }
-window.onload = loadLiveCamps;
-
         // 2. Fetch Past/Completed Camps
         const pastContainer = document.getElementById('past-camps-container');
         try {
@@ -399,12 +397,19 @@ async function loadReels() {
     } catch (e) { console.error("Error loading reels:", e); }
 }
 
-// Update your window.onload to include them:
-window.onload = () => {
+async function wakeAndLoad() {
+    try { await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' }); } catch(e) {}
+    for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 3000));
+        try { await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' }); break; } catch(e) {}
+    }
     loadPublicCamps();
     loadTestimonials();
     loadReels();
-};
+}
+
+// Update your window.onload to include them:
+window.onload = wakeAndLoad;
 </script>
     <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-[#030712] text-slate-700 dark:text-slate-200">
         <div class="container mx-auto px-6 max-w-6xl py-14">
@@ -419,7 +424,7 @@ window.onload = () => {
                 <div>
                     <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
                     <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-envelope mr-2 text-teal-500"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1e737f7f7730716c797f70776d7f6a7771705e79737f7772307d7173">[email&#160;protected]</a></p>
                         <p><i class="fas fa-phone mr-2 text-teal-500"></i>2882883441</p>
                     </div>
                 </div>
@@ -436,10 +441,4 @@ window.onload = () => {
                 </div>
             </div>
             <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
-                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
-
+                <

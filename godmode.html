@@ -97,10 +97,10 @@
         <main class="flex-1 min-h-screen overflow-y-auto px-6 py-8 md:px-12 md:py-12 pb-24 md:pb-12 relative">
             <div class="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,0.05),transparent_50%)] pointer-events-none"></div>
 
-            <!-- Wake status banner — shown while server is spinning up -->
+            <!-- Wake status banner -->
             <div id="wake-status" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-800 border border-slate-700 text-slate-200 text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl">
                 <i class="fas fa-circle-notch fa-spin text-brand-orange"></i>
-                Connecting to server, please wait…
+                Server is waking up, please wait…
             </div>
 
             <section id="dashboard" class="active space-y-10">
@@ -771,13 +771,7 @@ window.saveCert = async (userId) => {
                     </div>
                     <button onclick="deleteLeader(${l.id})" class="text-brand-rose flex-shrink-0">
                         <i class="fas fa-trash"></i>
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Deletes a leader from the system.
- * @param {number} id - The ID of the leader to be deleted.
- * @returns {Promise<void>} - A promise that resolves when the delete operation is complete.
- */
-/*******  c22dfec9-2304-4164-b8bc-203a25ef7e90  *******/                    </button>
+                    </button>
                 </div>`)
               .join('')
             : '<p class="text-slate-500 italic text-sm text-center py-8">No leaders added yet.</p>';
@@ -1004,34 +998,35 @@ window.saveCert = async (userId) => {
 
     // ─── 15. INIT ────────────────────────────────────────────────────────────
 
-    // Wake the Render server before making any real API calls.
-    // Free tier spins down after inactivity — this pings it first and retries
-    // until it responds, then loads all dashboard data.
+    // Wake Render's free-tier server before making credentialed API calls.
+    // Uses `no-cors` so the ping works even while the server is still asleep
+    // (a sleeping server can't respond to CORS preflights, but it CAN receive
+    // a no-cors ping and will start booting). We then poll a real CORS-safe
+    // endpoint until it responds with 200, then load all dashboard data.
     async function wakeAndLoad() {
         const statusEl = document.getElementById('wake-status');
-
-        // Show a subtle status message while waking
         if (statusEl) statusEl.classList.remove('hidden');
 
+        // Step 1: Fire a no-cors ping to kick the server awake (no CORS needed)
+        try {
+            await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' });
+        } catch (e) {}
+
+        // Step 2: Poll until the server responds properly (up to ~45 seconds)
         let awake = false;
-        for (let i = 0; i < 10; i++) {
-            try {
-                const res = await fetch(`${API_BASE}/`, { method: 'GET' });
-                if (res.ok) { awake = true; break; }
-            } catch (e) {}
-            // Wait 3 seconds between retries
+        for (let i = 0; i < 15; i++) {
             await new Promise(r => setTimeout(r, 3000));
+            try {
+                const res = await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' });
+                // no-cors fetch won't throw if server is up — opaque response = server awake
+                awake = true;
+                break;
+            } catch (e) {}
         }
 
-        // Hide the status message
         if (statusEl) statusEl.classList.add('hidden');
 
-        if (!awake) {
-            showModal('Connection Error', 'Server took too long to respond. Please refresh the page and try again.');
-            return;
-        }
-
-        // Server is awake — now load everything
+        // Step 3: Load all dashboard data now that server is awake
         updateDashboardStats();
         fetchUsers();
         loadCampApplications();
@@ -1042,7 +1037,6 @@ window.saveCert = async (userId) => {
         if (menuTrigger) {
             menuTrigger.onclick = () => document.getElementById('sidebar').classList.toggle('hidden');
         }
-
         wakeAndLoad();
     };
 </script>

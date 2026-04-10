@@ -281,9 +281,15 @@
         }
     }
 
-    window.onload = () => {
-        loadTeam();
+    window.onload = async () => {
         document.getElementById('mobile-menu-btn').onclick = () => document.getElementById('mobile-menu').classList.toggle('hidden');
+        // Wake server before fetching team data
+        try { await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' }); } catch(e) {}
+        for (let i = 0; i < 15; i++) {
+            await new Promise(r => setTimeout(r, 3000));
+            try { await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' }); break; } catch(e) {}
+        }
+        loadTeam();
     };
 </script>
     <footer class="border-t border-gray-200 dark:border-white/10 bg-slate-50 dark:bg-[#030712] text-slate-700 dark:text-slate-200 relative z-10">
@@ -299,7 +305,7 @@
                 <div>
                     <h4 class="text-sm font-black uppercase tracking-[0.25em] text-slate-900 dark:text-white mb-4">Contact</h4>
                     <div class="space-y-3 text-sm text-slate-500 dark:text-slate-400">
-                        <p><i class="fas fa-envelope mr-2 text-blue-500"></i>maai.organisation@gmail.com</p>
+                        <p><i class="fas fa-envelope mr-2 text-blue-500"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="066b67676f2869746167686f7567726f696846616b676f6a2865696b">[email&#160;protected]</a></p>
                         <p><i class="fas fa-phone mr-2 text-blue-500"></i>2882883441</p>
                     </div>
                 </div>
@@ -316,10 +322,4 @@
                 </div>
             </div>
             <div class="pt-6 text-center text-xs uppercase tracking-[0.28em] text-slate-400 dark:text-slate-500">
-                <p>MAAI Organisation &copy; 2026. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
-
+                <
