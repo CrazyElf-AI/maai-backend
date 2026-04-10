@@ -308,16 +308,26 @@
 
             <section id="notifications" class="space-y-8">
                 <h2 class="text-4xl font-display font-black text-white italic underline decoration-brand-orange decoration-4 underline-offset-8">Broadcast Notifications</h2>
-                <div class="glass p-10 rounded-[2.5rem] max-w-2xl mx-auto space-y-8 shadow-2xl shadow-brand-orange/5">
-                    <div class="space-y-2">
-                        <label class="text-xs font-black uppercase text-slate-500 tracking-widest">Title</label>
-                        <input type="text" id="notif-title" placeholder="Important Update" class="w-full bg-navy-900/50 border border-slate-700 rounded-[1.5rem] p-4 text-sm focus:border-brand-orange outline-none">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass p-10 rounded-[2.5rem] space-y-8 shadow-2xl shadow-brand-orange/5 h-fit">
+                        <h3 class="text-xl font-bold text-white mb-2"><i class="fas fa-bullhorn text-brand-orange mr-2"></i> New Broadcast</h3>
+                        <div class="space-y-2">
+                            <label class="text-xs font-black uppercase text-slate-500 tracking-widest">Title</label>
+                            <input type="text" id="notif-title" placeholder="Important Update" class="w-full bg-navy-900/50 border border-slate-700 rounded-[1.5rem] p-4 text-sm focus:border-brand-orange outline-none">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-black uppercase text-slate-500 tracking-widest">Message</label>
+                            <textarea id="notif-msg" placeholder="Write your announcement here..." class="w-full bg-navy-900/50 border border-slate-700 rounded-[1.5rem] p-4 text-sm h-48 focus:border-brand-orange outline-none"></textarea>
+                        </div>
+                        <button onclick="sendBroadcast()" class="w-full bg-brand-orange text-white py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-brand-orange/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">Send Broadcast</button>
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-black uppercase text-slate-500 tracking-widest">Message</label>
-                        <textarea id="notif-msg" placeholder="Write your announcement here..." class="w-full bg-navy-900/50 border border-slate-700 rounded-[1.5rem] p-4 text-sm h-64 focus:border-brand-orange outline-none"></textarea>
+                    
+                    <div class="glass p-8 rounded-[2.5rem] space-y-4">
+                        <h3 class="font-bold flex items-center gap-2 text-white"><i class="fas fa-history text-brand-orange"></i> Past Broadcasts</h3>
+                        <div id="god-announcements-list" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 hide-scrollbar">
+                            <p class="text-slate-500 italic text-sm py-4">Loading announcements...</p>
+                        </div>
                     </div>
-                    <button onclick="sendBroadcast()" class="w-full bg-brand-orange text-white py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-brand-orange/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">Send Broadcast</button>
                 </div>
             </section>
 
@@ -420,6 +430,7 @@
         if (sectionId === 'careers')     loadJobs();
         if (sectionId === 'reels')       loadReels();
         if (sectionId === 'testimonials') loadTestimonials();
+        if (sectionId === 'notifications') loadAnnouncements();
     };
 
     // ─── 3. DASHBOARD STATS ──────────────────────────────────────────────────
@@ -963,6 +974,43 @@
             showModal('Sent', 'Broadcast sent to all members.');
             document.getElementById('notif-title').value = '';
             document.getElementById('notif-msg').value   = '';
+            loadAnnouncements();
+        }
+    };
+
+    window.loadAnnouncements = async () => {
+        const list = document.getElementById('god-announcements-list');
+        if (!list) return;
+
+        const data = await apiCall('/api/admin/announcements');
+        if (!data) return;
+
+        list.innerHTML = data.length
+            ? data.map(a => `
+                <div class="bg-navy-900/50 border border-slate-700 p-5 rounded-2xl">
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex-1">
+                            <h4 class="text-white font-bold">${a.title}</h4>
+                            <p class="text-xs text-slate-400 mt-1">${new Date(a.created_at).toLocaleDateString()}</p>
+                            <p class="text-sm text-slate-300 mt-3 line-clamp-3">${a.content}</p>
+                        </div>
+                        <button onclick="deleteAnnouncement(${a.id})" class="text-brand-rose hover:text-red-400 transition-colors flex-shrink-0 p-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')
+            : '<p class="text-slate-500 italic text-sm text-center py-4">No past broadcasts found.</p>';
+    };
+
+    window.deleteAnnouncement = async (id) => {
+        const confirmed = await showModal('Delete Broadcast', 'Are you sure you want to remove this announcement?', null, true);
+        if (confirmed) {
+            const res = await apiCall(`/api/admin/announcements/${id}`, 'DELETE');
+            if (res) {
+                showModal('Deleted', 'Broadcast removed successfully.');
+                loadAnnouncements();
+            }
         }
     };
 
@@ -1019,6 +1067,7 @@
         updateDashboardStats();
         fetchMembers(); // pre-load member list for when user visits members tab
         loadCampApplications();
+        loadAnnouncements();
     };
 </script>
 </body>

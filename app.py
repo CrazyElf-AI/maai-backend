@@ -1011,6 +1011,35 @@ def api_admin_delete_testimonial(testimonial_id):
     return jsonify({"message": "Testimonial deleted"})
 
 
+@app.route("/api/admin/announcements", methods=["GET", "POST"])
+@admin_required
+def api_admin_announcements():
+    if request.method == "GET":
+        rows = query_all(
+            "SELECT id, title, content, created_at FROM announcements ORDER BY created_at DESC"
+        )
+        return jsonify(rows)
+
+    data = request.get_json() or {}
+    title = data.get("title")
+    content = data.get("content")
+    if not title or not content:
+        return jsonify({"error": "Title and content are required"}), 400
+
+    announcement_id = execute_write(
+        "INSERT INTO announcements (title, content) VALUES (%s, %s)",
+        (title, content),
+    )
+    return jsonify({"id": announcement_id, "message": "Announcement created"}), 201
+
+
+@app.route("/api/admin/announcements/<int:announcement_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_announcement(announcement_id):
+    execute_write("DELETE FROM announcements WHERE id = %s", (announcement_id,))
+    return jsonify({"message": "Announcement deleted"})
+
+
 @app.route("/api/admin/careers", methods=["GET", "POST"])
 @admin_required
 def api_admin_careers():
