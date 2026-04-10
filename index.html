@@ -232,6 +232,8 @@
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const API_BASE = isLocal ? 'https://maai-backend.onrender.com' : 'https://maai-backend.onrender.com';
     const token = localStorage.getItem('token');
+        // Just fire-and-forget — index.html has no dashboard to load
+        fetch('https://maai-backend.onrender.com/').catch(() => {});
         document.addEventListener('DOMContentLoaded', () => {
             // Loader — stop blocking clicks immediately when fading starts
             const loader = document.getElementById('loader');
@@ -254,14 +256,7 @@
             });
         });
 
-        // Ping the server to wake it up before making real requests
-async function wakeServer() {
-    try {
-        await fetch(`${API_BASE}/`, { method: 'GET' });
-    } catch(e) {}
-    // Then load your data
-    loadDashboard();
-}
+
 
 window.onload = wakeServer;
 
