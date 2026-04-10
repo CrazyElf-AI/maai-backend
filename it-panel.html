@@ -429,6 +429,21 @@
             : '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500 italic">No members found.</td></tr>';
     }
 
+    async function wakeServer() {
+    showToast("Connecting to server, please wait...", "info");
+    
+    let attempts = 0;
+    while (attempts < 10) {
+        try {
+            const res = await fetch(`${API_BASE}/`);
+            if (res.ok) break;
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 3000)); // wait 3s between tries
+        attempts++;
+    }
+    loadDashboard();
+}
+
     async function loadCampApplications() {
         const container = document.getElementById('it-camps-list');
         if (!container) return;

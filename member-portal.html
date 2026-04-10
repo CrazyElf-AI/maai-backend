@@ -429,6 +429,21 @@ async function loadUserProfile() {
         }, 2600);
     }
 
+    async function wakeServer() {
+    showToast("Connecting to server, please wait...", "info");
+    
+    let attempts = 0;
+    while (attempts < 10) {
+        try {
+            const res = await fetch(`${API_BASE}/`);
+            if (res.ok) break;
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 3000)); // wait 3s between tries
+        attempts++;
+    }
+    loadDashboard();
+}
+
     function setAppliedButton(button) {
         if (!button) return;
         button.textContent = 'Applied';

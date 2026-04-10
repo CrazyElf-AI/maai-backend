@@ -254,6 +254,17 @@
             });
         });
 
+        // Ping the server to wake it up before making real requests
+async function wakeServer() {
+    try {
+        await fetch(`${API_BASE}/`, { method: 'GET' });
+    } catch(e) {}
+    // Then load your data
+    loadDashboard();
+}
+
+window.onload = wakeServer;
+
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
