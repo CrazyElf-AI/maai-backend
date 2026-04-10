@@ -273,7 +273,7 @@
     }
 
     // ─── 3. CORE API HELPER ──────────────────────────────────────────────────
-    // FIX: was using undefined 'API_URL' — changed to API_BASE
+    // Retries up to 10 times with 4s gap to handle Render free-tier cold starts.
     async function apiCall(endpoint, method = 'GET', body = null) {
         const options = {
             method,
@@ -284,19 +284,27 @@
         };
         if (body) options.body = JSON.stringify(body);
 
-        try {
-            const res = await fetch(`${API_BASE}${endpoint}`, options);
-            if (res.status === 401) { window.location.replace('login.html'); return null; }
+        const MAX_RETRIES = 10;
+        const RETRY_DELAY = 4000;
 
-            const data = await res.json();
-            if (!res.ok) {
-                notify(data.error || 'Action failed', 'error');
-                return null;
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const res = await fetch(`${API_BASE}${endpoint}`, options);
+                if (res.status === 401) { window.location.replace('login.html'); return null; }
+
+                const data = await res.json();
+                if (!res.ok) {
+                    notify(data.error || 'Action failed', 'error');
+                    return null;
+                }
+                return data;
+            } catch (err) {
+                if (attempt === MAX_RETRIES) {
+                    notify('Server took too long to respond. Please refresh.', 'error');
+                    return null;
+                }
+                await new Promise(r => setTimeout(r, RETRY_DELAY));
             }
-            return data;
-        } catch (err) {
-            notify('Server connection lost', 'error');
-            return null;
         }
     }
 
@@ -429,77 +437,48 @@
             : '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500 italic">No members found.</td></tr>';
     }
 
-    async function wakeServer() {
-    showToast("Connecting to server, please wait...", "info");
-    
-    let attempts = 0;
-    while (attempts < 10) {
-        try {
-            const res = await fetch(`${API_BASE}/`);
-            if (res.ok) break;
-        } catch(e) {}
-        await new Promise(r => setTimeout(r, 3000)); // wait 3s between tries
-        attempts++;
-    }
-    loadDashboard();
-}
-
     async function loadCampApplications() {
         const container = document.getElementById('it-camps-list');
         if (!container) return;
 
-        try {
-            const res = await fetch(`${API_BASE}/camp-registrations`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+        const camps = await apiCall('/camp-registrations');
+        if (!camps) return;
 
-            if (res.status === 401 || res.status === 403) {
-                window.location.replace('login.html');
-                return;
-            }
-
-            const camps = await res.json();
-            if (!Array.isArray(camps) || !camps.length) {
-                container.innerHTML = '<div class="glass p-8 rounded-[2rem] text-slate-400 italic">No camp applications yet.</div>';
-                return;
-            }
-
-            container.innerHTML = camps.map(camp => `
-                <div class="glass rounded-[2rem] overflow-hidden">
-                    <div class="p-6 border-b border-slate-800">
-                        <h3 class="text-xl font-display font-bold text-white">${camp.camp_title || 'Camp'}</h3>
-                        <p class="text-sm text-slate-400 mt-1">${camp.camp_location || 'Location not set'}</p>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
-                                <tr>
-                                    <th class="px-6 py-4">Name</th>
-                                    <th class="px-6 py-4">Phone</th>
-                                    <th class="px-6 py-4">Field Of Study</th>
-                                    <th class="px-6 py-4">Email</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-800">
-                                ${camp.registrations.map(reg => `
-                                    <tr>
-                                        <td class="px-6 py-4 font-bold text-white">${reg.name || '—'}</td>
-                                        <td class="px-6 py-4 text-slate-300">${reg.phone_number || '—'}</td>
-                                        <td class="px-6 py-4 text-slate-300">${reg.field_of_study || '—'}</td>
-                                        <td class="px-6 py-4 text-slate-400 text-sm">${reg.email || '—'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `).join('');
-        } catch (err) {
-            container.innerHTML = '<div class="glass p-8 rounded-[2rem] text-brand-rose">Failed to load camp applications.</div>';
+        if (!Array.isArray(camps) || !camps.length) {
+            container.innerHTML = '<div class="glass p-8 rounded-[2rem] text-slate-400 italic">No camp applications yet.</div>';
+            return;
         }
+
+        container.innerHTML = camps.map(camp => `
+            <div class="glass rounded-[2rem] overflow-hidden">
+                <div class="p-6 border-b border-slate-800">
+                    <h3 class="text-xl font-display font-bold text-white">${camp.camp_title || 'Camp'}</h3>
+                    <p class="text-sm text-slate-400 mt-1">${camp.camp_location || 'Location not set'}</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Phone</th>
+                                <th class="px-6 py-4">Field Of Study</th>
+                                <th class="px-6 py-4">Email</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800">
+                            ${camp.registrations.map(reg => `
+                                <tr>
+                                    <td class="px-6 py-4 font-bold text-white">${reg.name || '—'}</td>
+                                    <td class="px-6 py-4 text-slate-300">${reg.phone_number || '—'}</td>
+                                    <td class="px-6 py-4 text-slate-300">${reg.field_of_study || '—'}</td>
+                                    <td class="px-6 py-4 text-slate-400 text-sm">${reg.email || '—'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `).join('');
     }
 
     // Add member form submission
@@ -544,7 +523,6 @@
     }
 
     // ─── 11. INIT ────────────────────────────────────────────────────────────
-    window.onload = wakeServer;
     window.onload = () => {
         loadMembers();
         loadMedia();

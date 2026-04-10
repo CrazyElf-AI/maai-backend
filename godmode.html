@@ -97,7 +97,7 @@
         <main class="flex-1 min-h-screen overflow-y-auto px-6 py-8 md:px-12 md:py-12 pb-24 md:pb-12 relative">
             <div class="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,0.05),transparent_50%)] pointer-events-none"></div>
 
-            <!-- Wake status banner -->
+            <!-- Shown automatically when apiCall is retrying after a cold start -->
             <div id="wake-status" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-800 border border-slate-700 text-slate-200 text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl">
                 <i class="fas fa-circle-notch fa-spin text-brand-orange"></i>
                 Server is waking up, please wait…
@@ -357,6 +357,8 @@
     }
 
     // ─── 1. CORE API HELPER ──────────────────────────────────────────────────
+    // Retries up to 10 times with 4s gap to handle Render free-tier cold starts.
+    // Shows a banner while waiting so the user knows what's happening.
     async function apiCall(endpoint, method = 'GET', body = null) {
         const opts = {
             method,
@@ -367,16 +369,29 @@
         };
         if (body) opts.body = JSON.stringify(body);
 
-        try {
-            const res = await fetch(`${API_BASE}${endpoint}`, opts);
-            if (res.status === 401) { window.location.replace('login.html'); return null; }
+        const banner = document.getElementById('wake-status');
+        const MAX_RETRIES = 10;
+        const RETRY_DELAY = 4000;
 
-            const data = await res.json();
-            if (!res.ok) { showModal('Error', data.error || 'Action failed.'); return null; }
-            return data;
-        } catch (err) {
-            showModal('Connection Error', 'Could not reach the server. Is the backend running?');
-            return null;
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const res = await fetch(`${API_BASE}${endpoint}`, opts);
+                if (banner) banner.classList.add('hidden');
+
+                if (res.status === 401) { window.location.replace('login.html'); return null; }
+                const data = await res.json();
+                if (!res.ok) { showModal('Error', data.error || 'Action failed.'); return null; }
+                return data;
+            } catch (err) {
+                if (attempt === MAX_RETRIES) {
+                    if (banner) banner.classList.add('hidden');
+                    showModal('Connection Error', 'Server took too long to respond. Please refresh and try again.');
+                    return null;
+                }
+                // Show wake banner and wait before retrying
+                if (banner) banner.classList.remove('hidden');
+                await new Promise(r => setTimeout(r, RETRY_DELAY));
+            }
         }
     }
 
@@ -997,47 +1012,14 @@ window.saveCert = async (userId) => {
     }
 
     // ─── 15. INIT ────────────────────────────────────────────────────────────
-
-    // Wake Render's free-tier server before making credentialed API calls.
-    // Uses `no-cors` so the ping works even while the server is still asleep
-    // (a sleeping server can't respond to CORS preflights, but it CAN receive
-    // a no-cors ping and will start booting). We then poll a real CORS-safe
-    // endpoint until it responds with 200, then load all dashboard data.
-    async function wakeAndLoad() {
-        const statusEl = document.getElementById('wake-status');
-        if (statusEl) statusEl.classList.remove('hidden');
-
-        // Step 1: Fire a no-cors ping to kick the server awake (no CORS needed)
-        try {
-            await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' });
-        } catch (e) {}
-
-        // Step 2: Poll until the server responds properly (up to ~45 seconds)
-        let awake = false;
-        for (let i = 0; i < 15; i++) {
-            await new Promise(r => setTimeout(r, 3000));
-            try {
-                const res = await fetch(`${API_BASE}/`, { method: 'GET', mode: 'no-cors' });
-                // no-cors fetch won't throw if server is up — opaque response = server awake
-                awake = true;
-                break;
-            } catch (e) {}
-        }
-
-        if (statusEl) statusEl.classList.add('hidden');
-
-        // Step 3: Load all dashboard data now that server is awake
-        updateDashboardStats();
-        fetchUsers();
-        loadCampApplications();
-    }
-
     window.onload = () => {
         const menuTrigger = document.getElementById('mobile-menu-trigger');
         if (menuTrigger) {
             menuTrigger.onclick = () => document.getElementById('sidebar').classList.toggle('hidden');
         }
-        wakeAndLoad();
+        updateDashboardStats();
+        fetchUsers();
+        loadCampApplications();
     };
 </script>
 </body>
