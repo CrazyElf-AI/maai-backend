@@ -42,7 +42,7 @@
     </nav>
 
     <div class="flex">
-        <aside id="sidebar" class="fixed md:relative w-64 h-screen glass border-r border-slate-800 flex-col z-40 hidden md:flex transition-all duration-300">
+        <aside id="sidebar" class="fixed md:sticky top-0 w-64 h-screen glass border-r border-slate-800 flex-col z-40 hidden md:flex transition-all duration-300">
             <div class="p-8 flex items-center gap-3">
                 <div class="w-10 h-10 bg-brand-orange rounded-xl flex items-center justify-center shadow-lg shadow-brand-orange/20">
                     <i class="fas fa-bolt text-white"></i>
@@ -91,6 +91,10 @@
                 <button onclick="handleLogout()" class="w-full flex items-center gap-4 px-4 py-3 bg-brand-rose/10 text-brand-rose rounded-xl font-bold hover:bg-brand-rose hover:text-white transition-all">
                     <i class="fas fa-power-off"></i> Logout
                 </button>
+                <div class="md:hidden text-center mt-4 pb-2 text-[10px] text-slate-500/80 uppercase tracking-widest flex items-center justify-center gap-2 opacity-70">
+                    <span class="animate-pulse"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left -ml-1"></i></span>
+                    Swipe to close
+                </div>
             </div>
         </aside>
 
@@ -1058,9 +1062,26 @@
 
     // ─── 15. INIT ────────────────────────────────────────────────────────────
     window.onload = () => {
+        // Swipe to close gesture for mobile
+        const sidebar = document.getElementById('sidebar');
+        let touchStartX = 0;
+        if (sidebar) {
+            sidebar.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+            sidebar.addEventListener('touchend', e => {
+                if (touchStartX - e.changedTouches[0].screenX > 50 && window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                    sidebar.classList.remove('flex');
+                }
+            }, {passive: true});
+        }
+
         const menuTrigger = document.getElementById('mobile-menu-trigger');
         if (menuTrigger) {
-            menuTrigger.onclick = () => document.getElementById('sidebar').classList.toggle('hidden');
+            menuTrigger.onclick = () => {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('flex');
+            };
         }
 
         // Load dashboard stats and default section data

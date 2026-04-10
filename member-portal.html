@@ -122,6 +122,10 @@
             <button id="logout-btn" class="flex items-center gap-3 text-gray-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-slate-800/50 px-4 py-3 rounded-xl font-medium transition-colors w-full">
                 <i class="fas fa-sign-out-alt w-5"></i> Logout
             </button>
+            <div class="md:hidden text-center mt-4 pb-2 text-[10px] text-gray-400/80 dark:text-slate-500/80 uppercase tracking-widest flex items-center justify-center gap-2 opacity-70">
+                <span class="animate-pulse"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left -ml-1"></i></span>
+                Swipe to close
+            </div>
         </div>
     </aside>
 
@@ -606,9 +610,18 @@ async function loadUserProfile() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
         const btn = document.getElementById('mobile-menu-btn');
+        const closeSidebar = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
+
         if (btn && sidebar && overlay) {
             btn.onclick = () => { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); };
-            overlay.onclick = () => { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); };
+            overlay.onclick = closeSidebar;
+            
+            // Swipe to close gesture for mobile
+            let touchStartX = 0;
+            sidebar.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+            sidebar.addEventListener('touchend', e => {
+                if (touchStartX - e.changedTouches[0].screenX > 50 && window.innerWidth < 768) closeSidebar();
+            }, {passive: true});
         }
     }
 

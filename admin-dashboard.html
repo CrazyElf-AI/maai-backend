@@ -50,10 +50,16 @@
 
         <!-- Sidebar -->
         <aside id="sidebar" class="w-64 bg-[#0a0f1c] border-r border-white/10 flex flex-col z-50 fixed md:relative h-full transition-transform duration-300 transform -translate-x-full md:translate-x-0 shadow-2xl md:shadow-none">
-            <a href="index.html" class="flex items-center gap-2">
-    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
-    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
-</a><class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <div class="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
+                <a href="index.html" class="flex items-center gap-2">
+                    <img src="https://i.postimg.cc/dtp5hswy/maailogo.png" alt="MAAI" class="w-10 h-10 object-contain">
+                    <span class="font-display text-2xl font-extrabold tracking-tight">माई</span>
+                </a>
+                <button id="close-sidebar" class="md:hidden text-gray-400 hover:text-white focus:outline-none">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                 <a href="#stats-overview" class="flex items-center gap-3 bg-teal-500/10 text-teal-400 px-4 py-3 rounded-xl font-semibold transition-colors border border-teal-500/20">
                     <i class="fas fa-chart-pie w-5"></i> Overview
                 </a>
@@ -95,6 +101,10 @@
                 <button id="logout-admin-btn" class="flex items-center gap-3 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-4 py-3 rounded-xl font-medium transition-colors w-full">
                     <i class="fas fa-sign-out-alt w-5"></i> Logout
                 </button>
+                <div class="md:hidden text-center mt-4 pb-2 text-[10px] text-gray-500/80 uppercase tracking-widest flex items-center justify-center gap-2 opacity-70">
+                    <span class="animate-pulse"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left -ml-1"></i></span>
+                    Swipe to close
+                </div>
             </div>
         </aside>
 
@@ -481,6 +491,7 @@
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
 
     // --- 2. SECURITY & AUTH CHECK ---
     async function checkAccess() {
@@ -676,16 +687,36 @@ if (logoutBtn) logoutBtn.onclick = handleLogout;
     }
 
     // Sidebar Logic
+    const closeSidebar = () => {
+        sidebar.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+    };
+
+    // Swipe to close gesture for mobile
+    let touchStartX = 0;
+    sidebar.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+    sidebar.addEventListener('touchend', e => {
+        if (touchStartX - e.changedTouches[0].screenX > 50 && window.innerWidth < 768) closeSidebar();
+    }, {passive: true});
+
     if (mobileMenuBtn) {
         mobileMenuBtn.onclick = () => {
             sidebar.classList.remove('-translate-x-full');
             sidebarOverlay.classList.remove('hidden');
         };
-        sidebarOverlay.onclick = () => {
-            sidebar.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
-        };
+        sidebarOverlay.onclick = closeSidebar;
     }
+
+    if (closeSidebarBtn) {
+        closeSidebarBtn.onclick = closeSidebar;
+    }
+
+    // Auto-close sidebar on mobile when a nav link is clicked
+    document.querySelectorAll('#sidebar nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 768) closeSidebar();
+        });
+    });
 
 
     // ─── MISSING FUNCTIONS (injected) ────────────────────────────────────────

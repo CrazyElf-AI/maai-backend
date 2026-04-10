@@ -27,15 +27,31 @@
 </head>
 <body class="bg-navy-900 text-slate-200 min-h-screen font-sans">
 
-    <div class="flex flex-col md:flex-row h-screen overflow-hidden">
+    <div class="flex flex-col md:flex-row h-screen overflow-hidden relative">
         
-        <aside class="w-full md:w-72 glass border-r border-slate-800 flex flex-col p-6">
-            <div class="flex items-center gap-3 mb-10">
-                <i class="fas fa-cog text-brand-blue text-2xl animate-spin-slow"></i>
-                <div>
-                    <h1 class="text-xl font-display font-black text-white">IT Panel</h1>
-                    <p class="text-[10px] uppercase tracking-widest text-slate-500">Content & Team Manager</p>
+        <!-- Mobile Header -->
+        <header class="md:hidden glass border-b border-slate-800 p-4 flex justify-between items-center z-30 shrink-0">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-cog text-brand-blue text-xl animate-spin-slow"></i>
+                <span class="font-display font-black text-white text-lg">IT Panel</span>
+            </div>
+            <button id="mobile-menu-trigger" class="text-slate-400 hover:text-white focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </header>
+
+        <aside id="sidebar" class="fixed md:static inset-0 z-50 w-full md:w-72 glass bg-navy-900/98 md:bg-transparent backdrop-blur-xl border-r border-slate-800 flex-col p-6 hidden md:flex transition-all duration-300">
+            <div class="flex justify-between items-start mb-10">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-cog text-brand-blue text-2xl animate-spin-slow"></i>
+                    <div>
+                        <h1 class="text-xl font-display font-black text-white">IT Panel</h1>
+                        <p class="text-[10px] uppercase tracking-widest text-slate-500">Content & Team Manager</p>
+                    </div>
                 </div>
+                <button id="close-sidebar" class="md:hidden text-slate-400 hover:text-white mt-1">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
             </div>
 
             <div class="space-y-1 flex-1">
@@ -63,6 +79,10 @@
             <div class="pt-6 border-t border-slate-800 space-y-2">
                 <a href="member-portal.html" class="flex items-center gap-3 text-slate-400 hover:text-white px-4 py-2 text-sm"><i class="fas fa-arrow-left"></i> Portal</a>
                 <button onclick="handleLogout()" class="w-full flex items-center gap-3 text-brand-rose px-4 py-2 text-sm font-bold"><i class="fas fa-power-off"></i> Logout</button>
+                <div class="md:hidden text-center mt-4 pb-2 text-[10px] text-slate-500/80 uppercase tracking-widest flex items-center justify-center gap-2 opacity-70">
+                    <span class="animate-pulse"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left -ml-1"></i></span>
+                    Swipe to close
+                </div>
             </div>
         </aside>
 
@@ -192,16 +212,15 @@
                 </div>
             </section>
 <section id="it-members" class="space-y-8">
-                <header class="flex justify-between items-center">
-    <h2 class="text-3xl font-display font-black text-white">Member Management</h2>
-                    <button onclick="openModal('add-member-modal')" class="bg-brand-blue px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-blue/20 hover:scale-105 transition-transform">
-                        <i class="fas fa-user-plus mr-2"></i> Add Member
-                    </button>
-                </header>
-
-                <div id="add-member-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
-                    <div class="glass max-w-md w-full p-8 rounded-[2rem] border border-white/10">
-                        <h3 class="text-2xl font-display font-bold text-white mb-6">Onboard New Member</h3>
+    <header class="flex justify-between items-center">
+    <h2 class="text-3xl font-display font-black text-white">Staff Users</h2>
+    <button onclick="openModal('add-member-modal')" class="bg-brand-blue px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-blue/20 hover:scale-105 transition-transform">
+        <i class="fas fa-user-plus mr-2"></i> Add Staff
+    </button>
+</header>
+<div id="add-member-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="glass max-w-md w-full p-8 rounded-[2rem] border border-white/10">
+        <h3 class="text-2xl font-display font-bold text-white mb-6">Onboard New Staff User</h3>
         <form id="add-member-form" class="space-y-4">
             <input type="text" id="mem-name" placeholder="Full Name" required class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
             <input type="email" id="mem-email" placeholder="Email Address" required class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
@@ -214,56 +233,13 @@
                                 <option value="god">GOD</option>
             </select>
             <div class="flex gap-4 pt-4">
-                <button type="button" onclick="closeModal('add-member-modal')" class="flex-1 px-6 py-3 rounded-xl bg-slate-800 font-bold">Cancel</button>
-                <button type="submit" class="flex-1 px-6 py-3 rounded-xl bg-brand-blue font-bold shadow-lg shadow-brand-blue/20">Add User</button>
                                 <button type="button" onclick="closeModal('add-member-modal')" class="flex-1 px-6 py-3 rounded-xl bg-slate-800 font-bold hover:bg-slate-700 transition-colors">Cancel</button>
                                 <button type="submit" class="flex-1 px-6 py-3 rounded-xl bg-brand-blue font-bold shadow-lg shadow-brand-blue/20 hover:bg-blue-600 transition-colors">Add User</button>
             </div>
         </form>
     </div>
 </div>
-    <div class="glass rounded-3xl overflow-hidden shadow-2xl">
-        <table class="w-full text-left">
-            <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
-                <tr>
-                    <th class="px-6 py-4">Name</th>
-                    <th class="px-6 py-4">Email</th>
-                    <th class="px-6 py-4">Access Level</th>
-                </tr>
-            </thead>
-            <tbody id="it-member-list" class="divide-y divide-slate-800">
-                </tbody>
-        </table>
-    </div>
 
-    <!-- Volunteer Members (members table) -->
-    <header class="flex justify-between items-center pt-4">
-        <h2 class="text-3xl font-display font-black text-white">Volunteer Members</h2>
-        <span class="text-slate-400 text-sm">Total: <span id="it-member-count" class="text-white font-bold">—</span></span>
-    </header>
-    <p class="text-slate-400 text-sm -mt-4">All volunteers who signed up through the website.</p>
-    <div class="relative max-w-md">
-        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-        <input type="text" oninput="loadVolunteerMembers()" id="it-member-search" class="w-full bg-navy-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-white outline-none focus:border-brand-blue" placeholder="Search by name, email, or city...">
-    </div>
-    <div class="glass rounded-3xl overflow-hidden shadow-2xl">
-        <table class="w-full text-left">
-            <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
-                <tr>
-                    <th class="px-6 py-4">Joined</th>
-                    <th class="px-6 py-4">Name</th>
-                    <th class="px-6 py-4">Contact</th>
-                    <th class="px-6 py-4">Field / College</th>
-                    <th class="px-6 py-4">City</th>
-                    <th class="px-6 py-4 text-center">Certificate</th>
-                    <th class="px-6 py-4 text-center">Delete</th>
-                </tr>
-            </thead>
-            <tbody id="it-volunteer-list" class="divide-y divide-slate-800">
-                <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading volunteer members...</td></tr>
-            </tbody>
-        </table>
-    </div>
                 <div class="flex flex-col md:flex-row justify-between gap-4 items-center">
                     <span class="text-slate-400 text-sm">Total: <span id="it-member-count" class="text-white font-bold">—</span></span>
                     <div class="relative w-full md:w-96">
@@ -339,12 +315,20 @@
         if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
         // Auto-refresh data on tab switch
-        if (id === 'members')     { loadMembers(); loadVolunteerMembers(); }
         if (id === 'members')     { loadMembers(); }
         if (id === 'camps')       loadCampApplications();
         if (id === 'leadership')  loadLeadership();
         if (id === 'media')       loadMedia();
         if (id === 'testimonials') loadTestimonials();
+
+        // Retract sidebar on mobile after clicking a section
+        if (window.innerWidth < 768) {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex');
+            }
+        }
     }
 
     // ─── 3. CORE API HELPER ──────────────────────────────────────────────────
@@ -481,32 +465,8 @@
         notify(`${data.length} testimonial(s) in the system.`);
     }
 
-    // ─── 8. STAFF USERS (users table) ────────────────────────────────────────
     // ─── 8. MEMBERS (unified) ────────────────────────────────────────
     async function loadMembers() {
-        const users = await apiCall('/api/admin/users');
-        if (!users) return;
-
-        const container = document.getElementById('it-member-list');
-        if (!container) return;
-
-        container.innerHTML = users.length
-            ? users.map(u => `
-                <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
-                    <td class="px-6 py-4 font-bold text-white">${u.full_name || '—'}</td>
-                    <td class="px-6 py-4 text-xs text-slate-500">${u.email}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-[10px] font-bold uppercase">
-                            ${u.role}
-                        </span>
-                    </td>
-                </tr>`)
-              .join('')
-            : '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500 italic">No staff users found.</td></tr>';
-    }
-
-    // ─── 8b. VOLUNTEER MEMBERS (members table) ───────────────────────────────
-    async function loadVolunteerMembers() {
         const members = await apiCall('/api/admin/members');
         if (!members) return;
 
@@ -526,7 +486,6 @@
         container.innerHTML = filtered.length
             ? filtered.map(m => `
                 <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
-                    <td class="px-6 py-4 text-slate-500 text-xs">${m.created_at ? m.created_at.slice(0,10) : '—'}</td>
                     <td class="px-6 py-4 text-center">
                         <input type="checkbox" value="${m.id}" class="member-checkbox accent-brand-blue w-4 h-4 cursor-pointer">
                     </td>
@@ -536,16 +495,10 @@
                         <div class="text-xs text-slate-500">${m.phone_number || ''}</div>
                     </td>
                     <td class="px-6 py-4 text-sm text-slate-400">
-                        <div>${m.field_of_study || '—'}</div>
-                        <div class="text-xs text-slate-500">${m.college || ''} ${m.year_of_study ? '· Y'+m.year_of_study : ''}</div>
                         ${m.field_of_study || '—'}
                     </td>
                     <td class="px-6 py-4 text-slate-400">${m.city || '—'}</td>
                     <td class="px-6 py-4 text-center">
-                        ${m.certificate_url
-                            ? `<a href="${m.certificate_url}" target="_blank" class="text-brand-blue hover:underline text-xs">View</a>`
-                            : `<button onclick="itUpdateMemberCert(${m.id})" class="text-xs text-slate-500 hover:text-brand-blue transition-colors">Add URL</button>`
-                        }
                         <select onchange="updateMemberRole(${m.id}, this.value)" class="bg-navy-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold uppercase focus:border-brand-blue outline-none text-white">
                             ${['member','ngo','ops','rnd','it','admin','god'].map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`).join('')}
                         </select>
@@ -560,12 +513,6 @@
             : '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic">No volunteer members found.</td></tr>';
     }
 
-    async function itUpdateMemberCert(memberId) {
-        const url = prompt('Enter certificate URL:');
-        if (!url) return;
-        const res = await apiCall(`/api/admin/members/${memberId}/certificate`, 'PUT', { certificate_url: url });
-        if (res) { notify('Certificate updated!'); loadVolunteerMembers(); }
-    }
     window.toggleAllMembers = (source) => {
         const checkboxes = document.querySelectorAll('.member-checkbox');
         checkboxes.forEach(cb => cb.checked = source.checked);
@@ -604,10 +551,8 @@
     };
 
     async function itDeleteMember(memberId) {
-        if (!confirm('Remove this volunteer member?')) return;
         if (!confirm('Remove this member?')) return;
         const res = await apiCall(`/api/admin/members/${memberId}`, 'DELETE');
-        if (res) { notify('Member removed.'); loadVolunteerMembers(); }
         if (res) { notify('Member removed.'); loadMembers(); }
     }
 
@@ -727,8 +672,36 @@
 
     // ─── 11. INIT ────────────────────────────────────────────────────────────
     window.onload = () => {
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuTrigger = document.getElementById('mobile-menu-trigger');
+        const closeSidebar = document.getElementById('close-sidebar');
+
+        // Swipe to close gesture for mobile
+        let touchStartX = 0;
+        if (sidebar) {
+            sidebar.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+            sidebar.addEventListener('touchend', e => {
+                if (touchStartX - e.changedTouches[0].screenX > 50 && window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                    sidebar.classList.remove('flex');
+                }
+            }, {passive: true});
+        }
+
+        if (mobileMenuTrigger && sidebar) {
+            mobileMenuTrigger.onclick = () => {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex');
+            };
+        }
+        if (closeSidebar && sidebar) {
+            closeSidebar.onclick = () => {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex');
+            };
+        }
+
         loadMembers();
-        loadVolunteerMembers();
         loadMedia();
         loadCampApplications();
     };
