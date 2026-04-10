@@ -328,7 +328,7 @@
         };
         if (!body.title || !body.video_url) return notify('Fill all fields', 'error');
 
-        const res = await apiCall('/admin/reels', 'POST', body);
+        const res = await apiCall('/api/admin/reels', 'POST', body);
         if (res) {
             notify('Camp reel published successfully!');
             document.getElementById('reel-title').value = '';
@@ -368,7 +368,7 @@
 
         if (!body.name || !body.position) return notify('Name and Role are required', 'error');
 
-        const res = await apiCall('/admin/leadership', 'POST', body);
+        const res = await apiCall('/api/admin/leadership', 'POST', body);
         if (res) {
             notify('Leadership profile added!');
             ['lead-name','lead-role','lead-image-url','lead-bio','lead-linkedin-url','lead-instagram-url']
@@ -396,7 +396,7 @@
         };
         if (!body.author || !body.text) return notify('Name and Quote are required', 'error');
 
-        const res = await apiCall('/admin/testimonials', 'POST', body);
+        const res = await apiCall('/api/admin/testimonials', 'POST', body);
         if (res) {
             notify('Story published to portal!');
             ['test-name','test-role','test-quote','test-img'].forEach(id => {
@@ -416,7 +416,7 @@
 
     // ─── 8. MEMBERS ──────────────────────────────────────────────────────────
     async function loadMembers() {
-        const users = await apiCall('/admin/users');
+        const users = await apiCall('/api/admin/users');
         if (!users) return;
 
         const container = document.getElementById('it-member-list');
@@ -491,7 +491,7 @@
             role:      document.getElementById('mem-role').value
         };
 
-        const res = await apiCall('/admin/users', 'POST', formData);
+        const res = await apiCall('/api/admin/users', 'POST', formData);
         if (res) {
             notify('Member added to MAAI directory!');
             closeModal('add-member-modal');

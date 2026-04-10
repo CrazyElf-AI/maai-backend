@@ -243,9 +243,7 @@ function getTokenPayload(rawToken) {
 
 function getRedirectForPayload(payload) {
     if (payload?.account_type === 'ngo') return 'ngo-dashboard.html';
-    if (payload?.role === 'god') return 'godmode.html';
-    if (payload?.role === 'it') return 'it-panel.html';
-    if (payload?.role === 'admin') return 'admin-dashboard.html';
+    // Always redirect to member-portal.html even for admins/godmode
     return 'member-portal.html';
 }
 

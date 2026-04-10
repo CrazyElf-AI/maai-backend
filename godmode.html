@@ -422,7 +422,7 @@
 
     // ─── 3. DASHBOARD STATS ──────────────────────────────────────────────────
     async function updateDashboardStats() {
-        const data = await apiCall('/admin/stats');
+        const data = await apiCall('/api/admin/stats');
         if (!data) return;
 
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -439,7 +439,7 @@
 
         tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">Loading members…</td></tr>';
 
-        const users = await apiCall('/admin/users');
+        const users = await apiCall('/api/admin/users');
         if (!users) return;
 
         if (users.length === 0) {
@@ -495,7 +495,7 @@ tbody.innerHTML = users.map(u => `
 window.saveCert = async (userId) => {
     const url = document.getElementById(`cert-${userId}`).value.trim();
     // This sends the link to the backend to be saved for that specific member
-    const res = await apiCall(`/admin/users/${userId}/certificate`, 'PUT', { certificate_url: url });
+    const res = await apiCall(`/api/admin/users/${userId}/certificate`, 'PUT', { certificate_url: url });
     if (res) alert("Certificate link sent to member portal!");
 };
     };
@@ -509,7 +509,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.full_name || !body.email) { showModal('Validation', 'Name and email are required.'); return; }
 
-        const res = await apiCall('/admin/users', 'POST', body);
+        const res = await apiCall('/api/admin/users', 'POST', body);
         if (res) {
             showModal('Success', 'Member added!');
             document.getElementById('new-member-name').value = '';
@@ -530,7 +530,7 @@ window.saveCert = async (userId) => {
         );
 
         if (confirmed) {
-            const res = await apiCall(`/admin/users/${userId}/role`, 'PUT', { role: newRole });
+            const res = await apiCall(`/api/admin/users/${userId}/role`, 'PUT', { role: newRole });
             if (res) showModal('Success', 'Role updated.');
         }
         fetchUsers();
@@ -543,7 +543,7 @@ window.saveCert = async (userId) => {
             null, true
         );
         if (confirmed) {
-            const res = await apiCall(`/admin/users/${userId}`, 'DELETE');
+            const res = await apiCall(`/api/admin/users/${userId}`, 'DELETE');
             if (res) { showModal('Purged', 'User removed.'); fetchUsers(); updateDashboardStats(); }
         }
     };
@@ -563,7 +563,7 @@ window.saveCert = async (userId) => {
         if (!container || !proposalsContainer) return;
 
         try {
-            const proposals = await apiCall('/admin/camp-proposals');
+            const proposals = await apiCall('/api/admin/camp-proposals');
             if (!Array.isArray(proposals) || !proposals.length) {
                 proposalsContainer.innerHTML = '<div class="glass p-8 rounded-3xl text-slate-400 italic">No NGO event proposals yet.</div>';
             } else {
@@ -688,7 +688,7 @@ window.saveCert = async (userId) => {
             rejectionReason = window.prompt('Enter rejection reason for the NGO:', '') || 'Rejected by admin';
         }
 
-        const res = await apiCall(`/admin/camp-proposals/${proposalId}/status`, 'PUT', {
+        const res = await apiCall(`/api/admin/camp-proposals/${proposalId}/status`, 'PUT', {
             status,
             rejection_reason: rejectionReason
         });
@@ -707,7 +707,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.title || !body.url) { showModal('Validation', 'Title and URL are required.'); return; }
 
-        const res = await apiCall('/admin/gallery', 'POST', body);
+        const res = await apiCall('/api/admin/gallery', 'POST', body);
         if (res) {
             showModal('Success', 'Image published to gallery.');
             document.getElementById('gal-title').value = '';
@@ -738,7 +738,7 @@ window.saveCert = async (userId) => {
     window.deleteGalleryItem = async (id) => {
         const confirmed = await showModal('Delete Image', 'Remove this image from gallery?', null, true);
         if (confirmed) {
-            const res = await apiCall(`/admin/gallery/${id}`, 'DELETE');
+            const res = await apiCall(`/api/admin/gallery/${id}`, 'DELETE');
             if (res) loadGallery();
         }
     };
@@ -758,7 +758,7 @@ window.saveCert = async (userId) => {
 
         if (!body.name || !body.position) { showModal('Validation', 'Name and Position are required.'); return; }
 
-        const res = await apiCall('/admin/leadership', 'POST', body);
+        const res = await apiCall('/api/admin/leadership', 'POST', body);
         if (res) {
             showModal('Success', 'Leader onboarded!');
             ['lead-name','lead-pos','lead-img','lead-link','lead-ig','lead-bio'].forEach(id => {
@@ -795,7 +795,7 @@ window.saveCert = async (userId) => {
     window.deleteLeader = async (id) => {
         const confirmed = await showModal('Remove Leader', 'Remove this person from leadership?', null, true);
         if (confirmed) {
-            const res = await apiCall(`/admin/leadership/${id}`, 'DELETE');
+            const res = await apiCall(`/api/admin/leadership/${id}`, 'DELETE');
             if (res) loadLeadership();
         }
     };
@@ -825,7 +825,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.title || !body.description) { alert('Title and Description are required!'); return; }
 
-        const res = await apiCall('/admin/initiatives', 'POST', body);
+        const res = await apiCall('/api/admin/initiatives', 'POST', body);
         if (res) { alert('Initiative live!'); location.reload(); }
     };
 
@@ -839,7 +839,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.title) { showModal('Validation', 'Job title is required.'); return; }
 
-        const res = await apiCall('/admin/careers', 'POST', body);
+        const res = await apiCall('/api/admin/careers', 'POST', body);
         if (res) {
             showModal('Success', 'Job published!');
             ['job-title','job-type','job-link','job-desc'].forEach(id => document.getElementById(id).value = '');
@@ -870,7 +870,7 @@ window.saveCert = async (userId) => {
 
     window.deleteJob = async (id) => {
         const confirmed = await showModal('Delete Job', 'Remove this listing?', null, true);
-        if (confirmed) { const res = await apiCall(`/admin/careers/${id}`, 'DELETE'); if (res) loadJobs(); }
+        if (confirmed) { const res = await apiCall(`/api/admin/careers/${id}`, 'DELETE'); if (res) loadJobs(); }
     };
 
     // ─── 9. REELS ────────────────────────────────────────────────────────────
@@ -881,7 +881,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.title || !body.video_url) { showModal('Validation', 'Title and URL are required.'); return; }
 
-        const res = await apiCall('/admin/reels', 'POST', body);
+        const res = await apiCall('/api/admin/reels', 'POST', body);
         if (res) {
             showModal('Success', 'Camp reel published.');
             document.getElementById('reel-title').value = '';
@@ -908,7 +908,7 @@ window.saveCert = async (userId) => {
 
     window.deleteReel = async (id) => {
         const confirmed = await showModal('Delete Reel', 'Remove this reel?', null, true);
-        if (confirmed) { const res = await apiCall(`/admin/reels/${id}`, 'DELETE'); if (res) loadReels(); }
+        if (confirmed) { const res = await apiCall(`/api/admin/reels/${id}`, 'DELETE'); if (res) loadReels(); }
     };
 
     // ─── 10. TESTIMONIALS ────────────────────────────────────────────────────
@@ -921,7 +921,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.author || !body.text) { showModal('Validation', 'Name and Quote are required.'); return; }
 
-        const res = await apiCall('/admin/testimonials', 'POST', body);
+        const res = await apiCall('/api/admin/testimonials', 'POST', body);
         if (res) {
             showModal('Success', 'Testimonial added.');
             ['test-name','test-role','test-img','test-quote'].forEach(id => document.getElementById(id).value = '');
@@ -950,7 +950,7 @@ window.saveCert = async (userId) => {
 
     window.deleteTestimonial = async (id) => {
         const confirmed = await showModal('Delete Testimonial', 'Remove this story?', null, true);
-        if (confirmed) { const res = await apiCall(`/admin/testimonials/${id}`, 'DELETE'); if (res) loadTestimonials(); }
+        if (confirmed) { const res = await apiCall(`/api/admin/testimonials/${id}`, 'DELETE'); if (res) loadTestimonials(); }
     };
 
     // ─── 11. NOTIFICATIONS ───────────────────────────────────────────────────
@@ -961,7 +961,7 @@ window.saveCert = async (userId) => {
         };
         if (!body.title || !body.content) { showModal('Validation', 'Title and message are required.'); return; }
 
-        const res = await apiCall('/admin/announcements', 'POST', body);
+        const res = await apiCall('/api/admin/announcements', 'POST', body);
         if (res) {
             showModal('Sent', 'Broadcast sent to all members.');
             document.getElementById('notif-title').value = '';
@@ -976,7 +976,7 @@ window.saveCert = async (userId) => {
             contact_email:         document.getElementById('setting-email').value,
             registration_enabled:  document.getElementById('reg-toggle').checked
         };
-        const res = await apiCall('/admin/settings', 'POST', body);
+        const res = await apiCall('/api/admin/settings', 'POST', body);
         if (res) showModal('Saved', 'Global settings updated.');
     };
 
