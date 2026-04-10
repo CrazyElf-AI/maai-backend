@@ -15,9 +15,10 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["https://crazyelf-ai.github.io"]
+        "origins": "https://crazyelf-ai.github.io"
     }
-})
+}, supports_credentials=True)
+
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 DB_HOST = os.getenv("DB_HOST", "localhost")
