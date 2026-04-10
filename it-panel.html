@@ -192,15 +192,16 @@
                 </div>
             </section>
 <section id="it-members" class="space-y-8">
-    <header class="flex justify-between items-center">
-    <h2 class="text-3xl font-display font-black text-white">Staff Users</h2>
-    <button onclick="openModal('add-member-modal')" class="bg-brand-blue px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-blue/20 hover:scale-105 transition-transform">
-        <i class="fas fa-user-plus mr-2"></i> Add Staff
-    </button>
-</header>
-<div id="add-member-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
-    <div class="glass max-w-md w-full p-8 rounded-[2rem] border border-white/10">
-        <h3 class="text-2xl font-display font-bold text-white mb-6">Onboard New Staff User</h3>
+                <header class="flex justify-between items-center">
+    <h2 class="text-3xl font-display font-black text-white">Member Management</h2>
+                    <button onclick="openModal('add-member-modal')" class="bg-brand-blue px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-blue/20 hover:scale-105 transition-transform">
+                        <i class="fas fa-user-plus mr-2"></i> Add Member
+                    </button>
+                </header>
+
+                <div id="add-member-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+                    <div class="glass max-w-md w-full p-8 rounded-[2rem] border border-white/10">
+                        <h3 class="text-2xl font-display font-bold text-white mb-6">Onboard New Member</h3>
         <form id="add-member-form" class="space-y-4">
             <input type="text" id="mem-name" placeholder="Full Name" required class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
             <input type="email" id="mem-email" placeholder="Email Address" required class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
@@ -210,10 +211,13 @@
                 <option value="rnd">R&D</option>
                 <option value="it">IT STAFF</option>
                 <option value="admin">ADMIN</option>
+                                <option value="god">GOD</option>
             </select>
             <div class="flex gap-4 pt-4">
                 <button type="button" onclick="closeModal('add-member-modal')" class="flex-1 px-6 py-3 rounded-xl bg-slate-800 font-bold">Cancel</button>
                 <button type="submit" class="flex-1 px-6 py-3 rounded-xl bg-brand-blue font-bold shadow-lg shadow-brand-blue/20">Add User</button>
+                                <button type="button" onclick="closeModal('add-member-modal')" class="flex-1 px-6 py-3 rounded-xl bg-slate-800 font-bold hover:bg-slate-700 transition-colors">Cancel</button>
+                                <button type="submit" class="flex-1 px-6 py-3 rounded-xl bg-brand-blue font-bold shadow-lg shadow-brand-blue/20 hover:bg-blue-600 transition-colors">Add User</button>
             </div>
         </form>
     </div>
@@ -260,6 +264,45 @@
             </tbody>
         </table>
     </div>
+                <div class="flex flex-col md:flex-row justify-between gap-4 items-center">
+                    <span class="text-slate-400 text-sm">Total: <span id="it-member-count" class="text-white font-bold">—</span></span>
+                    <div class="relative w-full md:w-96">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="text" oninput="loadMembers()" id="it-member-search" class="w-full bg-navy-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-white outline-none focus:border-brand-blue" placeholder="Search by name, email, or city...">
+                    </div>
+                </div>
+
+                <div class="glass rounded-3xl overflow-hidden shadow-2xl">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4 w-12 text-center">
+                                    <input type="checkbox" id="select-all-members" onclick="toggleAllMembers(this)" class="accent-brand-blue w-4 h-4 cursor-pointer">
+                                </th>
+                                <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Contact</th>
+                                <th class="px-6 py-4">Field</th>
+                                <th class="px-6 py-4">City</th>
+                                <th class="px-6 py-4 text-center">Role</th>
+                                <th class="px-6 py-4 text-center">Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody id="it-member-list" class="divide-y divide-slate-800">
+                            <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading members...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Certificates Section -->
+                <div class="glass p-8 rounded-3xl space-y-6 border-t-4 border-brand-blue mt-8">
+                    <h3 class="text-xl font-bold flex items-center gap-2 text-white"><i class="fas fa-certificate text-brand-blue"></i> Issue Certificates to Selected Members</h3>
+                    <p class="text-sm text-slate-400">Select members from the list above, enter the certificate title and link below, and send a notification.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="cert-title" placeholder="Certificate Title (e.g. Best Volunteer 2026)" class="bg-navy-900/50 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-blue outline-none text-white">
+                        <input type="url" id="cert-url" placeholder="Certificate Link (URL)" class="bg-navy-900/50 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-blue outline-none text-white">
+                    </div>
+                    <button onclick="sendBulkCertificates()" class="w-full md:w-auto bg-brand-blue px-8 py-3 rounded-xl font-bold text-white hover:bg-blue-600 transition-all shadow-lg shadow-brand-blue/20"><i class="fas fa-paper-plane mr-2"></i> Send Certificates</button>
+                </div>
 </section>
 
             <section id="it-camps" class="space-y-8">
@@ -297,6 +340,7 @@
 
         // Auto-refresh data on tab switch
         if (id === 'members')     { loadMembers(); loadVolunteerMembers(); }
+        if (id === 'members')     { loadMembers(); }
         if (id === 'camps')       loadCampApplications();
         if (id === 'leadership')  loadLeadership();
         if (id === 'media')       loadMedia();
@@ -438,6 +482,7 @@
     }
 
     // ─── 8. STAFF USERS (users table) ────────────────────────────────────────
+    // ─── 8. MEMBERS (unified) ────────────────────────────────────────
     async function loadMembers() {
         const users = await apiCall('/api/admin/users');
         if (!users) return;
@@ -482,6 +527,9 @@
             ? filtered.map(m => `
                 <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
                     <td class="px-6 py-4 text-slate-500 text-xs">${m.created_at ? m.created_at.slice(0,10) : '—'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <input type="checkbox" value="${m.id}" class="member-checkbox accent-brand-blue w-4 h-4 cursor-pointer">
+                    </td>
                     <td class="px-6 py-4 font-bold text-white">${m.name}</td>
                     <td class="px-6 py-4 text-sm text-slate-400">
                         <div>${m.email}</div>
@@ -490,6 +538,7 @@
                     <td class="px-6 py-4 text-sm text-slate-400">
                         <div>${m.field_of_study || '—'}</div>
                         <div class="text-xs text-slate-500">${m.college || ''} ${m.year_of_study ? '· Y'+m.year_of_study : ''}</div>
+                        ${m.field_of_study || '—'}
                     </td>
                     <td class="px-6 py-4 text-slate-400">${m.city || '—'}</td>
                     <td class="px-6 py-4 text-center">
@@ -497,6 +546,9 @@
                             ? `<a href="${m.certificate_url}" target="_blank" class="text-brand-blue hover:underline text-xs">View</a>`
                             : `<button onclick="itUpdateMemberCert(${m.id})" class="text-xs text-slate-500 hover:text-brand-blue transition-colors">Add URL</button>`
                         }
+                        <select onchange="updateMemberRole(${m.id}, this.value)" class="bg-navy-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold uppercase focus:border-brand-blue outline-none text-white">
+                            ${['member','ngo','ops','rnd','it','admin','god'].map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`).join('')}
+                        </select>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <button onclick="itDeleteMember(${m.id})" class="text-brand-rose hover:text-red-400 transition-colors">
@@ -514,11 +566,49 @@
         const res = await apiCall(`/api/admin/members/${memberId}/certificate`, 'PUT', { certificate_url: url });
         if (res) { notify('Certificate updated!'); loadVolunteerMembers(); }
     }
+    window.toggleAllMembers = (source) => {
+        const checkboxes = document.querySelectorAll('.member-checkbox');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    };
+
+    window.updateMemberRole = async (memberId, newRole) => {
+        const res = await apiCall(`/api/admin/members/${memberId}/role`, 'PUT', { role: newRole });
+        if (res) notify('Role updated!');
+    };
+
+    window.sendBulkCertificates = async () => {
+        const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+        const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        
+        if (memberIds.length === 0) {
+            notify('Please select at least one member.', 'error');
+            return;
+        }
+
+        const title = document.getElementById('cert-title').value.trim();
+        const url = document.getElementById('cert-url').value.trim();
+
+        if (!title || !url) {
+            notify('Title and Link are required.', 'error');
+            return;
+        }
+
+        const res = await apiCall('/api/admin/members/bulk-certificate', 'PUT', { member_ids: memberIds, title, url });
+        if (res) {
+            notify(`Certificates sent to ${memberIds.length} member(s)!`);
+            document.getElementById('cert-title').value = '';
+            document.getElementById('cert-url').value = '';
+            document.getElementById('select-all-members').checked = false;
+            loadMembers();
+        }
+    };
 
     async function itDeleteMember(memberId) {
         if (!confirm('Remove this volunteer member?')) return;
+        if (!confirm('Remove this member?')) return;
         const res = await apiCall(`/api/admin/members/${memberId}`, 'DELETE');
         if (res) { notify('Member removed.'); loadVolunteerMembers(); }
+        if (res) { notify('Member removed.'); loadMembers(); }
     }
 
     async function wakeServer() {
@@ -604,7 +694,7 @@
             role:      document.getElementById('mem-role').value
         };
 
-        const res = await apiCall('/api/admin/users', 'POST', formData);
+        const res = await apiCall('/api/admin/members', 'POST', formData);
         if (res) {
             notify('Member added to MAAI directory!');
             closeModal('add-member-modal');

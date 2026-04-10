@@ -195,29 +195,31 @@
     </nav>
 
     <!-- ══════════════ HERO ══════════════ -->
-    <header class="relative h-[88vh] flex items-end pb-20 pt-16 overflow-hidden">
+    <header class="relative h-[88vh] flex items-end pb-20 pt-16 overflow-hidden px-4 md:px-12">
         <img src="https://i.postimg.cc/KvfgWQsZ/ourteambanner2.jpg" 
      alt="Volunteers" 
      class="absolute inset-0 w-full h-full object-cover scale-150 object-[center_60%] md:scale-110 md:object-[center_30%] transition-opacity duration-500">
+        <!-- dark gradient overlay for better image contrast -->
+        <div class="absolute inset-0 bg-gradient-to-t from-white/50 via-transparent to-transparent dark:from-black/80 dark:via-black/20 dark:to-transparent pointer-events-none"></div>
         <!-- light overlay -->
         <div class="inline-block p-8 md:p-12 rounded-[3rem] 
-            bg-white/20 dark:bg-black/10 
-            backdrop-blur-xl 
-            border border-white/40 dark:border-white/10 
-            shadow-2xl shadow-gray-200/50 dark:shadow-none 
-            reveal">
+            bg-white/40 dark:bg-black/40 
+            backdrop-blur-md 
+            border border-white/50 dark:border-white/20 
+            shadow-2xl shadow-gray-400/30 dark:shadow-[0_0_40px_rgba(0,0,0,0.6)] 
+            reveal relative z-10">
     
     <h1 class="text-5xl md:text-7xl font-black leading-tight mb-6 
-               text-slate-900 dark:text-white transition-colors duration-300">
+               text-slate-900 dark:text-white transition-colors duration-300 drop-shadow-md">
         Volunteer for <br>
         <span class="text-transparent bg-clip-text bg-gradient-to-r 
-                     from-orange-500 to-rose-600 
-                     dark:from-amber-400 dark:to-rose-500">
+                     from-orange-600 to-rose-600 
+                     dark:from-orange-400 dark:to-rose-400 drop-shadow-sm">
             Real Impact.
         </span>
     </h1>
 
-    <p class="text-black-700 dark:text-white text-lg mb-8 max-w-md font-medium leading-relaxed">
+    <p class="text-slate-800 dark:text-gray-200 text-lg mb-8 max-w-md font-medium leading-relaxed drop-shadow-sm">
         Turn your time into a legacy. Join the MAAI movement today.
     </p>
 
@@ -226,7 +228,7 @@
        class="inline-flex items-center px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px]
               bg-indigo-600 dark:bg-white 
               text-white dark:text-indigo-950 
-              shadow-xl shadow-indigo-500/20 dark:shadow-none
+              shadow-xl shadow-indigo-500/20 dark:shadow-white/10
               hover:bg-indigo-500 dark:hover:bg-gray-100
               hover:-translate-y-1 transition-all duration-300">
         Join the Movement
@@ -234,15 +236,16 @@
 
     <a href="Camps.html" 
        class="inline-flex items-center px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px]
-              bg-white/10 dark:bg-white/5 
+              bg-white/30 dark:bg-black/30 
               backdrop-blur-md
-              border border-slate-200 dark:border-white/10 
+              border border-slate-200 dark:border-white/20 
               text-slate-900 dark:text-white 
-              hover:bg-white/40 dark:hover:bg-white/10
-              hover:-translate-y-1 transition-all duration-300">
-        <i class="fas fa-map-marker-alt mr-2 text-rose-500"></i> View Camps
+              hover:bg-white/50 dark:hover:bg-black/50
+              hover:-translate-y-1 transition-all duration-300 shadow-md">
+        <i class="fas fa-map-marker-alt mr-2 text-rose-600 dark:text-rose-400"></i> View Camps
     </a>
 </div>
+        </div>
     </header>
 
     <!-- ══════════════ ABOUT ══════════════ -->

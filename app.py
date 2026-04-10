@@ -124,6 +124,7 @@ def ensure_schema():
         "motivation": "ALTER TABLE users ADD COLUMN motivation TEXT NULL",
         "date_of_birth": "ALTER TABLE users ADD COLUMN date_of_birth DATE NULL",
         "certificate_url": "ALTER TABLE users ADD COLUMN certificate_url TEXT NULL",
+        "certificate_title": "ALTER TABLE users ADD COLUMN certificate_title VARCHAR(255) NULL",
     }
     for column_name, ddl in missing_user_columns.items():
         if column_name not in existing_user_columns:
@@ -426,7 +427,7 @@ def build_profile_response(table_name, email):
         ])
     else:
         select_fields.extend(["name", "role"])
-        for optional_field in ["phone_number", "city", "field_of_study", "college", "year_of_study", "certificate_url"]:
+        for optional_field in ["phone_number", "city", "field_of_study", "college", "year_of_study", "certificate_url", "certificate_title"]:
             if optional_field in table_columns:
                 select_fields.append(optional_field)
 
@@ -442,7 +443,7 @@ def build_profile_response(table_name, email):
         return None
 
     if table_name != "ngos":
-        for optional_field in ["phone_number", "city", "field_of_study", "college", "year_of_study", "certificate_url"]:
+        for optional_field in ["phone_number", "city", "field_of_study", "college", "year_of_study", "certificate_url", "certificate_title"]:
             record.setdefault(optional_field, None)
 
     return record
@@ -712,6 +713,7 @@ def api_me():
         "role": profile_data.get("role"),
         "profession": profile_data.get("field_of_study") or profile_data.get("city"),
         "certificate_url": profile_data.get("certificate_url"),
+        "certificate_title": profile_data.get("certificate_title"),
     })
 
 
@@ -1126,13 +1128,30 @@ def api_admin_delete_user(user_id):
     return jsonify({"message": "User deleted"})
 
 
-@app.route("/api/admin/members", methods=["GET"])
+@app.route("/api/admin/members", methods=["GET", "POST"])
 @admin_required
 def api_admin_members():
+    if request.method == "POST":
+        data = request.get_json() or {}
+        name = data.get("full_name") or data.get("name")
+        email = data.get("email")
+        role = data.get("role", "member")
+        if not name or not email:
+            return jsonify({"error": "Name and email are required"}), 400
+        existing = query_one("SELECT id FROM members WHERE email = %s", (email,))
+        if existing:
+            return jsonify({"error": "Member already exists"}), 400
+        hashed = bcrypt.hashpw("MAAI2026!".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        member_id = execute_write(
+            "INSERT INTO members (name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
+            (name, email, hashed, role),
+        )
+        return jsonify({"id": member_id, "message": "Member added"}), 201
+
     rows = query_all(
         """
         SELECT id, name, email, phone_number, city, field_of_study,
-               college, year_of_study, certificate_url, created_at
+               college, year_of_study, certificate_url, certificate_title, created_at
         FROM members
         ORDER BY created_at DESC
         """
@@ -1143,16 +1162,28 @@ def api_admin_members():
             "name": row["name"],
             "full_name": row["name"],
             "email": row["email"],
+            "role": row["role"],
             "phone_number": row.get("phone_number"),
             "city": row.get("city"),
             "field_of_study": row.get("field_of_study"),
             "college": row.get("college"),
             "year_of_study": row.get("year_of_study"),
             "certificate_url": row.get("certificate_url"),
+            "certificate_title": row.get("certificate_title"),
             "created_at": str(row["created_at"]),
         }
         for row in rows
     ])
+
+
+@app.route("/api/admin/members/<int:member_id>/role", methods=["PUT"])
+@admin_required
+def api_admin_update_member_role_put(member_id):
+    data = request.get_json() or {}
+    if not data.get("role"):
+        return jsonify({"error": "Role is required"}), 400
+    execute_write("UPDATE members SET role = %s WHERE id = %s", (data.get("role"), member_id))
+    return jsonify({"message": "Role updated"})
 
 
 @app.route("/api/admin/members/<int:member_id>/certificate", methods=["PUT"])
@@ -1168,6 +1199,31 @@ def api_admin_update_member_certificate(member_id):
 def api_admin_delete_member(member_id):
     execute_write("DELETE FROM members WHERE id = %s", (member_id,))
     return jsonify({"message": "Member deleted"})
+
+
+@app.route("/api/admin/members/bulk-certificate", methods=["PUT"])
+@admin_required
+def api_admin_bulk_certificate():
+    data = request.get_json() or {}
+    member_ids = data.get("member_ids", [])
+    url = data.get("url")
+    title = data.get("title")
+    
+    if not member_ids or not url or not title:
+        return jsonify({"error": "Member IDs, title and URL are required"}), 400
+        
+    conn = get_db()
+    cursor = conn.cursor()
+    format_strings = ','.join(['%s'] * len(member_ids))
+    cursor.execute(
+        f"UPDATE members SET certificate_url = %s, certificate_title = %s WHERE id IN ({format_strings})",
+        tuple([url, title] + member_ids)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    return jsonify({"message": "Certificates sent successfully"})
 
 
 @app.route("/api/admin/stats", methods=["GET"])

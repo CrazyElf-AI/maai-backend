@@ -57,11 +57,8 @@
                 <a href="#stats-overview" class="flex items-center gap-3 bg-teal-500/10 text-teal-400 px-4 py-3 rounded-xl font-semibold transition-colors border border-teal-500/20">
                     <i class="fas fa-chart-pie w-5"></i> Overview
                 </a>
-                <a href="#volunteers-section" class="flex items-center gap-3 text-gray-400 hover:text-teal-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
-                    <i class="fas fa-user-shield w-5"></i> Staff Management
-                </a>
                 <a href="#members-section" class="flex items-center gap-3 text-gray-400 hover:text-teal-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
-                    <i class="fas fa-users w-5"></i> Volunteer Members
+                    <i class="fas fa-users w-5"></i> Member Management
                 </a>
                 <a href="#camps-section" class="flex items-center gap-3 text-gray-400 hover:text-teal-400 hover:bg-white/5 px-4 py-3 rounded-xl font-medium transition-colors">
                     <i class="fas fa-campground w-5"></i> NGO Camps
@@ -152,12 +149,12 @@
                     </div>
 
         <!-- Volunteer Registrations Section -->
-        <section id="volunteers-section" class="mb-16 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-blue-500 pl-3">Staff Management</h2>
+        <section id="members-section" class="mb-16 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-white mb-6 border-l-4 border-blue-500 pl-3">Member Management</h2>
             
             <!-- Add Staff Form -->
             <div class="glass-panel p-6 rounded-2xl mb-8 shadow-xl border-t border-blue-500/20">
-                <h3 class="text-xl font-bold text-white mb-4 font-display"><i class="fas fa-user-plus text-blue-400 mr-2"></i>Add New Staff User</h3>
+                <h3 class="text-xl font-bold text-white mb-4 font-display"><i class="fas fa-user-plus text-blue-400 mr-2"></i>Add New Member</h3>
                 <form id="admin-add-member-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 mb-1 uppercase tracking-wide">Name</label>
@@ -180,52 +177,30 @@
                         </select>
                     </div>
                     <div>
-                        <button type="submit" id="add-mem-submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold w-full hover:bg-blue-400 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">Add Staff</button>
+                        <button type="submit" id="add-mem-submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold w-full hover:bg-blue-400 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">Add Member</button>
                     </div>
                 </form>
                 <p id="add-mem-msg" class="text-sm font-medium hidden mt-3"></p>
             </div>
 
-            <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto shadow-xl">
-                <table class="w-full text-left border-collapse whitespace-nowrap min-w-[600px]">
-                    <thead>
-                        <tr class="bg-blue-900/20 text-blue-300 text-xs uppercase tracking-wider font-semibold">
-                            <th class="p-5 border-b border-white/10">Name</th>
-                            <th class="p-5 border-b border-white/10">Email</th>
-                            <th class="p-5 border-b border-white/10 text-center">Role</th>
-                            <th class="p-5 border-b border-white/10 text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="volunteers-tbody" class="text-sm text-gray-300 divide-y divide-white/5">
-                        <tr><td colspan="4" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Volunteer Members Section (members table) -->
-        <section id="members-section" class="mb-16 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-white mb-2 border-l-4 border-teal-500 pl-3">Volunteer Members</h2>
-            <p class="text-gray-400 text-sm mb-6 pl-4">All volunteers who signed up through the website.</p>
-
             <div class="mb-6 flex justify-between items-center gap-4">
                 <span class="text-gray-400 text-sm">Total: <span id="stat-members" class="text-white font-bold">—</span></span>
                 <div class="relative w-full md:w-96">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="admin-member-search" oninput="loadMembers()" class="w-full bg-[#030712]/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none focus:border-teal-500 transition-colors" placeholder="Search by name, email, or city...">
+                    <input type="text" id="admin-member-search" oninput="loadMembers()" class="w-full bg-[#030712]/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="Search by name, email, or city...">
                 </div>
             </div>
 
             <div class="glass-panel rounded-2xl overflow-hidden overflow-x-auto shadow-xl">
                 <table class="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
                     <thead>
-                        <tr class="bg-teal-900/20 text-teal-300 text-xs uppercase tracking-wider font-semibold">
-                            <th class="p-5 border-b border-white/10">Joined</th>
+                        <tr class="bg-blue-900/20 text-blue-300 text-xs uppercase tracking-wider font-semibold">
+                            <th class="p-5 border-b border-white/10 w-12 text-center"><input type="checkbox" id="select-all-members" onclick="toggleAllMembers(this)" class="accent-blue-500 w-4 h-4 cursor-pointer"></th>
                             <th class="p-5 border-b border-white/10">Name</th>
                             <th class="p-5 border-b border-white/10">Contact</th>
-                            <th class="p-5 border-b border-white/10">Field / College</th>
+                            <th class="p-5 border-b border-white/10">Field</th>
                             <th class="p-5 border-b border-white/10">City</th>
-                            <th class="p-5 border-b border-white/10 text-center">Certificate</th>
+                            <th class="p-5 border-b border-white/10 text-center">Role</th>
                             <th class="p-5 border-b border-white/10 text-center">Delete</th>
                         </tr>
                     </thead>
@@ -233,6 +208,17 @@
                         <tr><td colspan="7" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading members...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Certificates Section -->
+            <div class="glass-panel p-6 rounded-2xl mt-8 shadow-xl border-t border-teal-500/20">
+                <h3 class="text-xl font-bold text-white mb-2 font-display"><i class="fas fa-certificate text-teal-400 mr-2"></i>Issue Certificates</h3>
+                <p class="text-sm text-gray-400 mb-6">Select members from the list above, enter the title and link, and send the certificate notification.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="cert-title" placeholder="Certificate Title (e.g. Best Volunteer)" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-teal-500 transition-colors">
+                    <input type="url" id="cert-url" placeholder="Certificate Link (URL)" class="w-full bg-[#030712]/50 border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-teal-500 transition-colors">
+                </div>
+                <button onclick="sendBulkCertificates()" class="bg-teal-500 text-[#030712] px-6 py-2 rounded-lg font-bold hover:bg-teal-400 transition-all shadow-[0_0_15px_rgba(20,184,166,0.3)]"><i class="fas fa-paper-plane mr-2"></i> Send Certificates</button>
             </div>
         </section>
 
@@ -547,7 +533,6 @@
 
     // --- 4. DASHBOARD DATA LOADERS ---
     async function initDashboardData() {
-        loadVolunteers();
         loadMembers();
         loadCampProposals();
         loadInitiatives();
@@ -557,39 +542,10 @@
         loadTestimonials();
     }
 
-    // --- 5a. STAFF MANAGEMENT (users table) ---
-    async function loadVolunteers() {
-        const users = await apiCall('/api/admin/users');
-        if (!users) return;
-        document.getElementById('stat-volunteers').textContent = users.length;
-        const tbody = document.getElementById('volunteers-tbody');
-        tbody.innerHTML = users.length === 0
-            ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">No staff users found.</td></tr>`
-            : users.map(u => `
-            <tr class="hover:bg-white/5 transition-colors">
-                <td class="p-5 border-b border-white/5 font-semibold text-white">${u.full_name}</td>
-                <td class="p-5 border-b border-white/5 text-gray-400">${u.email}</td>
-                <td class="p-5 border-b border-white/5 text-center">
-                    <select onchange="updateUserRole(${u.id}, this.value)" class="bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs">
-                        <option value="member" ${u.role === 'member' ? 'selected' : ''}>MEMBER</option>
-                        <option value="ops" ${u.role === 'ops' ? 'selected' : ''}>OPS</option>
-                        <option value="rnd" ${u.role === 'rnd' ? 'selected' : ''}>R&D</option>
-                        <option value="it" ${u.role === 'it' ? 'selected' : ''}>IT</option>
-                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>ADMIN</option>
-                        <option value="god" ${u.role === 'god' ? 'selected' : ''}>GOD</option>
-                    </select>
-                </td>
-                <td class="p-5 border-b border-white/5 text-center">
-                    <button onclick="deleteUser(${u.id})" class="text-rose-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    // --- 5b. VOLUNTEER MEMBERS (members table) ---
     async function loadMembers() {
         const members = await apiCall('/api/admin/members');
         if (!members) return;
+        document.getElementById('stat-volunteers').textContent = members.length;
         document.getElementById('stat-members').textContent = members.length;
         const tbody = document.getElementById('members-tbody');
         const search = (document.getElementById('admin-member-search')?.value || '').toLowerCase();
@@ -601,48 +557,62 @@
         tbody.innerHTML = filtered.length === 0
             ? `<tr><td colspan="7" class="p-8 text-center text-gray-500">No volunteer members found.</td></tr>`
             : filtered.map(m => `
-            <tr class="hover:bg-white/5 transition-colors">
-                <td class="p-5 border-b border-white/5 text-gray-400 text-xs">${m.created_at ? m.created_at.slice(0,10) : '-'}</td>
-                <td class="p-5 border-b border-white/5 font-semibold text-white">${m.name}</td>
-                <td class="p-5 border-b border-white/5 text-gray-400">
+            <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
+                <td class="p-5 text-center">
+                    <input type="checkbox" value="${m.id}" class="member-checkbox accent-blue-500 w-4 h-4 cursor-pointer">
+                </td>
+                <td class="p-5 font-semibold text-white">${m.name}</td>
+                <td class="p-5 text-gray-400">
                     <div>${m.email}</div>
                     <div class="text-xs text-gray-500">${m.phone_number || ''}</div>
                 </td>
-                <td class="p-5 border-b border-white/5 text-gray-400">
-                    <div>${m.field_of_study || '-'}</div>
-                    <div class="text-xs text-gray-500">${m.college || ''} ${m.year_of_study ? '· Y'+m.year_of_study : ''}</div>
+                <td class="p-5 text-gray-400">
+                    ${m.field_of_study || '-'}
                 </td>
-                <td class="p-5 border-b border-white/5 text-gray-400">${m.city || '-'}</td>
-                <td class="p-5 border-b border-white/5 text-center">
-                    ${m.certificate_url
-                        ? `<a href="${m.certificate_url}" target="_blank" class="text-teal-400 hover:underline text-xs">View</a>`
-                        : `<button onclick="updateMemberCertificate(${m.id})" class="text-xs text-gray-500 hover:text-teal-400 transition-colors">Add URL</button>`
-                    }
+                <td class="p-5 text-gray-400">${m.city || '-'}</td>
+                <td class="p-5 text-center">
+                    <select onchange="updateUserRole(${m.id}, this.value)" class="bg-navy-900 border border-white/10 rounded px-2 py-1 text-xs font-bold uppercase text-white">
+                        ${['member','ngo','ops','rnd','it','admin','god'].map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`).join('')}
+                    </select>
                 </td>
-                <td class="p-5 border-b border-white/5 text-center">
-                    <button onclick="deleteMember(${m.id})" class="text-rose-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button>
+                <td class="p-5 text-center">
+                    <button onclick="deleteUser(${m.id})" class="text-rose-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
     }
 
-    async function updateMemberCertificate(memberId) {
-        const url = prompt('Enter certificate URL:');
-        if (!url) return;
-        const res = await apiCall(`/api/admin/members/${memberId}/certificate`, 'PUT', { certificate_url: url });
-        if (res) loadMembers();
-    }
+    window.toggleAllMembers = (source) => {
+        const checkboxes = document.querySelectorAll('.member-checkbox');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    };
 
-    async function deleteMember(memberId) {
-        if (!confirm('Remove this volunteer member?')) return;
-        const res = await apiCall(`/api/admin/members/${memberId}`, 'DELETE');
-        if (res) loadMembers();
-    }
+    window.sendBulkCertificates = async () => {
+        const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+        const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        
+        if (memberIds.length === 0) {
+            notify('Please select at least one member.');
+            return;
+        }
 
-    async function updateUserRole(userId, newRole) {
-        const res = await apiCall(`/admin/users/${userId}/role`, 'PUT', { role: newRole }); //
-        if (res) notify("Role updated in PostgreSQL!");
-    }
+        const title = document.getElementById('cert-title').value.trim();
+        const url = document.getElementById('cert-url').value.trim();
+
+        if (!title || !url) {
+            notify('Title and Link are required.');
+            return;
+        }
+
+        const res = await apiCall('/api/admin/members/bulk-certificate', 'PUT', { member_ids: memberIds, title, url });
+        if (res) {
+            notify(`Certificates sent to ${memberIds.length} member(s)!`);
+            document.getElementById('cert-title').value = '';
+            document.getElementById('cert-url').value = '';
+            document.getElementById('select-all-members').checked = false;
+            loadMembers();
+        }
+    };
 
     // --- 6. CAMP PROPOSALS (NGO) ---
     async function loadCampProposals() {
@@ -720,10 +690,15 @@ if (logoutBtn) logoutBtn.onclick = handleLogout;
 
     // ─── MISSING FUNCTIONS (injected) ────────────────────────────────────────
 
+    async function updateUserRole(userId, newRole) {
+        const res = await apiCall(`/api/admin/members/${userId}/role`, 'PUT', { role: newRole });
+        if (res) notify("Role updated!");
+    }
+
     async function deleteUser(userId) {
         if (!confirm('Permanently delete this user? This cannot be undone.')) return;
-        const res = await apiCall(`/admin/users/${userId}`, 'DELETE');
-        if (res) { notify('User deleted.'); loadVolunteers(); }
+        const res = await apiCall(`/api/admin/members/${userId}`, 'DELETE');
+        if (res) { notify('User deleted.'); loadMembers(); }
     }
 
     // Admin Add-Member form
@@ -738,13 +713,13 @@ if (logoutBtn) logoutBtn.onclick = handleLogout;
                 role:      document.getElementById('add-mem-role').value
             };
             if (!body.full_name || !body.email) return;
-            const res = await apiCall('/admin/users', 'POST', body);
+            const res = await apiCall('/api/admin/members', 'POST', body);
             if (res) {
                 msg.textContent = 'Member added!';
                 msg.className = 'text-sm font-medium mt-3 text-teal-400';
                 msg.classList.remove('hidden');
                 adminAddForm.reset();
-                loadVolunteers();
+                loadMembers();
                 setTimeout(() => msg.classList.add('hidden'), 3000);
             }
         });
