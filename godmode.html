@@ -133,6 +133,7 @@
                         <input type="email" id="new-member-email" placeholder="Email Address" class="bg-navy-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-orange outline-none">
                         <select id="new-member-role" class="bg-navy-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-orange outline-none">
                             <option value="member">MEMBER</option>
+                            <option value="ngo">NGO</option>
                             <option value="ops">OPS</option>
                             <option value="rnd">R&D</option>
                             <option value="it">IT</option>
@@ -468,7 +469,7 @@
                     <select id="role-select-${u.id}"
                         class="bg-navy-900 border border-slate-700 rounded-lg px-3 py-1 text-xs font-bold uppercase focus:border-brand-orange outline-none"
                         onchange="handleUpdateRole(${u.id}, '${(u.full_name || '').replace(/'/g, "\\'")}')">
-                        ${['member','ops','rnd','it','admin','god'].map(r =>
+                        ${['member','ngo','ops','rnd','it','admin','god'].map(r =>
                             `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`
                         ).join('')}
                     </select>
@@ -544,35 +545,7 @@
         if (res) fetchVolunteerMembers();
     };
 
-        // Locate the part of the script that generates the <tr> tags
-tbody.innerHTML = users.map(u => `
-    <tr class="border-b border-slate-800 hover:bg-slate-800/40 transition-colors">
-        <td class="px-6 py-4 font-semibold text-white">${u.full_name || '—'}</td>
-        <td class="px-6 py-4 text-slate-400 text-sm">${u.email}</td>
-        <td class="px-6 py-4">
-            <span class="text-xs font-bold uppercase">${u.role}</span>
-        </td>
-        <td class="px-6 py-4">
-            <div class="flex gap-2">
-                <input type="text" id="cert-${u.id}" 
-                       value="${u.certificate_url || ''}" 
-                       placeholder="Paste Drive Link" 
-                       class="bg-navy-900 border border-slate-700 rounded px-2 py-1 text-xs text-white outline-none focus:border-brand-orange w-40">
-                <button onclick="saveCert(${u.id})" class="text-brand-teal hover:text-white">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </td>
-    </tr>
-`).join('');
 
-// Add this function to your <script> section
-window.saveCert = async (userId) => {
-    const url = document.getElementById(`cert-${userId}`).value.trim();
-    // This sends the link to the backend to be saved for that specific member
-    const res = await apiCall(`/api/admin/users/${userId}/certificate`, 'PUT', { certificate_url: url });
-    if (res) alert("Certificate link sent to member portal!");
-};
 
 
     // FIX: addUser must be on window so onclick="addUser()" works
