@@ -124,27 +124,30 @@
             </section>
 
             <section id="members" class="space-y-8">
-                <h2 class="text-3xl font-display font-black text-white italic underline decoration-brand-orange decoration-4 underline-offset-8">Members Management</h2>
+                <h2 class="text-3xl font-display font-black text-white italic underline decoration-brand-orange decoration-4 underline-offset-8">Staff Management</h2>
                 
                 <div class="glass p-8 rounded-3xl space-y-6">
-                    <h3 class="font-bold flex items-center gap-2"><i class="fas fa-user-plus text-brand-orange"></i> Add New Member</h3>
+                    <h3 class="font-bold flex items-center gap-2"><i class="fas fa-user-plus text-brand-orange"></i> Add New Staff User</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input type="text" id="new-member-name" placeholder="Full Name" class="bg-navy-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-orange outline-none">
                         <input type="email" id="new-member-email" placeholder="Email Address" class="bg-navy-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-orange outline-none">
                         <select id="new-member-role" class="bg-navy-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-brand-orange outline-none">
                             <option value="member">MEMBER</option>
+                            <option value="ops">OPS</option>
+                            <option value="rnd">R&D</option>
+                            <option value="it">IT</option>
                             <option value="admin">ADMIN</option>
-                            <option value="ngo">NGO</option>
+                            <option value="god">GOD</option>
                         </select>
                     </div>
-                    <button onclick="addUser()" class="w-full md:w-auto bg-brand-orange px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-brand-orange/20">Add Member</button>
+                    <button onclick="addUser()" class="w-full md:w-auto bg-brand-orange px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-brand-orange/20">Add Staff</button>
                 </div>
 
                 <div class="glass rounded-3xl overflow-hidden shadow-2xl">
                     <div class="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between gap-4">
                         <div class="relative flex-1 max-w-md">
                             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                            <input type="text" onkeyup="filterTable('user-table', this.value)" class="w-full bg-navy-900 border border-slate-700 rounded-xl pl-11 pr-4 py-2 text-sm focus:border-brand-orange outline-none" placeholder="Search members by name or email...">
+                            <input type="text" onkeyup="filterTable('user-table', this.value)" class="w-full bg-navy-900 border border-slate-700 rounded-xl pl-11 pr-4 py-2 text-sm focus:border-brand-orange outline-none" placeholder="Search staff by name or email...">
                         </div>
                     </div>
                     <div class="overflow-x-auto hide-scrollbar">
@@ -158,6 +161,38 @@
                                 </tr>
                             </thead>
                             <tbody id="user-list" class="divide-y divide-slate-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Volunteer Members (members table) -->
+                <h2 class="text-3xl font-display font-black text-white italic underline decoration-brand-teal decoration-4 underline-offset-8 pt-4">Volunteer Members</h2>
+                <p class="text-slate-400 text-sm">All volunteers who signed up through the website.</p>
+
+                <div class="glass rounded-3xl overflow-hidden shadow-2xl">
+                    <div class="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between gap-4 items-center">
+                        <span class="text-slate-400 text-sm">Total: <span id="god-member-count" class="text-white font-bold">—</span></span>
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" oninput="fetchVolunteerMembers()" id="god-member-search" class="w-full bg-navy-900 border border-slate-700 rounded-xl pl-11 pr-4 py-2 text-sm focus:border-brand-teal outline-none" placeholder="Search by name, email, or city...">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-900 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                                <tr>
+                                    <th class="px-6 py-4">Joined</th>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Contact</th>
+                                    <th class="px-6 py-4">Field / College</th>
+                                    <th class="px-6 py-4">City</th>
+                                    <th class="px-6 py-4 text-center">Certificate</th>
+                                    <th class="px-6 py-4 text-center">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody id="god-member-list" class="divide-y divide-slate-800">
+                                <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading volunteer members...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -390,7 +425,7 @@
         if (activeBtn) activeBtn.classList.add('active-nav');
 
         // Auto-load data when switching sections
-        if (sectionId === 'members')     fetchUsers();
+        if (sectionId === 'members')     { fetchUsers(); fetchVolunteerMembers(); }
         if (sectionId === 'camps')       loadCampApplications();
         if (sectionId === 'gallery')     loadGallery();
         if (sectionId === 'leadership')  loadLeadership();
@@ -410,19 +445,18 @@
         set('stat-pending',    data.pending_requests  ?? '—');
     }
 
-    // ─── 4. MEMBERS ──────────────────────────────────────────────────────────
     // FIX: was targeting 'members-tbody' which doesn't exist; HTML uses 'user-list'
     window.fetchUsers = async () => {
         const tbody = document.getElementById('user-list');
         if (!tbody) return;
 
-        tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">Loading members…</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">Loading staff…</td></tr>';
 
         const users = await apiCall('/api/admin/users');
         if (!users) return;
 
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">No members found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-500">No staff users found.</td></tr>';
             return;
         }
 
@@ -434,7 +468,7 @@
                     <select id="role-select-${u.id}"
                         class="bg-navy-900 border border-slate-700 rounded-lg px-3 py-1 text-xs font-bold uppercase focus:border-brand-orange outline-none"
                         onchange="handleUpdateRole(${u.id}, '${(u.full_name || '').replace(/'/g, "\\'")}')">
-                        ${['member','admin','it','god','ngo'].map(r =>
+                        ${['member','ops','rnd','it','admin','god'].map(r =>
                             `<option value="${r}" ${u.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`
                         ).join('')}
                     </select>
@@ -447,6 +481,68 @@
                 </td>
             </tr>
         `).join('');
+    };
+
+    // ─── 4b. VOLUNTEER MEMBERS (members table) ────────────────────────────────
+    window.fetchVolunteerMembers = async () => {
+        const tbody = document.getElementById('god-member-list');
+        if (!tbody) return;
+
+        const members = await apiCall('/api/admin/members');
+        if (!members) return;
+
+        const search = (document.getElementById('god-member-search')?.value || '').toLowerCase();
+        const filtered = search ? members.filter(m =>
+            (m.name||'').toLowerCase().includes(search) ||
+            (m.email||'').toLowerCase().includes(search) ||
+            (m.city||'').toLowerCase().includes(search)
+        ) : members;
+
+        const countEl = document.getElementById('god-member-count');
+        if (countEl) countEl.textContent = members.length;
+
+        tbody.innerHTML = filtered.length === 0
+            ? '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic">No volunteer members found.</td></tr>'
+            : filtered.map(m => `
+            <tr class="border-b border-slate-800 hover:bg-slate-800/40 transition-colors">
+                <td class="px-6 py-4 text-slate-500 text-xs">${m.created_at ? m.created_at.slice(0,10) : '—'}</td>
+                <td class="px-6 py-4 font-semibold text-white">${m.name}</td>
+                <td class="px-6 py-4 text-slate-400 text-sm">
+                    <div>${m.email}</div>
+                    <div class="text-xs text-slate-500">${m.phone_number || ''}</div>
+                </td>
+                <td class="px-6 py-4 text-slate-400 text-sm">
+                    <div>${m.field_of_study || '—'}</div>
+                    <div class="text-xs text-slate-500">${m.college || ''} ${m.year_of_study ? '· Y'+m.year_of_study : ''}</div>
+                </td>
+                <td class="px-6 py-4 text-slate-400">${m.city || '—'}</td>
+                <td class="px-6 py-4 text-center">
+                    ${m.certificate_url
+                        ? `<a href="${m.certificate_url}" target="_blank" class="text-brand-teal hover:underline text-xs">View</a>`
+                        : `<button onclick="updateGodMemberCert(${m.id})" class="text-xs text-slate-500 hover:text-brand-teal transition-colors">Add URL</button>`
+                    }
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button onclick="deleteVolunteerMember(${m.id})" class="text-brand-rose hover:text-red-400 transition-colors">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    window.updateGodMemberCert = async (memberId) => {
+        const url = prompt('Enter certificate URL:');
+        if (!url) return;
+        const res = await apiCall(`/api/admin/members/${memberId}/certificate`, 'PUT', { certificate_url: url });
+        if (res) fetchVolunteerMembers();
+    };
+
+    window.deleteVolunteerMember = async (memberId) => {
+        if (!confirm('Remove this volunteer member?')) return;
+        const res = await apiCall(`/api/admin/members/${memberId}`, 'DELETE');
+        if (res) fetchVolunteerMembers();
+    };
 
         // Locate the part of the script that generates the <tr> tags
 tbody.innerHTML = users.map(u => `
@@ -477,7 +573,7 @@ window.saveCert = async (userId) => {
     const res = await apiCall(`/api/admin/users/${userId}/certificate`, 'PUT', { certificate_url: url });
     if (res) alert("Certificate link sent to member portal!");
 };
-    };
+
 
     // FIX: addUser must be on window so onclick="addUser()" works
     window.addUser = async () => {

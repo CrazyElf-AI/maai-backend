@@ -1126,6 +1126,50 @@ def api_admin_delete_user(user_id):
     return jsonify({"message": "User deleted"})
 
 
+@app.route("/api/admin/members", methods=["GET"])
+@admin_required
+def api_admin_members():
+    rows = query_all(
+        """
+        SELECT id, name, email, phone_number, city, field_of_study,
+               college, year_of_study, certificate_url, created_at
+        FROM members
+        ORDER BY created_at DESC
+        """
+    )
+    return jsonify([
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "full_name": row["name"],
+            "email": row["email"],
+            "phone_number": row.get("phone_number"),
+            "city": row.get("city"),
+            "field_of_study": row.get("field_of_study"),
+            "college": row.get("college"),
+            "year_of_study": row.get("year_of_study"),
+            "certificate_url": row.get("certificate_url"),
+            "created_at": str(row["created_at"]),
+        }
+        for row in rows
+    ])
+
+
+@app.route("/api/admin/members/<int:member_id>/certificate", methods=["PUT"])
+@admin_required
+def api_admin_update_member_certificate(member_id):
+    data = request.get_json() or {}
+    execute_write("UPDATE members SET certificate_url = %s WHERE id = %s", (data.get("certificate_url"), member_id))
+    return jsonify({"message": "Certificate updated"})
+
+
+@app.route("/api/admin/members/<int:member_id>", methods=["DELETE"])
+@admin_required
+def api_admin_delete_member(member_id):
+    execute_write("DELETE FROM members WHERE id = %s", (member_id,))
+    return jsonify({"message": "Member deleted"})
+
+
 @app.route("/api/admin/stats", methods=["GET"])
 @admin_required
 def api_admin_stats():

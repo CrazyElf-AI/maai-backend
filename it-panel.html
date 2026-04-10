@@ -193,21 +193,23 @@
             </section>
 <section id="it-members" class="space-y-8">
     <header class="flex justify-between items-center">
-    <h2 class="text-3xl font-display font-black text-white">System Members</h2>
+    <h2 class="text-3xl font-display font-black text-white">Staff Users</h2>
     <button onclick="openModal('add-member-modal')" class="bg-brand-blue px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-blue/20 hover:scale-105 transition-transform">
-        <i class="fas fa-user-plus mr-2"></i> Add Member
+        <i class="fas fa-user-plus mr-2"></i> Add Staff
     </button>
 </header>
 <div id="add-member-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
     <div class="glass max-w-md w-full p-8 rounded-[2rem] border border-white/10">
-        <h3 class="text-2xl font-display font-bold text-white mb-6">Onboard New Member</h3>
+        <h3 class="text-2xl font-display font-bold text-white mb-6">Onboard New Staff User</h3>
         <form id="add-member-form" class="space-y-4">
             <input type="text" id="mem-name" placeholder="Full Name" required class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
             <input type="email" id="mem-email" placeholder="Email Address" required class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
             <select id="mem-role" class="w-full bg-navy-900/50 border border-slate-700 rounded-xl p-4 text-sm text-white outline-none focus:border-brand-blue">
                 <option value="member">MEMBER</option>
-                <option value="ngo">NGO PARTNER</option>
+                <option value="ops">OPS</option>
+                <option value="rnd">R&D</option>
                 <option value="it">IT STAFF</option>
+                <option value="admin">ADMIN</option>
             </select>
             <div class="flex gap-4 pt-4">
                 <button type="button" onclick="closeModal('add-member-modal')" class="flex-1 px-6 py-3 rounded-xl bg-slate-800 font-bold">Cancel</button>
@@ -227,6 +229,35 @@
             </thead>
             <tbody id="it-member-list" class="divide-y divide-slate-800">
                 </tbody>
+        </table>
+    </div>
+
+    <!-- Volunteer Members (members table) -->
+    <header class="flex justify-between items-center pt-4">
+        <h2 class="text-3xl font-display font-black text-white">Volunteer Members</h2>
+        <span class="text-slate-400 text-sm">Total: <span id="it-member-count" class="text-white font-bold">—</span></span>
+    </header>
+    <p class="text-slate-400 text-sm -mt-4">All volunteers who signed up through the website.</p>
+    <div class="relative max-w-md">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+        <input type="text" oninput="loadVolunteerMembers()" id="it-member-search" class="w-full bg-navy-900/50 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm text-white outline-none focus:border-brand-blue" placeholder="Search by name, email, or city...">
+    </div>
+    <div class="glass rounded-3xl overflow-hidden shadow-2xl">
+        <table class="w-full text-left">
+            <thead class="bg-slate-900/50 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                <tr>
+                    <th class="px-6 py-4">Joined</th>
+                    <th class="px-6 py-4">Name</th>
+                    <th class="px-6 py-4">Contact</th>
+                    <th class="px-6 py-4">Field / College</th>
+                    <th class="px-6 py-4">City</th>
+                    <th class="px-6 py-4 text-center">Certificate</th>
+                    <th class="px-6 py-4 text-center">Delete</th>
+                </tr>
+            </thead>
+            <tbody id="it-volunteer-list" class="divide-y divide-slate-800">
+                <tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic"><i class="fas fa-circle-notch fa-spin mr-2"></i>Loading volunteer members...</td></tr>
+            </tbody>
         </table>
     </div>
 </section>
@@ -265,7 +296,7 @@
         if (event && event.currentTarget) event.currentTarget.classList.add('active');
 
         // Auto-refresh data on tab switch
-        if (id === 'members')     loadMembers();
+        if (id === 'members')     { loadMembers(); loadVolunteerMembers(); }
         if (id === 'camps')       loadCampApplications();
         if (id === 'leadership')  loadLeadership();
         if (id === 'media')       loadMedia();
@@ -406,7 +437,7 @@
         notify(`${data.length} testimonial(s) in the system.`);
     }
 
-    // ─── 8. MEMBERS ──────────────────────────────────────────────────────────
+    // ─── 8. STAFF USERS (users table) ────────────────────────────────────────
     async function loadMembers() {
         const users = await apiCall('/api/admin/users');
         if (!users) return;
@@ -426,7 +457,68 @@
                     </td>
                 </tr>`)
               .join('')
-            : '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500 italic">No members found.</td></tr>';
+            : '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500 italic">No staff users found.</td></tr>';
+    }
+
+    // ─── 8b. VOLUNTEER MEMBERS (members table) ───────────────────────────────
+    async function loadVolunteerMembers() {
+        const members = await apiCall('/api/admin/members');
+        if (!members) return;
+
+        const container = document.getElementById('it-volunteer-list');
+        if (!container) return;
+
+        const search = (document.getElementById('it-member-search')?.value || '').toLowerCase();
+        const filtered = search ? members.filter(m =>
+            (m.name||'').toLowerCase().includes(search) ||
+            (m.email||'').toLowerCase().includes(search) ||
+            (m.city||'').toLowerCase().includes(search)
+        ) : members;
+
+        const countEl = document.getElementById('it-member-count');
+        if (countEl) countEl.textContent = members.length;
+
+        container.innerHTML = filtered.length
+            ? filtered.map(m => `
+                <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
+                    <td class="px-6 py-4 text-slate-500 text-xs">${m.created_at ? m.created_at.slice(0,10) : '—'}</td>
+                    <td class="px-6 py-4 font-bold text-white">${m.name}</td>
+                    <td class="px-6 py-4 text-sm text-slate-400">
+                        <div>${m.email}</div>
+                        <div class="text-xs text-slate-500">${m.phone_number || ''}</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-400">
+                        <div>${m.field_of_study || '—'}</div>
+                        <div class="text-xs text-slate-500">${m.college || ''} ${m.year_of_study ? '· Y'+m.year_of_study : ''}</div>
+                    </td>
+                    <td class="px-6 py-4 text-slate-400">${m.city || '—'}</td>
+                    <td class="px-6 py-4 text-center">
+                        ${m.certificate_url
+                            ? `<a href="${m.certificate_url}" target="_blank" class="text-brand-blue hover:underline text-xs">View</a>`
+                            : `<button onclick="itUpdateMemberCert(${m.id})" class="text-xs text-slate-500 hover:text-brand-blue transition-colors">Add URL</button>`
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="itDeleteMember(${m.id})" class="text-brand-rose hover:text-red-400 transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`)
+              .join('')
+            : '<tr><td colspan="7" class="px-6 py-8 text-center text-slate-500 italic">No volunteer members found.</td></tr>';
+    }
+
+    async function itUpdateMemberCert(memberId) {
+        const url = prompt('Enter certificate URL:');
+        if (!url) return;
+        const res = await apiCall(`/api/admin/members/${memberId}/certificate`, 'PUT', { certificate_url: url });
+        if (res) { notify('Certificate updated!'); loadVolunteerMembers(); }
+    }
+
+    async function itDeleteMember(memberId) {
+        if (!confirm('Remove this volunteer member?')) return;
+        const res = await apiCall(`/api/admin/members/${memberId}`, 'DELETE');
+        if (res) { notify('Member removed.'); loadVolunteerMembers(); }
     }
 
     async function wakeServer() {
@@ -546,6 +638,7 @@
     // ─── 11. INIT ────────────────────────────────────────────────────────────
     window.onload = () => {
         loadMembers();
+        loadVolunteerMembers();
         loadMedia();
         loadCampApplications();
     };
