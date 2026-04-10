@@ -1150,7 +1150,7 @@ def api_admin_members():
 
     rows = query_all(
         """
-        SELECT id, name, email, phone_number, city, field_of_study,
+        SELECT id, name, email, role, phone_number, city, field_of_study,
                college, year_of_study, certificate_url, certificate_title, created_at
         FROM members
         ORDER BY created_at DESC
