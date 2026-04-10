@@ -502,6 +502,10 @@
 
     // --- 3. CORE API HELPER ---
     async function apiCall(endpoint, method = 'GET', body = null) {
+        // Auto-prefix /api/ if the endpoint doesn't already have it
+        if (!endpoint.startsWith('/api/')) {
+            endpoint = '/api' + endpoint;
+        }
         const options = {
             method,
             headers: {
@@ -560,7 +564,7 @@
 
     // --- 6. CAMP PROPOSALS (NGO) ---
     async function loadCampProposals() {
-        const camps = await apiCall('/admin/camps'); //
+        const camps = await apiCall('/api/admin/camp-proposals'); //
         if (!camps) return;
 
         const pending = camps.filter(c => c.status === 'pending');
@@ -588,7 +592,7 @@
 
     async function updateCampStatus(campId, status) {
         const reason = status === 'rejected' ? prompt("Reason for rejection:") : "";
-        const res = await apiCall(`/admin/camps/${campId}/status`, 'PUT', { status, rejection_reason: reason }); //
+        const res = await apiCall(`/api/admin/camp-proposals/${campId}/status`, 'PUT', { status, rejection_reason: reason }); //
         if (res) {
             notify(`Camp ${status}!`);
             loadCampProposals();
@@ -679,7 +683,7 @@ if (logoutBtn) logoutBtn.onclick = handleLogout;
     async function loadInitiatives() {
         const list = document.getElementById('initiatives-list');
         if (!list) return;
-        const data = await apiCall('/admin/initiatives') || await apiCall('/initiatives');
+        const data = await apiCall('/api/admin/initiatives');
         if (!data) return;
         document.getElementById('stat-initiatives').textContent = data.length;
         list.innerHTML = data.length ? data.map(i => `
