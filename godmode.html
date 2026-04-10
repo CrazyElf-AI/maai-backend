@@ -97,12 +97,6 @@
         <main class="flex-1 min-h-screen overflow-y-auto px-6 py-8 md:px-12 md:py-12 pb-24 md:pb-12 relative">
             <div class="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(249,115,22,0.05),transparent_50%)] pointer-events-none"></div>
 
-            <!-- Shown automatically when apiCall is retrying after a cold start -->
-            <div id="wake-status" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-800 border border-slate-700 text-slate-200 text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl">
-                <i class="fas fa-circle-notch fa-spin text-brand-orange"></i>
-                Server is waking up, please wait…
-            </div>
-
             <section id="dashboard" class="active space-y-10">
                 <header>
                     <h1 class="text-4xl font-display font-black text-white">System Overview</h1>
@@ -357,8 +351,6 @@
     }
 
     // ─── 1. CORE API HELPER ──────────────────────────────────────────────────
-    // Retries up to 10 times with 4s gap to handle Render free-tier cold starts.
-    // Shows a banner while waiting so the user knows what's happening.
     async function apiCall(endpoint, method = 'GET', body = null) {
         const opts = {
             method,
@@ -369,29 +361,16 @@
         };
         if (body) opts.body = JSON.stringify(body);
 
-        const banner = document.getElementById('wake-status');
-        const MAX_RETRIES = 10;
-        const RETRY_DELAY = 4000;
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, opts);
+            if (res.status === 401) { window.location.replace('login.html'); return null; }
 
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                const res = await fetch(`${API_BASE}${endpoint}`, opts);
-                if (banner) banner.classList.add('hidden');
-
-                if (res.status === 401) { window.location.replace('login.html'); return null; }
-                const data = await res.json();
-                if (!res.ok) { showModal('Error', data.error || 'Action failed.'); return null; }
-                return data;
-            } catch (err) {
-                if (attempt === MAX_RETRIES) {
-                    if (banner) banner.classList.add('hidden');
-                    showModal('Connection Error', 'Server took too long to respond. Please refresh and try again.');
-                    return null;
-                }
-                // Show wake banner and wait before retrying
-                if (banner) banner.classList.remove('hidden');
-                await new Promise(r => setTimeout(r, RETRY_DELAY));
-            }
+            const data = await res.json();
+            if (!res.ok) { showModal('Error', data.error || 'Action failed.'); return null; }
+            return data;
+        } catch (err) {
+            showModal('Connection Error', 'Could not reach the server. Is the backend running?');
+            return null;
         }
     }
 
@@ -717,7 +696,7 @@ window.saveCert = async (userId) => {
     };
 
     async function loadGallery() {
-        const data = await apiCall('/gallery');
+        const data = await apiCall('/api/gallery');
         if (!data) return;
         const list = document.getElementById('god-gallery-list');
         if (!list) return;
@@ -769,7 +748,7 @@ window.saveCert = async (userId) => {
     };
 
     async function loadLeadership() {
-        const data = await apiCall('/leadership');
+        const data = await apiCall('/api/leadership');
         if (!data) return;
         const list = document.getElementById('god-leadership-list');
         if (!list) return;
@@ -848,7 +827,7 @@ window.saveCert = async (userId) => {
     };
 
     async function loadJobs() {
-        const data = await apiCall('/careers');
+        const data = await apiCall('/api/careers');
         if (!data) return;
         const list = document.getElementById('god-careers-list');
         if (!list) return;
@@ -891,7 +870,7 @@ window.saveCert = async (userId) => {
     };
 
     async function loadReels() {
-        const data = await apiCall('/reels');
+        const data = await apiCall('/api/reels');
         if (!data) return;
         const list = document.getElementById('god-reels-list');
         if (!list) return;
@@ -930,7 +909,7 @@ window.saveCert = async (userId) => {
     };
 
     async function loadTestimonials() {
-        const data = await apiCall('/testimonials');
+        const data = await apiCall('/api/testimonials');
         if (!data) return;
         const list = document.getElementById('god-testimonials-list');
         if (!list) return;
@@ -1017,8 +996,10 @@ window.saveCert = async (userId) => {
         if (menuTrigger) {
             menuTrigger.onclick = () => document.getElementById('sidebar').classList.toggle('hidden');
         }
+
+        // Load dashboard stats and default section data
         updateDashboardStats();
-        fetchUsers();
+        fetchUsers(); // pre-load member list for when user visits members tab
         loadCampApplications();
     };
 </script>
